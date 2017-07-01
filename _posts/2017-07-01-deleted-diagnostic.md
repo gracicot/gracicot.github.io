@@ -57,7 +57,7 @@ Ah! The good old GCC. The great pillar of GNU, that lighthouse of freedom in thi
 
 
 #### MSVC
-Oh, MSVC. That compiler is the bastard child of the family. It always had some quirks and bugs, but it has gotten a lot better recently. Let's see how it goes.
+Oh, MSVC. That compiler. It always had some quirks and bugs, but it has gotten a lot better recently. Let's see how it goes.
 
     add.cpp(3): error C2676: binary '+': 'main::<unnamed-type-someVar>' does not define this operator or a conversion to a type acceptable to the predefined operator
     add.cpp(9): note: see reference to function template instantiation 'auto add<main::,int>(A,B)' being compiled
