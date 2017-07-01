@@ -5,7 +5,7 @@ date:   2017-07-01 18:11:01 +0500
 categories: tricks
 ---
 
-Back in 1998, C++ templates was often blamed of horrible errors and diagnostics for users of heavy templated libraries. And indeed, there can be pretty horrible errors only using the STL.
+C++ templates is often blamed of horrible errors. Diagnostics can be painfully large for users of heavily templated libraries. And indeed, there can be pretty horrible errors only using the STL.
 
 ## Do you even error?
 
