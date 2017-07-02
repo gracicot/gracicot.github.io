@@ -246,7 +246,7 @@ auto tryAdd(A a, B b) -> std::enable_if_t<!can_add<A, B>::value> {
 }
 
 int main() {
-    tryAdd(1, 2); // call first
+    tryAdd(1, 2); // calls first
     tryAdd("some", "test"); // calls second
 }
 ```
