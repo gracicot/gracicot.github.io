@@ -197,7 +197,7 @@ The solution lies in default values. Some compiler will try to find further erro
 Let's change our deleted function to this:
 
 ```c++
-template<typename A, typename B, std::enable_if_t<!can_add<A, B>::value, int> = 0>
+template<typename A, typename B, std::enable_if_t<!can_add<A, B>::value>* = nullptr>
 void add(A, B, NoAddError = {}) = delete;
 //                        ^---- Notice the default argument that calls the default constructor!
 ```
