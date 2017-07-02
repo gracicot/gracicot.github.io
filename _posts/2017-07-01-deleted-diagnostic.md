@@ -144,7 +144,7 @@ But there's a catch. Look a this error message:
      auto add(A a, B b) -> decltype(a + b) {
                                  ~~^~~
     
-Whoa!? It is by itself a huge compilation error! How to fix this?
+Whoa! That hard for the eyes! Can we reduce the verbosity a bit?
 
 Fortunately, one can do *inverse-matching* to a deleted function instead. It is as easy to add as:
 
@@ -230,7 +230,7 @@ What do we get in our compiler output?
     
 **Now we're talking!** We have a deleted function, that when called directly (in evaluated context) fire a static_assert!
 
-The error could be a bit less verbose, but I'm happy with what we got: A deleted function call with a static assert message. 
+The error could be a bit less verbose, lines are quite long, but I'm happy with what we got: A deleted function call with a static assert message. 
 
 Here's a another snippet that shows that sfinae is not gone:
 
@@ -260,7 +260,7 @@ Edit the file and try to call `add("", "")` directly, and you'll get the static 
 
 Well, the catch is, it only work great with GCC. Painful truth, but it's not so bad. Users of your code using GCC will have full messages with a static assert, and others will get only a plain deleted function call error.
 
-Even with that, other compilers will still output the struct name `NoAddError` since it's in the signature of the function, which can still be useful if you don't use GCC, and your code will behave exacly the same as before. Calling a deleted function is still calling a deleted function, with or without this trick.
+Even with that, other compilers will still output the struct name `NoAddError` since it's in the signature of the function, which can still be useful if you don't use GCC.
 
 I have seen this working in some cases with clang, but is not as reliable as GCC for executing the trick.
 
@@ -332,11 +332,11 @@ Now, calling the function with the wrong arguments will yield this error:
           ^~~~~~
     main.cpp: In instantiation of 'NotCallableError<Args>::NotCallableError(F) [with F = main()::<lambda(int, bool)>; std::enable_if_t<(! is_callable<F(Args ...)>::value)>* <anonymous> = 0; Args = {const char (&)[5], main()::<lambda(int, bool)>&}]':
     main.cpp:45:34:   required from here
-    main.cpp:27:9: error: static assertion failed: The function cannot be called given parameters.
+    main.cpp:27:9: error: static assertion failed: The function cannot be called with given parameters.
              static_assert(!std::is_same<F, F>::value,
              ^~~~~~~~~~~~~
 
-Here's the [code snippet](http://coliru.stacked-crooked.com/a/f974e76bad921e65) that resulted in this error.
+Here's the [code snippet](http://coliru.stacked-crooked.com/a/e544fb49a4bd9efa) that resulted in this error.
 
 Again, it's not as clean as I would like to be, but it's still outputting our error properly, while not breaking sfinae.
 
@@ -352,7 +352,7 @@ struct NotCallableError {
         !is_callable<F(Args...)>::value>* = nullptr>
     NotCallableError(F) {
         static_assert(!std::is_same<F, F>::value,
-            "The function cannot be called given parameters."
+            "The function cannot be called with given parameters."
         );
     }
     
@@ -445,7 +445,7 @@ main.cpp:29:6: note: declared here
       ^~~
 ```
 
-The output is quite clear, cleaner than error classes, and less verbose. Unfortunately, it's not as extensible as the error class trick. When you have a lot of error cases, grouping them all in one place is really useful and easier to maintain.
+The output is quite clear, cleaner than error classes, and less verbose. In fact, it's the less verbose solution of all. Unfortunately, it's not as extensible as the error class trick. When you have a lot of error cases, grouping them all in one place is really useful and easier to maintain.
 
 Also, all errors will output the message in the string literal, and they will be scattered around in the compiler output. With the error class trick, only one static assert is fired and is placed at the end of the compiler output.
 
@@ -464,6 +464,8 @@ auto add(A a, B b) -> decltype(a + b) {
 ```
 
 At least this time, the message is there, as the error classes don't quite work under clang.
+
+Personally, I prefer the error class trick even for small cases. The error being a static_assert makes it clear for the various IDEs out there that parses the compiler output. That effectively makes it an error, as this simple case the message in inside a note.
 
 ---
 
