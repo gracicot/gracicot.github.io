@@ -232,7 +232,7 @@ auto tryAdd(A a, B b) -> std::enable_if_t<!can_add<A, B>::value> {
     std::cout << "Well, some runtime error." << std::endl;
 }
 ```
-[See how it runs live](http://coliru.stacked-crooked.com/a/822cad1d88bebe2b)
+[See how it runs live at coliru](http://coliru.stacked-crooked.com/a/822cad1d88bebe2b)
 
 If there were no sfinae involved, the second call would be ambiguous.
 
