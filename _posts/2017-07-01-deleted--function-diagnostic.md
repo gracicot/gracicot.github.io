@@ -256,14 +256,16 @@ If there were no sfinae involved, the second call would be ambiguous.
 
 Edit the file and try to call `add("", "")` directly, and you'll get the static assert.
 
-Another trick would be to use default values: 
+### Default values
+
+Another trick to trigger our static assert would be to use default values. Replace the constructor of `NoAddError` to take no parameter and add the parameter to the deleted function:
 ```c++
 template<typename A, typename B, std::enable_if_t<!can_add<A, B>::value>* = nullptr>
 void add(A, B, NoAddError = {}) = delete;
 //                        ^---- Notice the default argument that calls the default constructor!
 ```
 
-The same process goes: when invoked directly, the compiler dill instanciate the constructor body, triggerring the static assert.
+The same process goes: when invoked directly, the compiler will instanciate the constructor body, triggerring the static assert.
 
 ## The catch
 
@@ -273,7 +275,7 @@ Even with that, other compilers will still output the struct name `NoAddError` s
 
 I have seen this working in some cases with clang, but is not as reliable as GCC for executing the trick.
 
-If you already marked invalid overloads as deleted, using this trick won't break source. If adding an additional parameter is not a choice for you, continue reading.
+If you already marked invalid overloads as deleted, using this trick won't break source.
 
 ## Variadics
 Variadic functions are quite different to deal with. We must introduce our error parameter somewhere without breaking argument deduction.
