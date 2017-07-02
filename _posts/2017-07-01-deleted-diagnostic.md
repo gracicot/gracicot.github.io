@@ -54,6 +54,8 @@ Ah! The good old GCC. The great pillar of GNU, that lighthouse of freedom in thi
 
 #### Clang
 
+I like to use clang sometime when GCC's template bracktrace are not enough. It's nice to see some complex metaprogramming errors from another perspective. It's doing quite similar to GCC in this particular case:
+
     add.cpp:3:14: error: invalid operands to binary expression ('(anonymous struct at add.cpp:7:5)' and 'int')
         return a + b;
                ~ ^ ~
