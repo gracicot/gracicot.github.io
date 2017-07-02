@@ -95,12 +95,12 @@ You must think that the error is completly clean with that beautiful error messa
 
 Wrong!
 
-    main.cpp: In instantiation of 'auto add(A, B) [with A = main()::; B = int]':
+    main.cpp: In instantiation of 'auto add(A, B) [with A = main()::<anonymous struct>, B = int]':
     main.cpp:21:19:   required from here
     main.cpp:14:5: error: static assertion failed: Cannot add! You must send types that can add together.
          static_assert(can_add<A, B>::value, "Cannot add! You must send types that can add together.");
          ^~~~~~~~~~~~~
-    main.cpp:15:14: error: no match for 'operator+' (operand types are 'main()::' and 'int')
+    main.cpp:15:14: error: no match for 'operator+' (operand types are 'main()::<anonymous struct>' and 'int')
          return a + b;
                 ~~^~~
                 
@@ -122,16 +122,16 @@ This code is even simpler than the one with static_assert, and can prevent enorm
 But there's a catch. Look a this error message:
 
     main.cpp: In function 'int main()':
-    main.cpp:9:19: error: no matching function for call to 'add(main()::&, int)'
+    main.cpp:9:19: error: no matching function for call to 'add(main()::<anonymous struct>, int)'
          add(someVar, 7);
                        ^
     main.cpp:2:6: note: candidate: template decltype ((a + b)) add(A, B)
      auto add(A a, B b) -> decltype(a + b) {
           ^~~
     main.cpp:2:6: note:   template argument deduction/substitution failed:
-    main.cpp: In substitution of 'template decltype ((a + b)) add(A, B) [with A = main()::; B = int]':
+    main.cpp: In substitution of 'template decltype ((a + b)) add(A, B) [with A = main()::<anonymous struct>, B = int]':
     main.cpp:9:19:   required from here
-    main.cpp:2:34: error: no match for 'operator+' (operand types are 'main()::' and 'int')
+    main.cpp:2:34: error: no match for 'operator+' (operand types are 'main()::<anonymous struct>' and 'int')
      auto add(A a, B b) -> decltype(a + b) {
                                  ~~^~~
     
