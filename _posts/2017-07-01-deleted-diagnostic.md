@@ -264,7 +264,7 @@ auto callMe(F function, Args&&... args) -> decltype(function(std::declval<Args>(
 
 To support errors like before, we will need to change the error class, and change the first parameter of the deleted function to be that error class. The constructor of the error class will match the `F` template parameter, and will use `Args...` without breaking type deduction.
 
-In order to check if the deleted function is a match, the compiler will need to check if the first argument can be sent to our `NotCallableError` constructor. This makes the compiler instanciating the constructor. Since the `static_assert` is inside the constructor body, the error must occur only if you try to effectively call that constructor. It's signature is completely valid, and will trigger sfinae if called with wrong parameters. Let's see how to implement that:
+In order to check if the deleted function is a match, the compiler will need to check if the first argument can be sent to our `NotCallableError` constructor. This makes the compiler instanciating the constructor signature. Since the `static_assert` is inside the constructor body, the error must occur only if you try to effectively call that constructor. It's signature is completely valid, and will trigger sfinae if called with wrong parameters. Let's see how to implement that:
 
 ```c++
 template<typename...>
