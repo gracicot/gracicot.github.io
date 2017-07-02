@@ -1,7 +1,5 @@
 ## Guillaume Racicot's Blog
 
-Some programming blog
-
 <ul>
   {% for post in site.posts %}
     <li>
