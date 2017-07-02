@@ -240,11 +240,11 @@ Edit the file and try too call `add("", "")` directly, and you'll get the static
 
 ### The catch
 
-Well, the catch is, it only work with GCC great. Painful truth, but it's not so bad: Other compilers still output the "error name". In other words, the compiler will still output the struct name `NoAddError`, which can still be useful if you don't use GCC.
-
-If you use clang or MSVC, you'll get the same deleted function error as before. In other word, even if the trick doesn't work, calling a deleted function will get you at the same error, with or without the trick.
+Well, the catch is, it only work with GCC great. Painful truth, but it's not so bad: Other compilers still output the "error name". In other words, the compiler will still output the struct name `NoAddError`, which can still be useful if you don't use GCC, and you code will behave exacly the same as before. Calling a deleted function is still calling a deleted function, with or without this trick.
 
 I have seen this working in some cases with clang, but is not as reliable as GCC for executing the trick.
+
+If you already marked invalid overloads as deleted, using this trick won't break source. If adding an additional parameter is not a choice for you, continue reading.
 
 ### Variadics
 Variadic functions are quite different to deal with. We must introduce our error parameter somewhere without breaking argument deduction.
