@@ -368,7 +368,7 @@ I have used this pattern extensively in the library [Kangaru](https://github.com
 
 ## Multiple errors
 
-I can happen a code misues function at many places. Fortunatly, the error class trick handle those cases really well. Here's the GCC output for wrongly call the add function four times:
+It can happen a code misues function at many places, many times. Fortunatly, the error class trick handle those cases really well. Here's the GCC output for wrongly call the add function four times:
 ```
 main.cpp: In function 'int main()':
 main.cpp:46:15: error: use of deleted function 'auto add(A, B, NoAddError) [with A = const char*; B = const char*; std::enable_if_t<(! can_add<A, B>::value)>* <anonymous> = 0]'
@@ -433,7 +433,7 @@ auto add(A, B) -> decltype("Cannot add! You must send types that can add togethe
 ) = delete;
 ```
 
-This will yeild this compiler output:
+This will yield this compiler output:
 ```
 main.cpp: In function 'int main()':
 main.cpp:47:15: error: use of deleted function 'const char (& add(A, B))[55] [with A = const char*; B = const char*; std::enable_if_t<(! can_add<A, B>::value)>* <anonymous> = 0]'
