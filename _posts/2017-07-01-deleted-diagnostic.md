@@ -249,7 +249,7 @@ int main() {
     tryAdd("some", "test");
 }
 ```
-[See how it runs live at coliru](http://coliru.stacked-crooked.com/a/822cad1d88bebe2b)
+[See how it runs live at coliru](http://coliru.stacked-crooked.com/a/bd7b25aa32123db9)
 
 If there were no sfinae involved, the second call would be ambiguous.
 
@@ -335,7 +335,7 @@ Now, calling the function with the wrong arguments will yield this error:
              static_assert(!std::is_same<F, F>::value,
              ^~~~~~~~~~~~~
 
-Here's the [code snippet](http://coliru.stacked-crooked.com/a/56e296157cfbe5f5) that resulted in this error.
+Here's the [code snippet](http://coliru.stacked-crooked.com/a/f974e76bad921e65) that resulted in this error.
 
 Again, it's not as clean as I would like to be, but it's still outputting our error properly, while not breaking sfinae.
 
