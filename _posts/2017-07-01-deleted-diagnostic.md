@@ -316,6 +316,8 @@ Now, calling the function with the wrong arguments will yield this error:
 
 Here's the [code snippet](http://coliru.stacked-crooked.com/a/56e296157cfbe5f5) that resulted in this error.
 
+It's not as clean as I would like to be, but it's still outputting our error properly, while not breaking sfinae. 
+
 The great thing about having the static assert in a separate class is that you can add new errors simply by adding a new constructor:
 
 ```c++
@@ -335,4 +337,6 @@ struct NotCallableError {
 };
 ```
 
-You can find extensive usage of this pattern in my library [Kangaru](https://github.com/gracicot/kangaru/blob/master/include/kangaru/detail/error.hpp). 
+You can find extensive usage of this pattern in my library [Kangaru](https://github.com/gracicot/kangaru/blob/master/include/kangaru/detail/error.hpp), where a lot of error cases have been written in the same error class.
+
+If you have suggestions, compliments, complains, or even insults, just leave a comment on the reddit post our send me a github issue, I'll greatly appreciate any feedback! 
