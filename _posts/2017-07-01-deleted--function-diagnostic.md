@@ -186,8 +186,8 @@ Remember the first example with static_assert, how the compiler tried to find fu
 Let's make a simple class that will throw the error:
 ```c++
 struct NoAddError {
-    template<typename T = void>
-    NoAddError() {
+    template<typename T>
+    NoAddError(T&&) {
         static_assert(!std::is_same<T, T>::value,
             "Cannot add! You must send types that can add together."
         );
@@ -203,34 +203,34 @@ However, we must not alter too much the signature of the function, because causi
 
 The instanciation must only occur when you actually directly invoke the deleted function, not while instanciating the function signature.
 
-The solution lies in default values. Some compiler will try to find further error, instantiating the deleted function, and if needed, the templates needed by the default value expression.
+The solution lies in the constructor of the error class. When invoking directly the deleted function, the compiler will try to find further errors and will instanciate the body of the constructor, effectively triggering the static assert.
 
 Let's change our deleted function to this:
 
 ```c++
-template<typename A, typename B, std::enable_if_t<!can_add<A, B>::value>* = nullptr>
-void add(A, B, NoAddError = {}) = delete;
-//                        ^---- Notice the default argument that calls the default constructor!
+void add(NoAddError, ...) = delete;
+//       ^--- This class has a template constructor.
+              The compiler must check it's signature
+              to know if this function is a match.
 ```
 
 What do we get in our compiler output?
-
-    main.cpp: In function 'int main()':
-    main.cpp:46:15: error: use of deleted function 'void add(A, B, NoAddError) [with A = const char*; B = const char*; std::enable_if_t<(! can_add<A, B>::value)>* <anonymous> = 0]'
-         add("", "");
-                   ^
-    add.cpp:16:6: note: declared here
-     void add(A, B, NoAddError = {}) = delete;
-          ^~~
-    add.cpp: In instantiation of 'NoAddError::NoAddError() [with T = void]':
-    add.cpp:21:19:   required from here
-    add.cpp:6:9: error: static assertion failed: Cannot add! You must send types that can add together.
-             static_assert(!std::is_same<T, T>::value,
-             ^~~~~~~~~~~~~
+```
+main.cpp: In function 'int main()':
+main.cpp:44:15: error: use of deleted function 'void add(NoAddError, ...)'
+     add("", "");
+               ^
+main.cpp:28:6: note: declared here
+ void add(NoAddError, ...) = delete;
+      ^~~
+main.cpp: In instantiation of 'NoAddError::NoAddError(T&&) [with T = const char (&)[1]]':
+main.cpp:44:15:   required from here
+main.cpp:16:9: error: static assertion failed: Cannot add! You must send types that can add together.
+         static_assert(!std::is_same<T, T>::value,
+         ^~~~~~~~~~~~~
+```
     
 **Now we're talking!** We have a deleted function, that when called directly also fire a static_assert!
-
-The error could be a bit less verbose, lines are quite long, but I'm happy with what we got: A deleted function call with a static assert message. 
 
 Here's a another snippet that shows that sfinae is not gone:
 
@@ -250,11 +250,20 @@ int main() {
     tryAdd("some", "test"); // calls second
 }
 ```
-[See how it runs live at coliru](http://coliru.stacked-crooked.com/a/bd7b25aa32123db9)
+[See how it runs live at coliru](http://coliru.stacked-crooked.com/a/f4480cb1226c775c)
 
 If there were no sfinae involved, the second call would be ambiguous.
 
 Edit the file and try to call `add("", "")` directly, and you'll get the static assert.
+
+Another trick would be to use default values: 
+```c++
+template<typename A, typename B, std::enable_if_t<!can_add<A, B>::value>* = nullptr>
+void add(A, B, NoAddError = {}) = delete;
+//                        ^---- Notice the default argument that calls the default constructor!
+```
+
+The same process goes: when invoked directly, the compiler dill instanciate the constructor body, triggerring the static assert.
 
 ## The catch
 
@@ -338,7 +347,7 @@ Now, calling the function with the wrong arguments will yield this error:
 
 Here's the [code snippet](http://coliru.stacked-crooked.com/a/e544fb49a4bd9efa) that resulted in this error.
 
-Again, it's not as clean as I would like to be, but it's still outputting our error properly, while not breaking sfinae.
+It's not as clean as I would like to be, but it's still output our error properly, while not breaking sfinae.
 
 The great thing about having the static assert in a separate class is that you can add new errors simply by adding a new constructor:
 
@@ -372,34 +381,34 @@ I have used this pattern extensively in the library [Kangaru](https://github.com
 It can happen a code misues function at many places, many times. Fortunatly, the error class trick handle those cases really well. Here's the GCC output for wrongly call the add function four times:
 ```
 main.cpp: In function 'int main()':
-main.cpp:46:15: error: use of deleted function 'auto add(A, B, NoAddError) [with A = const char*; B = const char*; std::enable_if_t<(! can_add<A, B>::value)>* <anonymous> = 0]'
+main.cpp:44:15: error: use of deleted function 'void add(NoAddError, ...)'
      add("", "");
                ^
-main.cpp:29:6: note: declared here
- auto add(A, B, NoAddError = {}) = delete;
+main.cpp:28:6: note: declared here
+ void add(NoAddError, ...) = delete;
       ^~~
-main.cpp:47:15: error: use of deleted function 'auto add(A, B, NoAddError) [with A = const char*; B = const char*; std::enable_if_t<(! can_add<A, B>::value)>* <anonymous> = 0]'
+main.cpp:45:15: error: use of deleted function 'void add(NoAddError, ...)'
      add("", "");
                ^
-main.cpp:29:6: note: declared here
- auto add(A, B, NoAddError = {}) = delete;
+main.cpp:28:6: note: declared here
+ void add(NoAddError, ...) = delete;
       ^~~
-main.cpp:48:15: error: use of deleted function 'auto add(A, B, NoAddError) [with A = const char*; B = const char*; std::enable_if_t<(! can_add<A, B>::value)>* <anonymous> = 0]'
+main.cpp:46:15: error: use of deleted function 'void add(NoAddError, ...)'
      add("", "");
                ^
-main.cpp:29:6: note: declared here
- auto add(A, B, NoAddError = {}) = delete;
+main.cpp:28:6: note: declared here
+ void add(NoAddError, ...) = delete;
       ^~~
-main.cpp:49:15: error: use of deleted function 'auto add(A, B, NoAddError) [with A = const char*; B = const char*; std::enable_if_t<(! can_add<A, B>::value)>* <anonymous> = 0]'
+main.cpp:47:15: error: use of deleted function 'void add(NoAddError, ...)'
      add("", "");
                ^
-main.cpp:29:6: note: declared here
- auto add(A, B, NoAddError = {}) = delete;
+main.cpp:28:6: note: declared here
+ void add(NoAddError, ...) = delete;
       ^~~
-main.cpp: In instantiation of 'NoAddError::NoAddError() [with T = void]':
-main.cpp:46:15:   required from here
-main.cpp:18:9: error: static assertion failed: Cannot add! You must send types that can add together.
-         static_assert(!std::is_same<T, T>::value
+main.cpp: In instantiation of 'NoAddError::NoAddError(T&&) [with T = const char (&)[1]]':
+main.cpp:44:15:   required from here
+main.cpp:16:9: error: static assertion failed: Cannot add! You must send types that can add together.
+         static_assert(!std::is_same<T, T>::value,
          ^~~~~~~~~~~~~
 ```
 
