@@ -284,7 +284,7 @@ struct NotCallableError {
 };
 ```
 
-Now, just add the deleted function and some utility to control dhen deduction happen:
+Now, just add the deleted function and some utility to control when deduction happen:
 
 ```c++
 template<typename T>
