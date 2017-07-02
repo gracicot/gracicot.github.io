@@ -7,6 +7,10 @@ categories: tricks
 
 C++ templates is often blamed of horrible errors. Diagnostics can be painfully large for users of heavily templated libraries. And indeed, there can be pretty horrible errors only using the STL.
 
+Library writers often are confronted with a choice: Being sfinae friendly, or output a nicely crafted compiler error with `static_assert`.
+
+While experimenting ways to output errors in the cleanest way possible, I have found a trick to both enable sfinae while providing custom error messages that may depend on multiple conditions.
+
 ## Do you even error?
 
 Yeah... do you?
@@ -313,3 +317,5 @@ struct NotCallableError {
     }
 };
 ```
+
+You can find extensive usage of this pattern in my library [Kangaru](https://github.com/gracicot/kangaru/blob/master/include/kangaru/detail/error.hpp). 
