@@ -238,7 +238,7 @@ auto tryAdd(A a, B b) -> std::enable_if_t<!can_add<A, B>::value> {
 ```
 [See how it runs at coliru](http://coliru.stacked-crooked.com/a/822cad1d88bebe2b)
 
-Edit the file and try too call `add("", "")` directly, and you'll get the static assert.
+Edit the file and try to call `add("", "")` directly, and you'll get the static assert.
 
 ### The catch
 
