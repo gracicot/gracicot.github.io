@@ -237,6 +237,11 @@ template<typename A, typename B>
 auto tryAdd(A a, B b) -> std::enable_if_t<!can_add<A, B>::value> {
     std::cout << "Well, some runtime error." << std::endl;
 }
+
+int main() {
+    tryAdd(1, 2);
+    tryAdd("some", "test");
+}
 ```
 [See how it runs live at coliru](http://coliru.stacked-crooked.com/a/822cad1d88bebe2b)
 
