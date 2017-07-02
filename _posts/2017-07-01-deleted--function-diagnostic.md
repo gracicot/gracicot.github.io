@@ -482,4 +482,4 @@ Personally, I prefer the error class trick even for small cases. The error being
 
 That's it for today! I hope you enjoyed it!
 
-If you find something wrong or have suggestions, compliments, complains, or even insults, just leave a comment on the reddit post or send me a github issue, I'll greatly appreciate any feedback! 
+If you find something wrong or have suggestions, compliments, complains, or even insults, just leave a comment on the [reddit post](https://www.reddit.com/r/cpp/comments/6kttou/compiler_tricks_sfinae_and_nice_messages/) or send me a github issue, I'll greatly appreciate any feedback! 
