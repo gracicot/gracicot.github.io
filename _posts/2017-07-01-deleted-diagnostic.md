@@ -464,4 +464,8 @@ auto add(A a, B b) -> decltype(a + b) {
 
 At least this time, the message is there, as the error classes don't quite work under clang.
 
+---
+
+That's it for today! I hope you enjoyed it!
+
 If you have suggestions, compliments, complains, or even insults, just leave a comment on the reddit post our send me a github issue, I'll greatly appreciate any feedback! 
