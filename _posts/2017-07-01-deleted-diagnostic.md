@@ -11,7 +11,7 @@ DISCLAIMER: I will try to explain the best I can how and why this trick works. I
 
 C++ templates is often blamed of horrible errors. Diagnostics can be painfully large for users of heavily templated libraries. And indeed, there can be pretty horrible errors only using the STL.
 
-Library writers often are confronted with a choice: Being sfinae friendly, or output a nicely crafted compiler error with `static_assert`.
+Library writers often are confronted with a choice: being sfinae friendly, or output a nicely crafted compiler error with `static_assert`.
 
 While experimenting ways to output errors in the cleanest way possible, I have found a trick to both enable sfinae while providing custom error messages that may depend on multiple conditions.
 
