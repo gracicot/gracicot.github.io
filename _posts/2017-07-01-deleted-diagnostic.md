@@ -282,7 +282,7 @@ struct is_callable<Sig, void_t<std::result_of_t<Sig>>> : std::true_type {};
 
 template<typename... Args>
 struct NotCallableError {
-    //                                     v--- Constructor exist only if not callable.
+    //                   v--- Constructor exist only if not callable.
     template<typename F, std::enable_if_t<!is_callable<F(Args...)>::value>* = 0>
     NotCallableError(F) {
         static_assert(!std::is_same<F, F>::value,
