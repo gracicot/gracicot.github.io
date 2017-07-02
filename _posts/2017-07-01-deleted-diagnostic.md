@@ -396,7 +396,7 @@ auto add(A, B) -> decltype("Cannot add! You must send types that can add togethe
 ```
 
 This will yeild this compiler output:
-```c++
+```
 main.cpp: In function 'int main()':
 main.cpp:47:15: error: use of deleted function 'const char (& add(A, B))[55] [with A = const char*; B = const char*; std::enable_if_t<(! can_add<A, B>::value)>* <anonymous> = 0]'
      add("", "");
