@@ -237,7 +237,7 @@ Here's a another snippet that shows that sfinae is not gone:
 ```c++
 template<typename A, typename B>
 auto tryAdd(A a, B b) -> void_t<decltype(add(a, b))> {
-    add(a, b);
+    std::cout << add(a, b) << std::endl;
 }
 
 template<typename A, typename B>
@@ -246,8 +246,8 @@ auto tryAdd(A a, B b) -> std::enable_if_t<!can_add<A, B>::value> {
 }
 
 int main() {
-    tryAdd(1, 2);
-    tryAdd("some", "test");
+    tryAdd(1, 2); // call first
+    tryAdd("some", "test"); // calls second
 }
 ```
 [See how it runs live at coliru](http://coliru.stacked-crooked.com/a/bd7b25aa32123db9)
