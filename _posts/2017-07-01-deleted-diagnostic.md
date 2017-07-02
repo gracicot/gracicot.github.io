@@ -6,6 +6,8 @@ categories: tricks
 excerpt_separator: <!--more-->
 ---
 
+# Compiler Tricks: SFINAE and nice messages
+
 C++ templates is often blamed of horrible errors. Diagnostics can be painfully large for users of heavily templated libraries. And indeed, there can be pretty horrible errors only by using the STL.
 
 Library writers often are confronted with a choice: being sfinae friendly, or output a nicely crafted compiler error with `static_assert`.
