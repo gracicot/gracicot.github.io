@@ -255,7 +255,7 @@ If there were no sfinae involved, the second call would be ambiguous.
 
 Edit the file and try to call `add("", "")` directly, and you'll get the static assert.
 
-### The catch
+## The catch
 
 Well, the catch is, it only work great with GCC. Painful truth, but it's not so bad. Users of your code using GCC will have full messages with a static assert, and others will get only a plain deleted function call error.
 
@@ -265,7 +265,7 @@ I have seen this working in some cases with clang, but is not as reliable as GCC
 
 If you already marked invalid overloads as deleted, using this trick won't break source. If adding an additional parameter is not a choice for you, continue reading.
 
-### Variadics
+## Variadics
 Variadic functions are quite different to deal with. We must introduce our error parameter somewhere without breaking argument deduction.
 
 Here we cannot rely on default values to make the trick.
@@ -366,7 +366,7 @@ struct NotCallableError {
 
 I have used this pattern extensively in the library [Kangaru](https://github.com/gracicot/kangaru/blob/master/include/kangaru/detail/error.hpp), where a lot of error cases have been written in the same error class.
 
-### Multiple errors
+## Multiple errors
 
 I can happen a code misues function at many places. Fortunatly, the error class trick handle those cases really well. Here's the GCC output for wrongly call the add function four times:
 ```
