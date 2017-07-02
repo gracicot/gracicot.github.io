@@ -337,6 +337,6 @@ struct NotCallableError {
 };
 ```
 
-You can find extensive usage of this pattern in the library [Kangaru](https://github.com/gracicot/kangaru/blob/master/include/kangaru/detail/error.hpp) (shameless self promotion), where a lot of error cases have been written in the same error class.
+I have used this pattern extensively in the library [Kangaru](https://github.com/gracicot/kangaru/blob/master/include/kangaru/detail/error.hpp), where a lot of error cases have been written in the same error class.
 
 If you have suggestions, compliments, complains, or even insults, just leave a comment on the reddit post our send me a github issue, I'll greatly appreciate any feedback! 
