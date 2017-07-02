@@ -164,7 +164,9 @@ However, we loose a valuable information: the reason the error happened. We can 
 ```c++
 template<typename T = void>
 void add(...) {
-    static_assert(!std::is_same<T, T>::value, "Cannot add! You must send types that can add together.");
+    static_assert(!std::is_same<T, T>::value,
+        "Cannot add! You must send types that can add together."
+    );
 }
 ```
 
@@ -183,7 +185,9 @@ Let's make a simple class that will throw the error:
 struct NoAddError {
     template<typename T = void>
     NoAddError() {
-        static_assert(!std::is_same<T, T>::value, "Cannot add! You must send types that can add together.");
+        static_assert(!std::is_same<T, T>::value,
+            "Cannot add! You must send types that can add together."
+        );
     }
 };
 ```
@@ -276,10 +280,12 @@ struct is_callable<Sig, void_t<std::result_of_t<Sig>>> : std::true_type {};
 
 template<typename... Args>
 struct NotCallableError {
-    //                                     v---- Constructor exist only if not callable.
+    //                                     v--- Constructor exist only if not callable.
     template<typename F, std::enable_if_t<!is_callable<F(Args...)>::value>* = nullptr>
     NotCallableError(F) {
-        static_assert(!std::is_same<F, F>::value, "The function cannot be called given parameters.");
+        static_assert(!std::is_same<F, F>::value,
+            "The function cannot be called given parameters."
+        );
     }
 };
 ```
@@ -327,12 +333,16 @@ template<typename... Args>
 struct NotCallableError {
     template<typename F, std::enable_if_t<is_function<F>::value && !is_callable<F(Args...)>::value>* = nullptr>
     NotCallableError(F) {
-        static_assert(!std::is_same<F, F>::value, "The function cannot be called given parameters.");
+        static_assert(!std::is_same<F, F>::value,
+            "The function cannot be called given parameters."
+        );
     }
     
     template<typename F, std::enable_if_t<!is_function<F>::value>* = nullptr>
     NotCallableError(F) {
-        static_assert(!std::is_same<F, F>::value, "The first parameter must be a function.");
+        static_assert(!std::is_same<F, F>::value,
+            "The first parameter must be a function."
+        );
     }
 };
 ```
