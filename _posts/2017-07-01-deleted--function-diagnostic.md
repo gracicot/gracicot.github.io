@@ -210,8 +210,8 @@ Let's change our deleted function to this:
 ```c++
 void add(NoAddError, ...) = delete;
 //       ^--- This class has a template constructor.
-              The compiler must check it's signature
-              to know if this function is a match.
+//            The compiler must check it's signature
+//            to know if this function is a match.
 ```
 
 What do we get in our compiler output?
