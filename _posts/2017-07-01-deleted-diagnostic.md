@@ -224,7 +224,7 @@ What do we get in our compiler output?
     add.cpp: In instantiation of 'NoAddError::NoAddError() [with T = void]':
     add.cpp:21:19:   required from here
     add.cpp:6:9: error: static assertion failed: Cannot add! You must send types that can add together.
-             static_assert(!std::is_same<T, T>::value, "Cannot add! You must send types that can add together.");
+             static_assert(!std::is_same<T, T>::value,
              ^~~~~~~~~~~~~
     
 **Now we're talking!** We have a deleted function, that when called directly (in evaluated context) fire a static_assert!
@@ -332,7 +332,7 @@ Now, calling the function with the wrong arguments will yield this error:
     main.cpp: In instantiation of 'NotCallableError<Args>::NotCallableError(F) [with F = main()::<lambda(int, bool)>; std::enable_if_t<(! is_callable<F(Args ...)>::value)>* <anonymous> = 0; Args = {const char (&)[5], main()::<lambda(int, bool)>&}]':
     main.cpp:45:34:   required from here
     main.cpp:27:9: error: static assertion failed: The function cannot be called given parameters.
-             static_assert(!std::is_same<F, F>::value, "The function cannot be called given parameters.");
+             static_assert(!std::is_same<F, F>::value,
              ^~~~~~~~~~~~~
 
 Here's the [code snippet](http://coliru.stacked-crooked.com/a/56e296157cfbe5f5) that resulted in this error.
@@ -398,7 +398,7 @@ main.cpp:29:6: note: declared here
 main.cpp: In instantiation of 'NoAddError::NoAddError() [with T = void]':
 main.cpp:46:15:   required from here
 main.cpp:18:9: error: static assertion failed: Cannot add! You must send types that can add together.
-         static_assert(!std::is_same<T, T>::value, "Cannot add! You must send types that can add together.");
+         static_assert(!std::is_same<T, T>::value
          ^~~~~~~~~~~~~
 ```
 
