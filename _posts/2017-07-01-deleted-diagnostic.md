@@ -3,6 +3,7 @@ layout: default
 title:  "Compiler Tricks: SFINAE and nice messages"
 date:   2017-07-01 18:11:01 +0500
 categories: tricks
+excerpt_separator: <!--more-->
 ---
 
 C++ templates is often blamed of horrible errors. Diagnostics can be painfully large for users of heavily templated libraries. And indeed, there can be pretty horrible errors only by using the STL.
@@ -10,6 +11,8 @@ C++ templates is often blamed of horrible errors. Diagnostics can be painfully l
 Library writers often are confronted with a choice: being sfinae friendly, or output a nicely crafted compiler error with `static_assert`.
 
 While experimenting ways to output errors in the cleanest way possible, I have found a trick to both enable sfinae while providing custom error messages that may depend on multiple conditions.
+
+<!--more-->
 
 ## Do you even error?
 
