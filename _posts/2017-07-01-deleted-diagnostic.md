@@ -214,6 +214,10 @@ void add(A, B, NoAddError = {}) = delete;
 
 What do we get in our compiler output?
 
+    main.cpp: In function 'int main()':
+    main.cpp:46:15: error: use of deleted function 'void add(A, B, NoAddError) [with A = const char*; B = const char*; std::enable_if_t<(! can_add<A, B>::value)>* <anonymous> = 0]'
+         add("", "");
+                   ^
     add.cpp:16:6: note: declared here
      void add(A, B, NoAddError = {}) = delete;
           ^~~
@@ -224,6 +228,8 @@ What do we get in our compiler output?
              ^~~~~~~~~~~~~
     
 **Now we're talking!** We have a deleted function, that when called directly (in evaluated context) fire a static_assert!
+
+The error could be a bit less verbose, but I'm happy with what we got: A deleted function call with a static assert message. 
 
 Here's a another snippet that shows that sfinae is not gone:
 
@@ -329,7 +335,7 @@ Now, calling the function with the wrong arguments will yield this error:
 
 Here's the [code snippet](http://coliru.stacked-crooked.com/a/56e296157cfbe5f5) that resulted in this error.
 
-It's not as clean as I would like to be, but it's still outputting our error properly, while not breaking sfinae. 
+Again, it's not as clean as I would like to be, but it's still outputting our error properly, while not breaking sfinae. 
 
 The great thing about having the static assert in a separate class is that you can add new errors simply by adding a new constructor:
 
