@@ -228,7 +228,7 @@ What do we get in our compiler output?
              static_assert(!std::is_same<T, T>::value,
              ^~~~~~~~~~~~~
     
-**Now we're talking!** We have a deleted function, that when called directly (in evaluated context) fire a static_assert!
+**Now we're talking!** We have a deleted function, that when called directly also fire a static_assert!
 
 The error could be a bit less verbose, lines are quite long, but I'm happy with what we got: A deleted function call with a static assert message. 
 
