@@ -144,9 +144,9 @@ But there's a catch. Look a this error message:
      auto add(A a, B b) -> decltype(a + b) {
                                  ~~^~~
     
-Whoa! That hard for the eyes! Can we reduce the verbosity a bit?
+Whoa! The error is a bit longer than expected! It shows us a lot of information information, but that information won't be there if we use `enable_if` with a type trait.
 
-Fortunately, one can do *inverse-matching* to a deleted function instead. It is as easy to add as:
+Fortunately, one can do *inverse-matching* to a deleted function instead. This will allow us to control the quantity of compiler output. It is as easy to add as:
 
 ```c++
 void add(...) = delete;
