@@ -337,7 +337,7 @@ Now, calling the function with the wrong arguments will yield this error:
 
 Here's the [code snippet](http://coliru.stacked-crooked.com/a/56e296157cfbe5f5) that resulted in this error.
 
-Again, it's not as clean as I would like to be, but it's still outputting our error properly, while not breaking sfinae. 
+Again, it's not as clean as I would like to be, but it's still outputting our error properly, while not breaking sfinae.
 
 The great thing about having the static assert in a separate class is that you can add new errors simply by adding a new constructor:
 
@@ -365,6 +365,44 @@ struct NotCallableError {
 ```
 
 I have used this pattern extensively in the library [Kangaru](https://github.com/gracicot/kangaru/blob/master/include/kangaru/detail/error.hpp), where a lot of error cases have been written in the same error class.
+
+### Multiple errors
+
+I can happen a code misues function at many places. Fortunatly, the error class trick handle those cases really well. Here's the GCC output for wrongly call the add function four times:
+```
+main.cpp: In function 'int main()':
+main.cpp:46:15: error: use of deleted function 'auto add(A, B, NoAddError) [with A = const char*; B = const char*; std::enable_if_t<(! can_add<A, B>::value)>* <anonymous> = 0]'
+     add("", "");
+               ^
+main.cpp:29:6: note: declared here
+ auto add(A, B, NoAddError = {}) = delete;
+      ^~~
+main.cpp:47:15: error: use of deleted function 'auto add(A, B, NoAddError) [with A = const char*; B = const char*; std::enable_if_t<(! can_add<A, B>::value)>* <anonymous> = 0]'
+     add("", "");
+               ^
+main.cpp:29:6: note: declared here
+ auto add(A, B, NoAddError = {}) = delete;
+      ^~~
+main.cpp:48:15: error: use of deleted function 'auto add(A, B, NoAddError) [with A = const char*; B = const char*; std::enable_if_t<(! can_add<A, B>::value)>* <anonymous> = 0]'
+     add("", "");
+               ^
+main.cpp:29:6: note: declared here
+ auto add(A, B, NoAddError = {}) = delete;
+      ^~~
+main.cpp:49:15: error: use of deleted function 'auto add(A, B, NoAddError) [with A = const char*; B = const char*; std::enable_if_t<(! can_add<A, B>::value)>* <anonymous> = 0]'
+     add("", "");
+               ^
+main.cpp:29:6: note: declared here
+ auto add(A, B, NoAddError = {}) = delete;
+      ^~~
+main.cpp: In instantiation of 'NoAddError::NoAddError() [with T = void]':
+main.cpp:46:15:   required from here
+main.cpp:18:9: error: static assertion failed: Cannot add! You must send types that can add together.
+         static_assert(!std::is_same<T, T>::value, "Cannot add! You must send types that can add together.");
+         ^~~~~~~~~~~~~
+```
+
+This is it! There is only one static assert, nicely placed at the end of the error list. The first error you see in you console is the most relevant. Neat!
 
 ## Dealing with other compilers
 
@@ -406,6 +444,24 @@ main.cpp:29:6: note: declared here
       ^~~
 ```
 
-The output is quite clear, and not that verbose. Unfortunately, it's but not as extensible as the error class trick. When you have a lot of error cases, grouping them all in one place is really useful and easier to maintain.
+The output is quite clear, cleaner than error classes, and less verbose. Unfortunately, it's not as extensible as the error class trick. When you have a lot of error cases, grouping them all in one place is really useful and easier to maintain.
+
+Also, all error will output the message, and they will be scattered around in the compiler output, as with the error class trick only one static assert is fired and is placed at the end of the output.
+
+For clang, this same simple trick will result in the message being in the middle of the error:
+```
+main.cpp:47:5: error: call to deleted function 'add'
+    add("", "");
+    ^~~
+main.cpp:29:6: note: candidate function [with A = const char *, B = const char *, $2 = nullptr] has been explicitly deleted
+auto add(A, B) -> decltype("Cannot add! You must send types that can add together."
+     ^
+main.cpp:24:6: note: candidate template ignored: substitution failure [with A = const char *, B = const char *]: invalid operands to binary expression ('const char *' and 'const char *')
+auto add(A a, B b) -> decltype(a + b) {
+     ^                           ~
+1 error generated.
+```
+
+At least this time, the message is there, as the error classes don't quite work under clang.
 
 If you have suggestions, compliments, complains, or even insults, just leave a comment on the reddit post our send me a github issue, I'll greatly appreciate any feedback! 
