@@ -1,6 +1,6 @@
 ## Guillaume Racicot's Blog
 
-Welcome to my blog
+Some programming blog
 
 <ul>
   {% for post in site.posts %}
