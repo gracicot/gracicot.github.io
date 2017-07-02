@@ -5,6 +5,10 @@ date:   2017-07-01 18:11:01 +0500
 categories: tricks
 ---
 
+DISCLAIMER: I will try to explain the best I can how and why this trick works. If you find something wrong, leave me a message or open a github issue, and I'll gladly fix it. Thanks.
+
+---
+
 C++ templates is often blamed of horrible errors. Diagnostics can be painfully large for users of heavily templated libraries. And indeed, there can be pretty horrible errors only using the STL.
 
 Library writers often are confronted with a choice: Being sfinae friendly, or output a nicely crafted compiler error with `static_assert`.
@@ -190,9 +194,11 @@ Simply instantiating a constructor will lead to the error message.
 
 Now, in the deleted function we must find a way to "force" the compiler to go further and instantiate the constructor of this class.
 
-However, we must not alter too much the signature of the function, because causing the static_assert by trying to instantiate the signature will lead to a hard error.
+However, we must not alter too much the signature of the function, because causing the static_assert by trying to instantiate the signature of the function will lead to a hard error.
 
-The solution lies in default values. Some compiler will try to find further error instantiating the deleted function by instantiating, if  needed, the templates needed by the default value expression.
+The instanciation must only occur when you actually directly invoke the deleted function, not while instanciating the function signature.
+
+The solution lies in default values. Some compiler will try to find further error, instantiating the deleted function, and if needed, the templates needed by the default value expression.
 
 Let's change our deleted function to this:
 
@@ -213,7 +219,7 @@ What do we get in our compiler output?
              static_assert(!std::is_same<T, T>::value, "Cannot add! You must send types that can add together.");
              ^~~~~~~~~~~~~
     
-Now we're talking! We have a deleted function, that when called directly (in evaluated context) fire a static_assert!
+**Now we're talking!** We have a deleted function, that when called directly (in evaluated context) fire a static_assert!
 
 Here's a another snippet that shows that sfinae is not gone:
 
@@ -228,13 +234,22 @@ auto tryAdd(A a, B b) -> std::enable_if_t<!can_add<A, B>::value> {
     std::cout << "Well, some runtime error." << std::endl;
 }
 ```
+[See how it runs at coliru](http://coliru.stacked-crooked.com/a/822cad1d88bebe2b)
+
+Edit the file and try too call `add("", "")` directly, and you'll get the static assert.
 
 ### The catch
 
-Well, the catch is, it only work with GCC. Painful truth, but it's not so bad: Other compilers still output the "error name". In other words, the compiler will still output the struct name `NoAddError`, which can still be useful if you don't use GCC.
+Well, the catch is, it only work with GCC great. Painful truth, but it's not so bad: Other compilers still output the "error name". In other words, the compiler will still output the struct name `NoAddError`, which can still be useful if you don't use GCC.
+
+If you use clang or MSVC, you'll get the same deleted function error as before. In other word, even if the trick doesn't work, calling a deleted function will get you at the same error, with or without the trick.
+
+I have seen this working in some cases with clang, but is not as reliable as GCC for executing the trick.
 
 ### Variadics
 Variadic functions are quite different to deal with. We must introduce our error parameter somewhere without breaking argument deduction.
+
+Here we cannot rely on default values to make the trick.
 
 Let's use another example here. We want to implement a `callMe` function that will call a function with some parameters:
 
@@ -246,6 +261,8 @@ auto callMe(F function, Args&&... args) -> decltype(function(std::declval<Args>(
 ```
 
 To support errors like before, we will need to change the error class, and change the first parameter of the deleted function to be that error class. The constructor of the error class will match the `F` template parameter, and will use `Args...` without breaking type deduction.
+
+In order to check if the deleted function is a match, the compiler will need to check if the first argument can be sent to our `NotCallableError` constructor. This makes the compiler instanciating the constructor. Since the `static_assert` is inside the constructor body, the error must occur only if you try to effectively call that constructor. It's signature is completely valid, and will trigger sfinae if called with wrong parameters. Let's see how to implement that:
 
 ```c++
 template<typename...>
@@ -259,7 +276,7 @@ struct is_callable<Sig, void_t<std::result_of_t<Sig>>> : std::true_type {};
 
 template<typename... Args>
 struct NotCallableError {
-    //                                     v---- Constructor exist only of not callable.
+    //                                     v---- Constructor exist only if not callable.
     template<typename F, std::enable_if_t<!is_callable<F(Args...)>::value>* = nullptr>
     NotCallableError(F) {
         static_assert(!std::is_same<F, F>::value, "The function cannot be called given parameters.");
@@ -267,7 +284,7 @@ struct NotCallableError {
 };
 ```
 
-Now, just add the deleted function:
+Now, just add the deleted function and some utility to control dhen deduction happen:
 
 ```c++
 template<typename T>
@@ -287,7 +304,7 @@ Now, calling the function with the wrong arguments will yield this error:
     main.cpp: In function 'int main()':
     main.cpp:45:34: error: use of deleted function 'void callMe(NotCallableError<identity_t<Args>...>, Args&& ...) [with Args = {const char (&)[5], main()::<lambda(int, bool)>&}]'
          callMe(lambda, "test", lambda)
-                                  ^
+                                      ^
     main.cpp:39:6: note: declared here
      void callMe(NotCallableError<identity_t<Args>...>, Args&&...) = delete;
           ^~~~~~
