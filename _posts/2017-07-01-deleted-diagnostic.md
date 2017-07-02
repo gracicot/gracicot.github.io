@@ -173,7 +173,7 @@ void add(...) {
 We got back our message! but there's another catch: we broke sfinae. Users cannot test if one can use `add` with given parameter. It will match to our poisoned function, and it's a valid function according to it's signature.
 
 ## Where are we going with this?
-This is some examples of what programmers actually do to solve this problem. Most of the time, we will see code such as the very first example. If programmers are constrained in a C++11 only environment, they may do as the first sfinae example did.
+This is some examples of what programmers actually do to solve this problem. Most of the time, we will see code such as the very first example. At the very best, we may see something like the first sfinae example or with the fallback function asserting.
 
 ## Best of both worlds
 Well, I have found another solution that may allows you to add custom compilation error messages without breaking sfinae.
