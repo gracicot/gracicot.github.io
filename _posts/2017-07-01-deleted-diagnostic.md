@@ -446,7 +446,7 @@ main.cpp:29:6: note: declared here
 
 The output is quite clear, cleaner than error classes, and less verbose. Unfortunately, it's not as extensible as the error class trick. When you have a lot of error cases, grouping them all in one place is really useful and easier to maintain.
 
-Also, all error will output the message, and they will be scattered around in the compiler output, as with the error class trick only one static assert is fired and is placed at the end of the output.
+Also, all errors will output the message in the string literal, and they will be scattered around in the compiler output. With the error class trick, only one static assert is fired and is placed at the end of the compiler output.
 
 For clang, this same simple trick will result in the message being in the middle of the error:
 ```
