@@ -207,7 +207,7 @@ The solution lies in default values. Some compiler will try to find further erro
 Let's change our deleted function to this:
 
 ```c++
-template<typename A, typename B, std::enable_if_t<!can_add<A, B>::value>* = 0>
+template<typename A, typename B, std::enable_if_t<!can_add<A, B>::value>* = nullptr>
 void add(A, B, NoAddError = {}) = delete;
 //                        ^---- Notice the default argument that calls the default constructor!
 ```
@@ -257,7 +257,9 @@ Edit the file and try to call `add("", "")` directly, and you'll get the static 
 
 ### The catch
 
-Well, the catch is, it only work great with GCC. Painful truth, but it's not so bad: Other compilers still output the "error name". In other words, the compiler will still output the struct name `NoAddError`, which can still be useful if you don't use GCC, and you code will behave exacly the same as before. Calling a deleted function is still calling a deleted function, with or without this trick.
+Well, the catch is, it only work great with GCC. Painful truth, but it's not so bad. Users of your code using GCC will have full messages with a static assert, and others will get only a plain deleted function call error.
+
+Even with that, other compilers will still output the struct name `NoAddError` since it's in the signature of the function, which can still be useful if you don't use GCC, and your code will behave exacly the same as before. Calling a deleted function is still calling a deleted function, with or without this trick.
 
 I have seen this working in some cases with clang, but is not as reliable as GCC for executing the trick.
 
@@ -294,7 +296,7 @@ struct is_callable<Sig, void_t<std::result_of_t<Sig>>> : std::true_type {};
 template<typename... Args>
 struct NotCallableError {
     //                   v--- Constructor exist only if not callable.
-    template<typename F, std::enable_if_t<!is_callable<F(Args...)>::value>* = 0>
+    template<typename F, std::enable_if_t<!is_callable<F(Args...)>::value>* = nullptr>
     NotCallableError(F) {
         static_assert(!std::is_same<F, F>::value,
             "The function cannot be called given parameters."
@@ -346,14 +348,14 @@ template<typename... Args>
 struct NotCallableError {
     template<typename F, std::enable_if_t<
         is_function<F>::value &&
-        !is_callable<F(Args...)>::value>* = 0>
+        !is_callable<F(Args...)>::value>* = nullptr>
     NotCallableError(F) {
         static_assert(!std::is_same<F, F>::value,
             "The function cannot be called given parameters."
         );
     }
     
-    template<typename F, std::enable_if_t<!is_function<F>::value>* = 0>
+    template<typename F, std::enable_if_t<!is_function<F>::value>* = nullptr>
     NotCallableError(F) {
         static_assert(!std::is_same<F, F>::value,
             "The first parameter must be a function."
@@ -363,5 +365,47 @@ struct NotCallableError {
 ```
 
 I have used this pattern extensively in the library [Kangaru](https://github.com/gracicot/kangaru/blob/master/include/kangaru/detail/error.hpp), where a lot of error cases have been written in the same error class.
+
+## Dealing with other compilers
+
+Writing good error messages should not only benefit users of GCC. The thing is, since all static assert are in a separated class, you can reuse them. Here's an example of that:
+```c++
+template<typename F, typename... Args,
+    std::enable_if_t<std::is_constructible<NotCallableError<Args...>, F>::value>* = nullptr>
+void debug_callMe(F&& function, Args&&... args) {
+    NotCallableError error{std::forward<F>(function)};
+    (void)error;
+}
+
+template<typename F, typename... Args,
+    std::enable_if_t<!std::is_constructible<NotCallableError<Args...>, F>::value>* = nullptr>
+void debug_callMe(F function, Args&&... args) {
+    static_assert(!std::is_same<F, F>::value, "No error detected.")
+}
+```
+
+Using the function `debug_callMe` as if it was `callMe` will trigger directly the static assert inside `NotCallableError` constructor. If no errors are detected, this code will output `No error detected.` as a static assert.
+
+## Simple cases
+
+Here's another bonus trick that can be used for simple cases. If you only have one possible error, just like our add function, you can always put a string literal in decltype. The compiler will also output that string when you invoke the function:
+```c++
+template<typename A, typename B, std::enable_if_t<!can_add<A, B>::value>* = nullptr>
+auto add(A, B) -> decltype("Cannot add! You must send types that can add together."
+) = delete;
+```
+
+This will yeild this compiler output:
+```c++
+main.cpp: In function 'int main()':
+main.cpp:47:15: error: use of deleted function 'const char (& add(A, B))[55] [with A = const char*; B = const char*; std::enable_if_t<(! can_add<A, B>::value)>* <anonymous> = 0]'
+     add("", "");
+               ^
+main.cpp:29:6: note: declared here
+ auto add(A, B) -> decltype("Cannot add! You must send types that can add together."
+      ^~~
+```
+
+The output is quite clear, and not that verbose. Unfortunately, it's but not as extensible as the error class trick. When you have a lot of error cases, grouping them all in one place is really useful and easier to maintain.
 
 If you have suggestions, compliments, complains, or even insults, just leave a comment on the reddit post our send me a github issue, I'll greatly appreciate any feedback! 
