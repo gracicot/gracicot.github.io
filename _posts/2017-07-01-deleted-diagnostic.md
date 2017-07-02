@@ -110,7 +110,7 @@ Not quite.
          return a + b;
                 ~~^~~
                 
-It's indeed not that great, we still see the same error as before, but with a nice message added. One could think a static_assert will stop the compilation, just as throwing will halt the function. But compilers usually don't stop at the first compilation error, so many, **many** other error can still appear after the static assert.
+It's indeed not that great, we still see the same error as before, but with a nice message added. One could think a static_assert will stop the compilation, just as throwing will halt the function. But compilers usually don't stop at the first compilation error. Many, **many** other error can still appear after the static assert.
 
 ## SFINAE
 This feature of C++ of probably one of the best one that came to existence for meta-programming. It's the building block of any library that want to introspect and validate types. As you noticed, I used it in the example above.
