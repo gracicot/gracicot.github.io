@@ -5,10 +5,6 @@ date:   2017-07-01 18:11:01 +0500
 categories: tricks
 ---
 
-DISCLAIMER: I will try to explain the best I can how and why this trick works. If you find something wrong, leave me a message or open a github issue, and I'll gladly fix it. Thanks.
-
----
-
 C++ templates is often blamed of horrible errors. Diagnostics can be painfully large for users of heavily templated libraries. And indeed, there can be pretty horrible errors only by using the STL.
 
 Library writers often are confronted with a choice: being sfinae friendly, or output a nicely crafted compiler error with `static_assert`.
@@ -468,4 +464,4 @@ At least this time, the message is there, as the error classes don't quite work 
 
 That's it for today! I hope you enjoyed it!
 
-If you have suggestions, compliments, complains, or even insults, just leave a comment on the reddit post or send me a github issue, I'll greatly appreciate any feedback! 
+If you find something wrong or have suggestions, compliments, complains, or even insults, just leave a comment on the reddit post or send me a github issue, I'll greatly appreciate any feedback! 
