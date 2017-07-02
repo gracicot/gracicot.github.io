@@ -21,9 +21,7 @@ Yeah... do you?
 
 No, I didn't meant you, I meant the compilers. Do they. I felt like necessary to compare some solutions I have found to provide nicer messages from the compiler when having errors in templates. 
 
-First, we will start with a non-sfinae enabled, simple template function that yield a compilation error. Let's see.
-
-Look at this code:
+First, we will start with a non-sfinae enabled, simple template function that yield a compilation error:
 
 ```c++
 template<typename A, typename B>
@@ -40,7 +38,7 @@ int main() {
 }
 ```
 
-Let's listen to the scream of pain of multiple compilers at the sight of this ill-formed program.
+Now let's listen to the screams of pain of multiple compilers at the sight of this ill-formed program.
 
 #### GCC
 
