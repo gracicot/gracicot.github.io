@@ -49,8 +49,7 @@ Ah! The good old GCC. The great pillar of GNU, that lighthouse of freedom in thi
     add.cpp:3:14: error: invalid operands to binary expression ('(anonymous struct at add.cpp:7:5)' and 'int')
         return a + b;
                ~ ^ ~
-    add.cpp:9:5: note: in instantiation of function template specialization 
-        'add<(anonymous struct at add.cpp:7:5), int>' requested here
+    add.cpp:9:5: note: in instantiation of function template specialization 'add<(anonymous struct at add.cpp:7:5), int>' requested here
     add(someVar, 7);
     ^
     1 error generated.
