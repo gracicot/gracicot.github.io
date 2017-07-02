@@ -88,7 +88,9 @@ template<typename, typename, typename = void>
 struct can_add : std::false_type {};
 
 template<typename A, typename B>
-struct can_add<A, B, void_t<decltype(std::declval<A>() + std::declval<B>())>> : std::true_type {};
+struct can_add<A, B,
+    void_t<decltype(std::declval<A>() + std::declval<B>())>
+> : std::true_type {};
 
 template<typename A, typename B>
 auto add(A a, B b) {
@@ -205,7 +207,7 @@ The solution lies in default values. Some compiler will try to find further erro
 Let's change our deleted function to this:
 
 ```c++
-template<typename A, typename B, std::enable_if_t<!can_add<A, B>::value>* = nullptr>
+template<typename A, typename B, std::enable_if_t<!can_add<A, B>::value>* = 0>
 void add(A, B, NoAddError = {}) = delete;
 //                        ^---- Notice the default argument that calls the default constructor!
 ```
@@ -281,7 +283,7 @@ struct is_callable<Sig, void_t<std::result_of_t<Sig>>> : std::true_type {};
 template<typename... Args>
 struct NotCallableError {
     //                                     v--- Constructor exist only if not callable.
-    template<typename F, std::enable_if_t<!is_callable<F(Args...)>::value>* = nullptr>
+    template<typename F, std::enable_if_t<!is_callable<F(Args...)>::value>* = 0>
     NotCallableError(F) {
         static_assert(!std::is_same<F, F>::value,
             "The function cannot be called given parameters."
@@ -331,7 +333,9 @@ The great thing about having the static assert in a separate class is that you c
 
 template<typename... Args>
 struct NotCallableError {
-    template<typename F, std::enable_if_t<is_function<F>::value && !is_callable<F(Args...)>::value>* = nullptr>
+    template<typename F, std::enable_if_t<
+        is_function<F>::value &&
+        !is_callable<F(Args...)>::value>* = 0>
     NotCallableError(F) {
         static_assert(!std::is_same<F, F>::value,
             "The function cannot be called given parameters."
