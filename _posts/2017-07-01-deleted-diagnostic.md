@@ -33,8 +33,6 @@ int main() {
     struct {} someVar;
 
     add(someVar, 7);
-
-    return 0;
 }
 ```
 
