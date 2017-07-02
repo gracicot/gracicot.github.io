@@ -342,7 +342,7 @@ struct NotCallableError {
         );
     }
     
-    template<typename F, std::enable_if_t<!is_function<F>::value>* = nullptr>
+    template<typename F, std::enable_if_t<!is_function<F>::value>* = 0>
     NotCallableError(F) {
         static_assert(!std::is_same<F, F>::value,
             "The first parameter must be a function."
