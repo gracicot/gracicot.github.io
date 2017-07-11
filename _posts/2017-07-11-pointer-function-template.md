@@ -6,5 +6,5 @@ categories: tricks
 excerpt_separator: <!--more-->
 ---
 
-# Taking pointer to function template
+# Pointer to function template
 
