@@ -267,15 +267,44 @@ void add(A, B, NoAddError = {}) = delete;
 
 The same process goes: when invoked directly, the compiler will instanciate the constructor body, triggerring the static assert.
 
-## The catch
 
-Well, the catch is, it only work great with GCC. Painful truth, but it's not so bad. Users of your code using GCC will have full messages with a static assert, and others will get only a plain deleted function call error.
+## Multiple errors
 
-Even with that, other compilers will still output the struct name `NoAddError` since it's in the signature of the function, which can still be useful if you don't use GCC.
+It can happen a code misues function at many places, many times. Fortunatly, the error class trick handle those cases really well. Here's the GCC output for wrongly call the add function four times:
+```
+main.cpp: In function 'int main()':
+main.cpp:44:15: error: use of deleted function 'void add(NoAddError, ...)'
+     add("", "");
+               ^
+main.cpp:28:6: note: declared here
+ void add(NoAddError, ...) = delete;
+      ^~~
+main.cpp:45:15: error: use of deleted function 'void add(NoAddError, ...)'
+     add("", "");
+               ^
+main.cpp:28:6: note: declared here
+ void add(NoAddError, ...) = delete;
+      ^~~
+main.cpp:46:15: error: use of deleted function 'void add(NoAddError, ...)'
+     add("", "");
+               ^
+main.cpp:28:6: note: declared here
+ void add(NoAddError, ...) = delete;
+      ^~~
+main.cpp:47:15: error: use of deleted function 'void add(NoAddError, ...)'
+     add("", "");
+               ^
+main.cpp:28:6: note: declared here
+ void add(NoAddError, ...) = delete;
+      ^~~
+main.cpp: In instantiation of 'NoAddError::NoAddError(T&&) [with T = const char (&)[1]]':
+main.cpp:44:15:   required from here
+main.cpp:16:9: error: static assertion failed: Cannot add! You must send types that can add together.
+         static_assert(!std::is_same<T, T>::value,
+         ^~~~~~~~~~~~~
+```
 
-I have seen this working in some cases with clang, but is not as reliable as GCC for executing the trick.
-
-If you already marked invalid overloads as deleted, using this trick won't break source.
+This is it! There is only one static assert, nicely placed at the end of the error list. The first error you see in you console is the most relevant. Neat!
 
 ## Variadics
 Variadic functions are quite different to deal with. We must introduce our error parameter somewhere without breaking argument deduction.
@@ -378,43 +407,15 @@ struct NotCallableError {
 
 I have used this pattern extensively in the library [Kangaru](https://github.com/gracicot/kangaru/blob/master/include/kangaru/detail/error.hpp), where a lot of error cases have been written in the same error class.
 
-## Multiple errors
+## The catch
 
-It can happen a code misues function at many places, many times. Fortunatly, the error class trick handle those cases really well. Here's the GCC output for wrongly call the add function four times:
-```
-main.cpp: In function 'int main()':
-main.cpp:44:15: error: use of deleted function 'void add(NoAddError, ...)'
-     add("", "");
-               ^
-main.cpp:28:6: note: declared here
- void add(NoAddError, ...) = delete;
-      ^~~
-main.cpp:45:15: error: use of deleted function 'void add(NoAddError, ...)'
-     add("", "");
-               ^
-main.cpp:28:6: note: declared here
- void add(NoAddError, ...) = delete;
-      ^~~
-main.cpp:46:15: error: use of deleted function 'void add(NoAddError, ...)'
-     add("", "");
-               ^
-main.cpp:28:6: note: declared here
- void add(NoAddError, ...) = delete;
-      ^~~
-main.cpp:47:15: error: use of deleted function 'void add(NoAddError, ...)'
-     add("", "");
-               ^
-main.cpp:28:6: note: declared here
- void add(NoAddError, ...) = delete;
-      ^~~
-main.cpp: In instantiation of 'NoAddError::NoAddError(T&&) [with T = const char (&)[1]]':
-main.cpp:44:15:   required from here
-main.cpp:16:9: error: static assertion failed: Cannot add! You must send types that can add together.
-         static_assert(!std::is_same<T, T>::value,
-         ^~~~~~~~~~~~~
-```
+Well, the catch is, it only work great with GCC. Painful truth, but it's not so bad. Users of your code using GCC will have full messages with a static assert, and others will get only a plain deleted function call error.
 
-This is it! There is only one static assert, nicely placed at the end of the error list. The first error you see in you console is the most relevant. Neat!
+Even with that, other compilers will still output the struct name `NoAddError` since it's in the signature of the function, which can still be useful if you don't use GCC.
+
+I have seen this working in some cases with clang, but is not as reliable as GCC for executing the trick.
+
+If you already marked invalid overloads as deleted, using this trick won't break source.
 
 ## Dealing with other compilers
 
