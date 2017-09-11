@@ -17,26 +17,28 @@ I'm not the inventor of this idiom. I'm sure everyone doing OOP ended up doing s
 Let's start with a simple example:
 
 ```c++
-// Our interface
+// Our interface.
 struct Task {
     virtual void execute() = 0;
     virtual ~Task() = default;
 };
 
-// A implementation
+// An implementation of our interface.
 struct PrintTask : Task {
     void execute() override {
         std::cout << "PrintTask" << std::endl;
     }
 };
 
-// Some uses of tasks
+// A type erased list of tasks.
 std::vector<std::unique_ptr<Task>> tasks;
 
+// A function that push a new task in the list.
 void push(std::unique_ptr<Task> task) {
     tasks.emplace_back(std::move(task));
 }
 
+// execute all tasks and clear the list.
 void run() {
     for(auto&& task : tasks) {
         task->execute();
@@ -57,8 +59,8 @@ Secondly, it doesn't work with all classes. I heard a lot people responding
 The thing is, not all types can implement your interface. For example, you have some library that has a class like that:
 
 ```c++
-struct SomeRunner {
-    void run() { /* ... */ }
+struct SomeTask : LibraryTask {
+    void execute() { /* ... */ }
 };
 ```
 
@@ -68,8 +70,13 @@ Also, there another kind of classes that cannot possibly extend the interface: l
 
 Yeah, lambdas! Your code is not compatible with them! Imagine writing something like that:
 ```c++
-// push function from the example above
 push([] { std::cout << "print something!"; });
 ```
 
 Sadly, that won't work, because the lambda is not dynamically allocated, and it don't extends the `Task` class.
+
+The Concept-Model idiom aim to fix these problem, and to give us even more control over what's happening under the hood.
+
+## Concept-Model: The adapter pattern on steroids
+
+In this section, I'll explain the process of going from classical OOP to the Concept-Model idiom. I'll try to break this into many small steps to make understanding easier.
