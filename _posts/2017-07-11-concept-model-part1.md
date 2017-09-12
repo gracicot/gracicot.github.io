@@ -18,23 +18,23 @@ Let's start with a simple example:
 
 ```c++
 // Our interface.
-struct Task {
+struct abstract_task {
     virtual void execute() = 0;
-    virtual ~Task() = default;
+    virtual ~abstract_task() = default;
 };
 
 // An implementation of our interface.
-struct PrintTask : Task {
+struct print_task : abstract_task {
     void execute() override {
-        std::cout << "PrintTask" << std::endl;
+        std::cout << "Print Task" << std::endl;
     }
 };
 
 // A type erased list of tasks.
-std::vector<std::unique_ptr<Task>> tasks;
+std::vector<std::unique_ptr<abstract_task>> tasks;
 
 // A function that push a new task in the list.
-void push(std::unique_ptr<Task> task) {
+void push(std::unique_ptr<abstract_task> task) {
     tasks.emplace_back(std::move(task));
 }
 
@@ -55,11 +55,11 @@ There are few problem with that. First, dynamic allocation is required here. The
 Secondly, it doesn't work with all classes. I heard a lot people responding
 
  > Yeah, jsut implement that interface and voilà! All types works!
- 
+
 The thing is, not all types can implement your interface. For example, you have some library that has a class like that:
 
 ```c++
-struct SomeTask : LibraryTask {
+struct some_library_task : library_task {
     void execute() { /* ... */ }
 };
 ```
@@ -73,10 +73,153 @@ Yeah, lambdas! Your code is not compatible with them! Imagine writing something 
 push([] { std::cout << "print something!"; });
 ```
 
-Sadly, that won't work, because the lambda is not dynamically allocated, and it don't extends the `Task` class.
+Sadly, that won't work, because the lambda is not dynamically allocated, and it don't extends the `abstract_task` class.
 
 The Concept-Model idiom aim to fix these problem, and to give us even more control over what's happening under the hood.
 
 ## Concept-Model: The adapter pattern on steroids
 
 In this section, I'll explain the process of going from classical OOP to the Concept-Model idiom. I'll try to break this into many small steps to make understanding easier.
+
+First, the function `push` takes a `std::unique_ptr`. Think about it. Imageine you have dozens of functions that takes a task that way. What if one day you need all those functions that take a `std::unique_ptr<abstract_task>` to take a raw pointer or a reference instead? Well, you have to change all of those.
+
+We will do what you should have done from the start: taking a struct that contains the pointer instead:
+```c++
+struct task {
+    task(std::unique_ptr<abstract_task> t) noexcept : wrapped{std::move(t)} {}
+
+    std::unique_ptr<abstract_task> wrapped;
+};
+
+void push(Task t);
+```
+But now there is still some problem. Using a `task` is quite dull, imagine writing `some_task.wrapped->process()`! Let's change that:
+```c++
+struct task {
+    Task(std::unique_ptr<abstract_task> t) noexcept : wrapped{std::move(t)} {}
+    
+    void process() {
+        wrapped->process();
+    }
+    
+private:
+    std::unqiue_ptr<abstract_task> wrapped;
+};
+```
+
+Now that is already nice! Everywhere you had a `std::unique_ptr<abstract_task>`, you can secretly use a `Task` transparently, and using that class is more natural: dot instead of arrow for members, move semantics, you receive by value... all that good stuff!
+
+And yet, the semantics didn't change for our caller:
+```c++
+push(std::make_unique<PrintTask>());
+```
+> But wait... we haven't fixed our problem yet! We want to support lambdas, change the way objects are sent, avoir heap allocation, this is for to deliver!
+
+Try again! There is one thing in that list we can now do: change the way objects are sent. Instead of changing 200 function signature, we only have to change the constructor of `Task`, and this is what we're gonna do.
+
+Now, want the `push` function to albe be able to receive `some_library_task`. For that, we need adapters to adapt those types to the `AbstractTask` interface, and change the constructor of `Task`:
+```c++
+struct some_library_task_adapter : abstract_task {
+    some_library_task_adapter(some_library_task t) : task{std::move(t)} {}
+
+    void process() override {
+        task.process();
+    }
+    
+    some_library_task task;
+};
+
+struct task {
+    Task(std::unique_ptr<abstract_task> t) noexcept : wrapped{std::move(t)} {}
+    Task(some_library_task t) noexcept : task{std::make_unique<SomeLibraryTaskAdapter>(std::move(t))} {}
+    
+    void process() {
+        wrapped->process();
+    }
+    
+private:
+    std::unqiue_ptr<abstract_task> wrapped;
+};
+
+// Many lines later
+int main() {
+    push(SomeLibraryTask{});
+}
+```
+
+Okay, now we're getting somewhere: We can use the push function by sending a library task by value!
+
+However, our own task cannot be sent by value yet, we must send the pointer to it. So let's treat our own code as a library code. All of our task class won't extend the abstract class anymore, just like the library code, and we will create an adapter for each of our classes. Also, we don't want any classes to extends `AbstractTask`, so it will be a private member type:
+```c++
+struct task {
+    task(some_library_task task) noexcept : task{std::make_unique<library_model_t>(std::move(t))} {}
+    task(print_task task) noexcept : task{std::make_unique<print_model_t>(std::move(t))} {}
+    task(some_other_task task) noexcept : task{std::make_unique<some_other_model_t>(std::move(t))} {}
+    
+    void process() {
+        self->process();
+    }
+    
+private:
+    // This is our interface, now named concept_t instead of abstract_task
+    struct concept_t {
+        virtual ~concept_t() = default;
+        void process() = 0;
+    };
+    
+    // model instead of adapter here
+    struct library_model_t {
+        library_model_t(some_library_task s) noexcept : self{std::move(s)} {}
+        void process() override { self.process(); }
+        some_library_task self;
+    };
+    
+    struct print_model_t {
+        library_model_t(print_task s) noexcept : self{std::move(s)} {}
+        void process() override { self.process(); }
+        print_task self;
+    };
+    
+    struct some_other_model_t {
+        library_model_t(some_other_task s) noexcept : self{std::move(s)} {}
+        void process() override { self.process(); }
+        some_other_task self;
+    };
+
+    std::unique_ptr<concept_t> self;
+};
+```
+> That's preposterous! You can't copy paste the same code for all of your (previously) subclass of `abstract_task`! There must be a way arount it!
+
+Yes indeed, there's a great tool in C++ that was carefully made to avoid mindless copy paste like that: templates!
+```c++
+struct task {
+    template<typename T>
+    task(T task) noexcept : task{std::make_unique<model_t<T>>(std::move(t))} {}
+    
+    void process() {
+        self->process();
+    }
+    
+private:
+    struct concept_t {
+        virtual ~concept_t() = default;
+        void process() = 0;
+    };
+    
+    template<typename T>
+    struct model_t {
+        model_t(T s) noexcept : self{std::move(s)} {}
+        void process() override { self.process(); }
+        T self;
+    };
+
+    std::unique_ptr<concept_t> self;
+};
+```
+Problem solved! No more copy paste, no more inheritance, no more pointers in the API of our code!
+
+Can you see the pattern now? We now have a class `task` that that is constructible with *any* object that happen to possess a member function named `process` callable with no parameter.
+
+Our class is a *universal adapter* for any classes that fits our need: having a `process` member function.
+
