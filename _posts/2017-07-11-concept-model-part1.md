@@ -149,7 +149,7 @@ int main() {
 
 Okay, now we're getting somewhere: We can use the push function by sending a library task by value!
 
-However, our own task cannot be sent by value yet, we must send the pointer to it. So let's treat our own code as a library code. All of our task class won't extend the abstract class anymore, just like the library code, and we will create an adapter for each of our classes. Also, we don't want any classes to extends `AbstractTask`, so it will be a private member type:
+However, our own task cannot be sent by value yet, we must send the pointer to it. So let's treat our own code as library code. All of our task class won't extend the abstract class anymore, just like the library code, and we will create an adapter for each of our classes. Also, we don't want any classes to extends `abstract_task`, so it will be a private member type:
 ```c++
 struct task {
     task(some_library_task task) noexcept : task{std::make_unique<library_model_t>(std::move(t))} {}
@@ -221,5 +221,7 @@ Problem solved! No more copy paste, no more inheritance, no more pointers in the
 
 Can you see the pattern now? We now have a class `task` that that is constructible with *any* object that happen to possess a member function named `process` callable with no parameter.
 
-Our class is a *universal adapter* for any classes that fits our need: having a `process` member function.
+Our class is a *universal adapter* for any classes that fits our need: having a `process` member function, in about **20 lines of code**.
+
+Another nice property of this idiom, is that **we treat our own code the same as library code**. This makes `task` truely generic. No matter where the object code from, it just work. That class doesn't need to know about the interface, or heap allocation, or even polymorphism. It just need to express what the task concept needs.
 
