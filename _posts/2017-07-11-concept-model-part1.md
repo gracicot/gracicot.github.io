@@ -96,7 +96,7 @@ void push(Task t);
 But now there is still some problem. Using a `task` is quite dull, imagine writing `some_task.wrapped->process()`! Let's change that:
 ```c++
 struct task {
-    Task(std::unique_ptr<abstract_task> t) noexcept : wrapped{std::move(t)} {}
+    task(std::unique_ptr<abstract_task> t) noexcept : wrapped{std::move(t)} {}
     
     void process() {
         wrapped->process();
@@ -113,9 +113,9 @@ And yet, the semantics didn't change for our caller:
 ```c++
 push(std::make_unique<PrintTask>());
 ```
-> But wait... we haven't fixed our problem yet! We want to support lambdas, change the way objects are sent, avoir heap allocation, this is for to deliver!
+> But wait... we haven't fixed our problem yet! We want to support lambdas, change the way objects are sent, avoir heap allocation, is this really ganno help?
 
-Try again! There is one thing in that list we can now do: change the way objects are sent. Instead of changing 200 function signature, we only have to change the constructor of `Task`, and this is what we're gonna do.
+Of course! There is one thing in that list we can now do: change the way objects are sent. Instead of changing 200 function signature, we only have to change the constructor of `task`, and this is what we're gonna do.
 
 Now, want the `push` function to albe be able to receive `some_library_task`. For that, we need adapters to adapt those types to the `AbstractTask` interface, and change the constructor of `Task`:
 ```c++
