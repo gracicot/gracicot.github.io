@@ -91,7 +91,11 @@ struct task {
     std::unique_ptr<abstract_task> wrapped;
 };
 
-void push(Task t);
+std::vector<task> tasks;
+
+void push(task t) {
+    tasks.emplace_back(std::move(t));
+}
 ```
 But now there is still some problem. Using a `task` is quite dull, imagine writing `some_task.wrapped->process()`! Let's change that:
 ```c++
@@ -105,9 +109,17 @@ struct task {
 private:
     std::unqiue_ptr<abstract_task> wrapped;
 };
+
+void run() {
+    for(auto&& task : tasks) {
+        task.execute();
+    }
+    
+    tasks.clear();
+}
 ```
 
-Now that is already nice! Everywhere you had a `std::unique_ptr<abstract_task>`, you can secretly use a `task` transparently, and using that class is more natural: dot instead of arrow for members, move semantics, you receive by value... all that good stuff!
+Now that is already nice! Everywhere you had a `std::unique_ptr<abstract_task>`, you can secretly use a `task` transparently, and using that class is more natural. Dot instead of arrow for members, receive by value... all that good stuff!
 
 And yet, the semantics didn't change for our caller:
 ```c++
@@ -284,8 +296,8 @@ Another nice property of this idiom, is that **we treat our own code the same as
 
 As we can see, the Concept-Model idiom, also called runtime-concept or virtual-concept is really powerful, and enables us a control over how polymorphism is done in our progerams.
 
-> Hey, you forgot about lambdas!
+> Hey, you forgot about lambdas! Wasn't that the whole point of this?
 
-We will see that in part 2, along other techniques for mapping our concept, and variations of the idiom.
+We will see that in part 2, along other techniques for mapping our concept. I'll also cover variations of the idiom.
 
 I welcome any comments and criticism. If I can make this post better or less confusing, give me some feedback and I'll do my best to incorporate it in this post, or the next parts. If you have any questions, simply post in the reddit discussion, and I'll gladly answer!
