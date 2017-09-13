@@ -111,7 +111,7 @@ Now that is already nice! Everywhere you had a `std::unique_ptr<abstract_task>`,
 
 And yet, the semantics didn't change for our caller:
 ```c++
-push(std::make_unique<PrintTask>());
+push(std::make_unique<print_task>());
 ```
 > But wait... we haven't fixed our problem yet! We want to support lambdas, change the way objects are sent, avoir heap allocation, is this really ganno help?
 
@@ -141,9 +141,8 @@ private:
     std::unqiue_ptr<abstract_task> wrapped;
 };
 
-// Many lines later
 int main() {
-    push(SomeLibraryTask{});
+    push(some_library_task{});
 }
 ```
 
@@ -216,6 +215,13 @@ private:
 
     std::unique_ptr<concept_t> self;
 };
+
+int main() {
+    // natural syntax for object construction! Yay!
+    push(some_library_task{});
+    push(my_task{});
+    push(print_task{});
+}
 ```
 Problem solved! No more copy paste, no more inheritance, no more pointers in the API of our code!
 
@@ -223,5 +229,59 @@ Can you see the pattern now? We now have a class `task` that that is constructib
 
 Our class is a *universal adapter* for any classes that fits our need: having a `process` member function, in about **20 lines of code**.
 
-Another nice property of this idiom, is that **we treat our own code the same as library code**. This makes `task` truely generic. No matter where the object code from, it just work. That class doesn't need to know about the interface, or heap allocation, or even polymorphism. It just need to express what the task concept needs.
+## Perks
 
+How does this idiom fixes all the problem problem I listed at the beginning? Let me show you with examples.
+
+First, it enable polymorphism with a natural syntax. It looks uniform, and also has a lighter syntax.
+```c++
+void do_stuff() {
+    std::string s = "value";
+    task t = print_task{};
+    
+    // use string like this
+    auto size = s.size();
+    
+    // use task like that
+    t.process();
+}
+```
+No arrow, no `new`, no `std::make_*`. Polymorphism is done transparently, without any additional overhead.
+
+Second, it *avoid heap allocation*. Yes indeed, even if we pass around our object inside a unique pointer internally.
+```c++
+void do_stuff() {
+    some_task t;
+    
+    // do some stuff with task
+    t.stuff();
+    
+    // maybe push the task
+    if (condition()) {
+        push(std::move(t));
+    }
+}
+```
+In this example, `t` is pushed into the list conditionally. If we don't need heap allocation and polymorphism, we can decide at runtime to not use it.
+
+Third, our implementation of tasks can implement the `process` function the way it wants. so for example:
+```c++
+struct special_task {
+    int process(bool more_stuff = false) const {
+        // ...
+    }
+};
+```
+This still satifies the concept. We can still call `t.process()` even if the function is const, takes an optional parameter or has a different return type.
+
+Another nice property of this idiom, is that **we treat our own code the same as library code**. This makes `task` truely generic. No matter where the object code from, it just work. That class doesn't need to know about the interface, or heap allocation, or even polymorphism. It just need to fit into the task concept.
+
+## In closing
+
+As we can see, the Concept-Model idiom, also called runtime-concept or virtual-concept is really powerful, and enables us a control over how polymorphism is done in our progerams.
+
+> Hey, you forgot about lambdas!
+
+We will see that in part 2, along other techniques for mapping our concept, and variations of the idiom.
+
+I welcome any comments and criticism. If I can make this post better or less confusing, give me some feedback and I'll do my best to incorporate it in this post, or the next parts. If you have any questions, simply post in the reddit discussion, and I'll gladly answer!
