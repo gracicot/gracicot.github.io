@@ -252,13 +252,20 @@ How does this idiom fixes all the problem problem I listed at the beginning? Let
 First, it enable polymorphism with a natural syntax. It looks uniform, and also has a lighter syntax.
 ```c++
 void do_stuff() {
+    // Initialize a string using a value after the equal sign
     std::string s = "value";
+    
+    // Pretty similar syntax eh?
     task t = print_task{};
+    
+    // Or if you like AAA
+    auto s2 = std::string{"potato"};
+    auto t2 = task{print_task{}};
     
     // use string like this
     auto size = s.size();
     
-    // use task like that
+    // use task like that. Again, pretty similar 
     t.process();
 }
 ```
@@ -299,5 +306,7 @@ As we can see, the Concept-Model idiom, also called runtime-concept or virtual-c
 > Hey, you forgot about lambdas! Wasn't that the whole point of this?
 
 We will see that in part two, along other techniques for mapping our concept, and allow more types like lambdas. In later parts, I'll also cover variations of the idiom, and how you can use this idiom to refactor your code incrementally.
+
+Also, our example still forced any `task` to have dynamic allocations for the type erased model. I'll also cover a strategy to overcode this and do polymorphism on the stack using this idiom.
 
 I welcome any comments and criticism. If I can make this post better or less confusing, give me some feedback and I'll do my best to incorporate it in this post, or the next parts. If you're interested in more content, or you have any questions, simply post in the reddit discussion, and I'll gladly answer!
