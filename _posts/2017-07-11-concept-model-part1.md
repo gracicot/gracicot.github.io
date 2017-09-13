@@ -131,7 +131,8 @@ struct some_library_task_adapter : abstract_task {
 
 struct task {
     task(std::unique_ptr<abstract_task> t) noexcept : wrapped{std::move(t)} {}
-    task(some_library_task t) noexcept : task{std::make_unique<SomeLibraryTaskAdapter>(std::move(t))} {}
+    task(some_library_task t) noexcept :
+        wrapped{std::make_unique<some_library_task_adapter>(std::move(t))} {}
     
     void process() {
         wrapped->process();
@@ -151,9 +152,12 @@ Okay, now we're getting somewhere: We can use the push function by sending a lib
 However, our own task cannot be sent by value yet, we must send the pointer to it. So let's treat our own code as library code. All of our task class won't extend the abstract class anymore, just like the library code, and we will create an adapter for each of our classes. Also, we don't want any classes to extends `abstract_task`, so it will be a private member type:
 ```c++
 struct task {
-    task(some_library_task task) noexcept : task{std::make_unique<library_model_t>(std::move(t))} {}
-    task(print_task task) noexcept : task{std::make_unique<print_model_t>(std::move(t))} {}
-    task(some_other_task task) noexcept : task{std::make_unique<some_other_model_t>(std::move(t))} {}
+    task(some_library_task task) noexcept :
+        self{std::make_unique<library_model_t>(std::move(t))} {}
+    task(print_task task) noexcept :
+        self{std::make_unique<print_model_t>(std::move(t))} {}
+    task(some_other_task task) noexcept :
+        self{std::make_unique<some_other_model_t>(std::move(t))} {}
     
     void process() {
         self->process();
