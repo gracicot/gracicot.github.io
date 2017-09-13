@@ -303,10 +303,12 @@ Another nice property of this idiom, is that **we treat our own code the same as
 
 As we can see, the Concept-Model idiom, also called runtime-concept or virtual-concept, is really powerful, and enables us a control over how polymorphism is done in our progerams.
 
+There are many other advantages and tricks you can do with this idiom I did not cover in this part.
+
 > Hey, you forgot about lambdas! Wasn't that the whole point of this?
 
 We will see that in part two, along other techniques for mapping our concept, and allow more types like lambdas. In later parts, I'll also cover variations of the idiom, and how you can use this idiom to refactor your code incrementally.
 
-Also, our example still forced any `task` to have dynamic allocations for the type erased model. I'll also cover a strategy to overcode this and do polymorphism on the stack using this idiom.
+Also, our example still forced any `task` to have dynamic allocations for the type erased model. I'll also cover a strategy to overcome this and do polymorphism on the stack using this idiom.
 
 I welcome any comments and criticism. If I can make this post better or less confusing, give me some feedback and I'll do my best to incorporate it in this post, or the next parts. If you're interested in more content, or you have any questions, simply post in the reddit discussion, and I'll gladly answer!
