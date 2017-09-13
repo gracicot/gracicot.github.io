@@ -243,7 +243,7 @@ Problem solved! No more copy paste, no more inheritance, no more pointers in the
 
 Can you see the pattern now? We now have a class `task` that that is constructible with *any* object that happen to possess a member function named `process` callable with no parameter.
 
-Our class is a *universal adapter* for any classes that fits our need: having a `process` member function, in about **20 lines of code**.
+Our class is a *universal adapter* for any classes that satifies our concept. All that in about **20 lines of code**.
 
 ## Perks
 
@@ -262,7 +262,7 @@ void do_stuff() {
     t.process();
 }
 ```
-No arrow, no `new`, no `std::make_*`. Polymorphism is done transparently, without any additional overhead.
+No arrow, no `new`, no `std::make_*`. Simple values. All polymorphism is done transparently, and hidden in implementation detail.
 
 Second, it *avoid heap allocation*. Yes indeed, even if we pass around our object inside a unique pointer internally.
 ```c++
@@ -290,14 +290,14 @@ struct special_task {
 ```
 This still satifies the concept. We can still call `t.process()` even if the function is const, takes an optional parameter or has a different return type.
 
-Another nice property of this idiom, is that **we treat our own code the same as library code**. This makes `task` truely generic. No matter where the object code from, it just work. That class doesn't need to know about the interface, or heap allocation, or even polymorphism. It just need to fit into the task concept.
+Another nice property of this idiom, is that **we treat our own code the same as library code**. This makes `task` truely generic. No matter where the object code from, it *just work*. That class doesn't need to know about the interface, or heap allocation, or even polymorphism. It just need to satify the task concept.
 
-## In closing
+## Path to part two
 
-As we can see, the Concept-Model idiom, also called runtime-concept or virtual-concept is really powerful, and enables us a control over how polymorphism is done in our progerams.
+As we can see, the Concept-Model idiom, also called runtime-concept or virtual-concept, is really powerful, and enables us a control over how polymorphism is done in our progerams.
 
 > Hey, you forgot about lambdas! Wasn't that the whole point of this?
 
-We will see that in part 2, along other techniques for mapping our concept. I'll also cover variations of the idiom.
+We will see that in part two, along other techniques for mapping our concept, and allow more types like lambdas. In later parts, I'll also cover variations of the idiom, and how you can use this idiom to refactor your code incrementally.
 
-I welcome any comments and criticism. If I can make this post better or less confusing, give me some feedback and I'll do my best to incorporate it in this post, or the next parts. If you have any questions, simply post in the reddit discussion, and I'll gladly answer!
+I welcome any comments and criticism. If I can make this post better or less confusing, give me some feedback and I'll do my best to incorporate it in this post, or the next parts. If you're interested in more content, or you have any questions, simply post in the reddit discussion, and I'll gladly answer!
