@@ -253,12 +253,12 @@ First, it enable polymorphism with a natural syntax. It looks uniform, and also 
 ```c++
 void do_stuff() {
     // Initialize a string using a value after the equal sign
-    std::string s = "value";
+    std::string s{"value"};
     
     // Pretty similar syntax eh?
-    task t = print_task{};
+    task t{print_task{}};
     
-    // Or if you like AAA
+    // Or if you like AAA style
     auto s2 = std::string{"potato"};
     auto t2 = task{print_task{}};
     
