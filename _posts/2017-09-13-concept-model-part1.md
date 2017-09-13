@@ -252,7 +252,7 @@ How does this idiom fixes all the problem problem I listed at the beginning? Let
 First, it enable polymorphism with a natural syntax. It looks uniform, and also has a lighter syntax.
 ```c++
 void do_stuff() {
-    // Initialize a string using a value after the equal sign
+    // Initialize a std::string using a value in direct initialization 
     std::string s{"value"};
     
     // Pretty similar syntax eh?
