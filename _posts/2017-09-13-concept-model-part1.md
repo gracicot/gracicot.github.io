@@ -299,16 +299,14 @@ This still satifies the concept. We can still call `t.process()` even if the fun
 
 Another nice property of this idiom, is that **we treat our own code the same as library code**. This makes `task` truely generic. No matter where the object code from, it *just work*. That class doesn't need to know about the interface, or heap allocation, or even polymorphism. It just need to satify the task concept.
 
-## Path to part two
+## Conclusion
 
-As we can see, the Concept-Model idiom, also called runtime-concept or virtual-concept, is really powerful, and enables us a control over how polymorphism is done in our progerams.
-
-There are many other advantages and tricks you can do with this idiom I did not cover in this part.
+I want to conclude part one there. Indeed, there is much more to cover about this idiom, but this article has aready a satifying size. 
 
 > Hey, you forgot about lambdas! Wasn't that the whole point of this?
 
-We will see that in part two, along other techniques for mapping our concept, and allow more types like lambdas. In later parts, I'll also cover variations of the idiom, and how you can use this idiom to refactor your code incrementally.
+We will see that in part two, along other techniques for mapping our concept, and allow more types like lambdas. In later parts, I'll also cover variations of the idiom, and how you can use this idiom to refactor your code incrementally, and probably much more!
 
-Also, our example still forced any `task` to have dynamic allocations for the type erased model. I'll also cover a strategy to overcome this and do polymorphism on the stack using this idiom.
+Also, our example still forced any `task` to have dynamic allocations for the type erased model. I'll also cover a strategy to overcome this and do polymorphism on the stack using Concept-Model.
 
 I welcome any comments and criticism. If I can make this post better or less confusing, give me some feedback and I'll do my best to incorporate it in this post, or the next parts. If you're interested in more content, or you have any questions, simply post in the reddit discussion, and I'll gladly answer!
