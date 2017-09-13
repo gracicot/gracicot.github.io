@@ -19,13 +19,13 @@ Let's start with a simple example:
 ```c++
 // Our interface.
 struct abstract_task {
-    virtual void execute() = 0;
+    virtual void process() = 0;
     virtual ~abstract_task() = default;
 };
 
 // An implementation of our interface.
 struct print_task : abstract_task {
-    void execute() override {
+    void process() override {
         std::cout << "Print Task" << std::endl;
     }
 };
@@ -41,14 +41,14 @@ void push(std::unique_ptr<abstract_task> task) {
 // execute all tasks and clear the list.
 void run() {
     for(auto&& task : tasks) {
-        task->execute();
+        task->process();
     }
     
     tasks.clear();
 }
 ```
 
-I'd say taht the code above is quite common. You have an interface, one or more implementation, a type erased list and we execute the `execute` function polymorphically.
+I'd say that the code above is quite common. You have an interface, one or more implementation, a type erased list and we execute the `process` function polymorphically.
 
 There are few problem with that. First, dynamic allocation is required here. There are no way around it. The intent of this code is not "we want dynamic allocation 100% of the time!" No, the intent is "We want a type erased list of somthing that is a Task." Yet, always using dynamic allocation and polymorphism via vtable happen to be the most common way to do it, and it happen also that it's the only way the language automate the implementation of polymorphism.
 
@@ -60,7 +60,7 @@ The thing is, not all types can implement your interface. For example, you have 
 
 ```c++
 struct some_library_task : library_task {
-    void execute() { /* ... */ }
+    void process() { /* ... */ }
 };
 ```
 
