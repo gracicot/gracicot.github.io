@@ -54,7 +54,7 @@ There are few problem with that. First, dynamic allocation is required here. The
 
 Secondly, it doesn't work with all classes. I heard a lot people responding
 
- > Yeah, jsut implement that interface and voilà! All types works!
+ > Yeah, just implement that interface and voilà! All types works!
 
 The thing is, not all types can implement your interface. For example, you have some library that has a class like that:
 
