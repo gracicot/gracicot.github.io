@@ -107,7 +107,7 @@ private:
 };
 ```
 
-Now that is already nice! Everywhere you had a `std::unique_ptr<abstract_task>`, you can secretly use a `Task` transparently, and using that class is more natural: dot instead of arrow for members, move semantics, you receive by value... all that good stuff!
+Now that is already nice! Everywhere you had a `std::unique_ptr<abstract_task>`, you can secretly use a `task` transparently, and using that class is more natural: dot instead of arrow for members, move semantics, you receive by value... all that good stuff!
 
 And yet, the semantics didn't change for our caller:
 ```c++
@@ -117,7 +117,7 @@ push(std::make_unique<print_task>());
 
 Of course! There is one thing in that list we can now do: change the way objects are sent. Instead of changing 200 function signature, we only have to change the constructor of `task`, and this is what we're gonna do.
 
-Now, want the `push` function to albe be able to receive `some_library_task`. For that, we need adapters to adapt those types to the `AbstractTask` interface, and change the constructor of `Task`:
+Now, want the `push` function to albe be able to receive `some_library_task`. For that, we need adapters to adapt those types to the `abstract_task` interface, and change the constructor of `task`:
 ```c++
 struct some_library_task_adapter : abstract_task {
     some_library_task_adapter(some_library_task t) : task{std::move(t)} {}
@@ -130,15 +130,15 @@ struct some_library_task_adapter : abstract_task {
 };
 
 struct task {
-    Task(std::unique_ptr<abstract_task> t) noexcept : wrapped{std::move(t)} {}
-    Task(some_library_task t) noexcept : task{std::make_unique<SomeLibraryTaskAdapter>(std::move(t))} {}
+    task(std::unique_ptr<abstract_task> t) noexcept : wrapped{std::move(t)} {}
+    task(some_library_task t) noexcept : task{std::make_unique<SomeLibraryTaskAdapter>(std::move(t))} {}
     
     void process() {
         wrapped->process();
     }
     
 private:
-    std::unqiue_ptr<abstract_task> wrapped;
+    std::unique_ptr<abstract_task> wrapped;
 };
 
 int main() {
