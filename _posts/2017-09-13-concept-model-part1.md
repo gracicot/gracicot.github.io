@@ -50,9 +50,9 @@ void run() {
 
 I'd say that the code above is quite common. You have an interface, one or more implementation, a type erased list and we execute the `process` function polymorphically.
 
-There are few problem with that. First, dynamic allocation is required here. There are no way around it. The intent of this code is not "we want dynamic allocation 100% of the time!" No, the intent is "We want a type erased list of somthing that is a Task." Yet, always using dynamic allocation and polymorphism via vtable happen to be the most common way to do it, and it happen also that it's the only way the language automate the implementation of polymorphism.
+There are few problem with that. First, dynamic allocation is required here. There are no way around it. The intent of this code is not *"we want dynamic allocation 100% of the time!"* No, the intent is *"We want a type erased list of somthing that is a task."* Yet, always using dynamic allocation and polymorphism via vtable happen to be the most common way to do it, and it happen also that it's the only way the language automate the implementation of polymorphism.
 
-Secondly, it doesn't work with all classes. I heard a lot people responding
+Secondly, it doesn't work with all classes. I heard a lot people saying:
 
  > Yeah, just implement that interface and voilà! All types works!
 
