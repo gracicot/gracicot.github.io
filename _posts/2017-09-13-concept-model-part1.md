@@ -190,19 +190,19 @@ private:
     };
     
     // We name our struct `model` instead of `adapter`
-    struct library_model_t {
+    struct library_model_t : concept_t {
         library_model_t(some_library_task s) noexcept : self{std::move(s)} {}
         void process() override { self.process(); }
         some_library_task self;
     };
     
-    struct print_model_t {
+    struct print_model_t : concept_t {
         library_model_t(print_task s) noexcept : self{std::move(s)} {}
         void process() override { self.process(); }
         print_task self;
     };
     
-    struct some_other_model_t {
+    struct some_other_model_t : concept_t {
         library_model_t(some_other_task s) noexcept : self{std::move(s)} {}
         void process() override { self.process(); }
         some_other_task self;
@@ -231,7 +231,7 @@ private:
     };
     
     template<typename T>
-    struct model_t {
+    struct model_t : concept_t {
         model_t(T s) noexcept : self{std::move(s)} {}
         void process() override { self.process(); }
         T self;
