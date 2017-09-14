@@ -114,7 +114,7 @@ private:
 
 void run() {
     for(auto&& task : tasks) {
-        task.execute();
+        task.process();
     }
     
     tasks.clear();
