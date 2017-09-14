@@ -8,7 +8,7 @@ excerpt_separator: <!--more-->
 
 # Concept-Model Idiom Part One: A new look at polymorphism
 
-Ah, good old Oriented Object Programming. Have a problem? Just make an interface, and implement it! Simple as that heh? Well no. Polymorphism as done today with classic OOP is intrusive, forces polymorphic behavior even in place where it's not really needed, almost always imply heap allocation, needs to carry the vtable pointer and the list goes on. Fortunatly, other pattern and idiom exixt. Here's an approach that might change how you see polymophism, and the problem it tries to solve. Let me introduce the Concept-Model idiom, also called runtime concept, or virtual concept.
+Ah, good old Oriented Object Programming. Have a problem? Just make an interface, and implement it! Simple as that heh? Well no. Polymorphism as done today with classic OOP is intrusive, forces polymorphic behavior even in place where it's not really needed, almost always imply heap allocation, needs to carry the vtable pointer and the list goes on. Fortunatly, other pattern and idiom exists. Here's an approach that might change how you see polymophism, and the problem it tries to solve. Let me introduce the Concept-Model idiom, also called runtime concept, or virtual concept.
 
 I'm not the inventor of this idiom. I'm sure everyone doing OOP ended up doing something that look like it in some way (hint: Adapter pattern). The first time I saw the idea in a concrete way was in the Sean Parent's talk [Inheritance Is The Base Class of Evil](https://channel9.msdn.com/Events/GoingNative/2013/Inheritance-Is-The-Base-Class-of-Evil). Thanks to him, I manage to use it and practice it a lot. I want to share what I've learned by playing around with this pattern.
 
@@ -131,7 +131,7 @@ push(std::make_unique<print_task>());
 
 Of course! There is one thing in that list we can now do: change the way objects are sent. Instead of changing 200 function signature, we only have to change the constructor of `task`, and this is what we're gonna do.
 
-Now, want the `push` function to albe be able to receive `some_library_task`. For that, we need adapters to adapt those library types to the `abstract_task` interface, and change the constructor of `task`:
+Now, want the `push` function to be able to receive `some_library_task`. For that, we need adapters to adapt those library types to the `abstract_task` interface, and change the constructor of `task`:
 ```c++
 // Our adapter. We contain a library task and implementing the abstract_task interface
 struct some_library_task_adapter : abstract_task {
@@ -168,7 +168,7 @@ int main() {
 
 Okay, now we're getting somewhere: We can use the push function by sending a library task by value!
 
-However, our own task cannot be sent by value yet, we must send the pointer to it. So let's treat our own code as library code. All of our task class won't extend the abstract class anymore, just like the library code, and we will create an adapter for each of our classes. Also, we don't want any classes to extends `abstract_task`, so it will be a private member type:
+However, our own task cannot be sent by value yet, we must send the pointer to it. So **let's treat our own code as library code**. All of our task class won't extend the abstract class anymore, just like the library code, and we will create an adapter for each of our classes. Also, we don't want any classes to extends `abstract_task`, so it will be a private member type:
 ```c++
 struct task {
     task(some_library_task task) noexcept :
