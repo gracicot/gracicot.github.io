@@ -168,7 +168,7 @@ int main() {
 
 Okay, now we're getting somewhere: We can use the push function by sending a library task by value!
 
-However, our own task cannot be sent by value yet, we must send the pointer to it. So **let's treat our own code as library code**. All of our task class won't extend the abstract class anymore, just like the library code, and we will create an adapter for each of our classes. Also, we don't want any classes to extends `abstract_task`, so it will be a private member type:
+However, our own task cannot be sent by value yet, we must send the pointer to it. So **let's treat our own code as library code**. All of our task class won't extend the abstract class anymore, just like the library code, and we will create an adapter for each of our classes. Also, we don't want any external classes to extends `abstract_task`, so it will be a private member type:
 ```c++
 struct task {
     task(some_library_task task) noexcept :
