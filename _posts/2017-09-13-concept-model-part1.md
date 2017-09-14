@@ -91,8 +91,10 @@ struct task {
     std::unique_ptr<abstract_task> wrapped;
 };
 
+// A vector of task, which wrap a unique pointer.
 std::vector<task> tasks;
 
+// We take a task by value, since it's constructible from a unique pointer.
 void push(task t) {
     tasks.emplace_back(std::move(t));
 }
@@ -107,7 +109,7 @@ struct task {
     }
     
 private:
-    std::unqiue_ptr<abstract_task> wrapped;
+    std::unique_ptr<abstract_task> wrapped;
 };
 
 void run() {
@@ -125,12 +127,13 @@ And yet, the semantics didn't change for our caller:
 ```c++
 push(std::make_unique<print_task>());
 ```
-> But wait... we haven't fixed our problem yet! We want to support lambdas, change the way objects are sent, avoir heap allocation, is this really ganno help?
+> But wait... we haven't fixed our problem yet! We want to support lambdas, change the way objects are sent, avoid heap allocation, is this really gonna help?
 
 Of course! There is one thing in that list we can now do: change the way objects are sent. Instead of changing 200 function signature, we only have to change the constructor of `task`, and this is what we're gonna do.
 
-Now, want the `push` function to albe be able to receive `some_library_task`. For that, we need adapters to adapt those types to the `abstract_task` interface, and change the constructor of `task`:
+Now, want the `push` function to albe be able to receive `some_library_task`. For that, we need adapters to adapt those library types to the `abstract_task` interface, and change the constructor of `task`:
 ```c++
+// Our adapter. We contain a library task and implementing the abstract_task interface
 struct some_library_task_adapter : abstract_task {
     some_library_task_adapter(some_library_task t) : task{std::move(t)} {}
 
@@ -143,6 +146,9 @@ struct some_library_task_adapter : abstract_task {
 
 struct task {
     task(std::unique_ptr<abstract_task> t) noexcept : wrapped{std::move(t)} {}
+    
+    // We can now receive a library task by value.
+    // We move it into a new instance of adapter.
     task(some_library_task t) noexcept :
         wrapped{std::make_unique<some_library_task_adapter>(std::move(t))} {}
     
@@ -155,6 +161,7 @@ private:
 };
 
 int main() {
+    // push a new task to the vector
     push(some_library_task{});
 }
 ```
@@ -182,7 +189,7 @@ private:
         void process() = 0;
     };
     
-    // model instead of adapter here
+    // We name our struct `model` instead of `adapter`
     struct library_model_t {
         library_model_t(some_library_task s) noexcept : self{std::move(s)} {}
         void process() override { self.process(); }
@@ -206,7 +213,7 @@ private:
 ```
 > That's preposterous! You can't copy paste the same code for all of your (previously) subclass of `abstract_task`! There must be a way arount it!
 
-Yes indeed, there's a great tool in C++ that was carefully made to avoid mindless copy paste like that: templates!
+Yes indeed, there's a great tool in C++ that was carefully made to avoid mindless copy paste: templates!
 ```c++
 struct task {
     template<typename T>
