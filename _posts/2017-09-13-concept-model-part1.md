@@ -207,7 +207,8 @@ private:
         void process() override { self.process(); }
         some_other_task self;
     };
-
+ 
+    // We quite know it's wrapped. Let's name it self
     std::unique_ptr<concept_t> self;
 };
 ```
