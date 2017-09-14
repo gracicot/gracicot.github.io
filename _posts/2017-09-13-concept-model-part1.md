@@ -81,7 +81,7 @@ The Concept-Model idiom aim to fix these problem, and to give us even more contr
 
 In this section, I'll explain the process of going from classical OOP to the Concept-Model idiom. I'll try to break this into many small steps to make understanding easier.
 
-First, the function `push` takes a `std::unique_ptr`. Think about it. Imageine you have dozens of functions that takes a task that way. What if one day you need all those functions that take a `std::unique_ptr<abstract_task>` to take a raw pointer or a reference instead? Well, you have to change all of those.
+First, the function `push` takes a `std::unique_ptr`. Think about it. Imagine you have dozens of functions that takes a task that way. What if one day you need all those functions that take a `std::unique_ptr<abstract_task>` to take a raw pointer or a reference instead? Well, you have to change all of those.
 
 We will do what you should have done from the start: taking a struct that contains the pointer instead:
 ```c++
