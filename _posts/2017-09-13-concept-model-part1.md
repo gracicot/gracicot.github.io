@@ -218,7 +218,7 @@ Yes indeed, there's a great tool in C++ that was carefully made to avoid mindles
 ```c++
 struct task {
     template<typename T>
-    task(T task) noexcept : task{std::make_unique<model_t<T>>(std::move(t))} {}
+    task(T t) noexcept : task{std::make_unique<model_t<T>>(std::move(t))} {}
     
     void process() {
         self->process();
@@ -306,6 +306,8 @@ struct special_task {
 This still satifies the concept. We can still call `t.process()` even if the function is const, takes an optional parameter or has a different return type.
 
 Another nice property of this idiom, is that **we treat our own code the same as library code**. This makes `task` truely generic. No matter where the object code from, it *just work*. That class doesn't need to know about the interface, or heap allocation, or even polymorphism. It just need to satify the task concept.
+
+Also, there is now a single place where the interface is inherited. One. This in itself dramatically reduces the complexity of our code, because that single implementation is the only place where the polymorphism is done. Previously, polymorphism was scattered all over our codebase.
 
 ## Conclusion
 
