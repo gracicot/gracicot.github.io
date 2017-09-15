@@ -319,6 +319,6 @@ We will see that in part two, along other techniques for mapping our concept, an
 
 Also, our example still forced any `task` to have dynamic allocations for the type erased model. I'll also cover a strategy to overcome this and do polymorphism on the stack using Concept-Model.
 
-If you want to play around with this code, I uploaded a live example on [godbolt](https://godbolt.org/g/rLn9gu) and [Coliru](http://coliru.stacked-crooked.com/a/371c7e9589d79872).
+If you want to play around with this code, I uploaded a live example on [compiler explorer](https://godbolt.org/g/rLn9gu) and [Coliru](http://coliru.stacked-crooked.com/a/371c7e9589d79872).
 
 I welcome any comments and criticism. If I can make this post better or less confusing, give me some feedback and I'll do my best to incorporate it in this post, or the next parts. If you're interested in more content, or you have any questions, found an error, simply post in the [reddit discussion](https://www.reddit.com/r/cpp/comments/709ttn/conceptmodel_idiom_part_one_a_new_look_at/), and I'll gladly answer!
