@@ -186,7 +186,7 @@ private:
     // This is our interface, now named concept_t instead of abstract_task
     struct concept_t {
         virtual ~concept_t() = default;
-        void process() = 0;
+        virtual void process() = 0;
     };
     
     // We name our struct `model` instead of `adapter`
@@ -227,7 +227,7 @@ struct task {
 private:
     struct concept_t {
         virtual ~concept_t() = default;
-        void process() = 0;
+        virtual void process() = 0;
     };
     
     template<typename T>
