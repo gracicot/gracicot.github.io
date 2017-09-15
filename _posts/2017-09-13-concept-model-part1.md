@@ -293,7 +293,7 @@ void do_stuff() {
     }
 }
 ```
-In this example, `t` is pushed into the list conditionally. If we don't need heap allocation and polymorphism, we can decide at runtime to not use it. There are also other strategies for avoiding dynamic allocation that I'll cover in other parts.
+In this example, `t` is pushed into the list conditionally. If we don't need heap allocation and polymorphism, we can decide at runtime to not use it. There are also other strategies, like using SBO for avoiding dynamic allocation that I'll cover in other parts.
 
 Third, our implementation of tasks can implement the `process` function the way it wants. so for example:
 ```c++
