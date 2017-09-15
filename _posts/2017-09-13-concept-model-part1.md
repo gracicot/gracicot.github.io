@@ -277,7 +277,7 @@ void do_stuff() {
     t.process();
 }
 ```
-No arrow, no `new`, no `std::make_*`. Simple values. All polymorphism is done transparently, and hidden in implementation detail.
+No arrow, no `new`, no `std::make_*`. Simple values. All polymorphism is done without it creeping into our classes, and hidden in implementation detail.
 
 Second, it *avoid heap allocation*. Yes indeed, even if we pass around our object inside a unique pointer internally.
 ```c++
