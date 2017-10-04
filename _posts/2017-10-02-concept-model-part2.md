@@ -8,4 +8,4 @@ excerpt_separator: <!--more-->
 
 # Concept-Model Idiom Part Two: Concept mapping
 
-Last time in this series, we explored a new way to do polymorphism through type erasure. This time, we will extend what we've done last time and make something that can support more type than just one interface.
+Last time in this series, we explored a new way to do polymorphism through type erasure. This time, we will extend what we've done last time and make something that can support more type than just one interface. This will makes our Concept-model implementation accept more types of object that potentially have differing interfaces than what our original interface used to have.
