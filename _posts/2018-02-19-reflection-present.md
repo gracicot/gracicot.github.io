@@ -17,10 +17,9 @@ limitations.
 
 <!--more-->
 
-## Reflection in Parts
+## Reflection Broken Down
 
-There are two main part that people refer when talking about reflection: reflection and reification. Here I want to bring to light
-multiple facets of the reflection part: basic querying and introspection.
+There are two main part that people refer when talking about reflection: reflection and reification. Here I want to bring to light multiple facets of the reflection part: introspection and querying.
 
 ### Introspection
 
