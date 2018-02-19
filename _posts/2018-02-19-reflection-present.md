@@ -37,7 +37,31 @@ to iterate on and process. This is what most people think about when talking abo
 ## Introspection in C++
 
 C++ offers a quite powerful way to test any expression validity and let you inspect whether an object has a specific member or not.
-This is done with sfinae today. In simply a few lines you can create a predicate that let you check an expression, therefore the presence of a member:
+This is done with sfinae today. Here's a basic sfinae example:
+
+```c++
+template<typename T> // foo version
+auto foo_or_bar(T const& t) -> decltype(t.foo()) {
+    return t.foo();
+}
+
+template<typename T> // bar version
+auto foo_or_bar(T const& t) -> decltype(t.bar()) {
+    return t.bar();
+}
+
+int main() {
+    struct has_foo { void foo() const {} } f;
+    struct has_bar { void bar() const {} } b;
+    struct has_both : has_foo, has_bar {} fb;
+    
+    foo_or_bar(f);  // calls foo version
+    foo_or_bar(b);  // calls bar version
+    foo_or_bar(fb); // error, ambiguous call
+}
+```
+
+In simply a few lines you can create a predicate that let you check an expression, therefore the presence of a member:
 
 ```c++
 // Our predicate, false by default
