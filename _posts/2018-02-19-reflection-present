@@ -1,0 +1,19 @@
+---
+layout: default
+title:  "Reflection in C++: The Present"
+date:   2018-02-19 15:32:00 +0500
+categories: reflectiopn
+excerpt_separator: <!--more-->
+---
+
+# Reflection in C++: The Present
+
+New popular languages often comes with reflection baked in the language. All python, Java, Ruby and Javascript folk all shows up
+with fancy way to reflect on data structures.
+What about C++? It's often criticized for it's lack of reflection, but it doesn't mean it don't have any reflection capabilities.
+
+In this post we're gonna explore what reflection facilities are available to us today and what is possible to achieve given it's
+limitations. 
+
+<!--more-->
+
