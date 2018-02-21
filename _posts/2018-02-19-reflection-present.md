@@ -107,8 +107,24 @@ inspect how many template parameter it need to take in some cases.
 
 Why this is big you ask? Why do I seem to act like this is a revolutionnary thing? Simply because it's rarely seen
 as a reflection capability. But it is, give me a function object or function pointer, I can meta-tell you how can call it!
-There is no other entity in the language that let you inspect it's guts.
+Function and function objects are the only basic entities that exposes it's guts. Every 
 
-## Reflecting free function
+## Reflecting Free Function
 
-Querying function to get a list of parameters can be done because all that data is encoded in it's type.
+Querying function to get a list of parameters can be done because all that data is encoded in it's type. You probably did once reflected a function type by accident, but you know, many good things in C++ happened by accident. Here's an example of such code:
+
+```c++
+template<typename R>
+auto default_result(R(*)()) -> void {
+    std::cout << R{} << '\n';
+}
+
+auto ret_int() -> int;
+
+auto main() -> int {
+    default_result(ret_int);
+}
+```
+
+In this example, we are using some reflection capability of the compiler to get the return type of a free function, and default initialize the return value. Is it really reflection? In some way, yes. We can send a function to the `default_result` function, and it can infer the return type from the function we sent it.
+
