@@ -128,3 +128,4 @@ auto main() -> int {
 
 In this example, we are using some reflection capability of the compiler to get the return type of a free function, and default initialize the return value. Is it really reflection? In some way, yes. We can send a function to the `default_result` function, and it can infer the return type from the function we sent it.
 
+This can work because of template argument deduction.
