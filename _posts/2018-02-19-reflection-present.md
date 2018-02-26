@@ -107,7 +107,7 @@ inspect how many template parameter it need to take in some cases.
 
 Why this is big you ask? Why do I seem to act like this is a revolutionnary thing? Simply because it's rarely seen
 as a reflection capability. But it is, give me a function object or function pointer, I can meta-tell you how can call it!
-Function and function objects are the only basic entities that exposes it's guts. Every 
+This can happen because function and therefore function objects are the only entities (besides tuples) that exposes valuable information in their type, such as taken parameters and return type. We'll see how we can use this property to make a small reflection library.
 
 ## Reflecting Free Function
 
@@ -115,7 +115,7 @@ Querying function to get a list of parameters can be done because all that data 
 
 ```c++
 template<typename R>
-auto default_result(R(*)()) -> void {
+auto print_default_result(R(*)()) -> void {
     std::cout << R{} << '\n';
 }
 
@@ -126,6 +126,66 @@ auto main() -> int {
 }
 ```
 
-In this example, we are using some reflection capability of the compiler to get the return type of a free function, and default initialize the return value. Is it really reflection? In some way, yes. We can send a function to the `default_result` function, and it can infer the return type from the function we sent it.
+In this example, we are using some reflection capability of the compiler to get the return type of a free function, and default initialize the return value. Is it really reflection? In some way, yes. We can send a function to the `print_default_result` function, and it can infer the return type from the function we sent it. This can work because of template argument deduction. We will use this feature to make our small reflection library.
 
-This can work because of template argument deduction.
+In the example abouve, we only extracted the return type of the function. In fact, our `print_default_result` function only work with function that takes no parameter. Let's fix that by adding a version that accept a function with a parameter:
+
+```c++
+template<typename R, typename Arg1>
+auto print_default_result(R(*)(Arg1)) -> void {
+    std::cout << R{} << '\n';
+    // Do other stuff with Arg1, maybe.
+}
+```
+
+This can be easily generalized using a variadic template:
+
+```c++
+template<typename R, typename... Args>
+auto print_default_result(R(*)(Args...)) -> void { // Accept a function with any number of parameter
+    std::cout << R{} << '\n';
+    // Do other stuff with Args, maybe...
+}
+```
+
+As we said, functions are almost the only basic entities that exposes valuable properties in their type. Since what we want to reflect is part of their type, we can use the pattern matching habilities of template argument deduction to extract and expose the return and argument types.
+
+Can we do something more useful than print a defaut constructed object when reflecting the return type of a function? Yes of course! Here's the first building block of our reflection library:
+
+```c++
+template<typename NotAFunction>
+struct function_traits {}; /// #1
+
+template<typename R>
+struct function_traits<R(*)()> { /// #2
+    using result = R;
+};
+
+template<typename F>
+using function_result_t = typename function_traits<F>::result; /// #3
+```
+
+So what is happening here? Here instead of using template argument deduction for our pattern matching, we used partial specialization. At the line marked `#1`, we are defining the base case, where the type sent to us is not a function. We expose nothing in this case. That way we stay sfinae friendly.
+
+Then, at line marked `#2` we expose an alias equal to the return type of the function type sent as template parameter.
+
+Finally, at line `#3`, we are making an alias to the member type alias to make it easier to use.
+
+Note that we are not handling parameter types yet. As with our function `print_default_result`, we simply add an argument pack so it will also deduce the argument types:
+
+```c++
+template<typename R, typename... Args>
+struct function_traits<R(*)(Args...)> {
+    using result = R;
+    using parameters = std::tuple<Args...>;
+};
+
+template<typename F>
+using function_arguments = function_traits<F>::parameters;
+```
+
+Since we cannot make an alias to a argument pack, we make an alias to a tuple type.
+
+## Using function reflection
+
+
