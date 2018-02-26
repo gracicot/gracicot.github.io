@@ -122,7 +122,7 @@ auto print_default_result(R(*)()) -> void {
 auto ret_int() -> int;
 
 auto main() -> int {
-    default_result(ret_int);
+    print_default_result(ret_int);
 }
 ```
 
