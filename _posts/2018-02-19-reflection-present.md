@@ -6,7 +6,7 @@ categories: reflection
 excerpt_separator: <!--more-->
 ---
 
-# Reflection in C++: The Present
+# Reflection in C++ Part 1: The Present
 
 New popular languages often comes with reflection baked in the language. All python, Java, Ruby and Javascript folk all shows up
 with fancy way to reflect on data structures.
@@ -83,12 +83,10 @@ static_assert(!has_perimeter<Bar>);
 ```
 > How does it work?
 
-It's not an article about sfinae, maybe another time, but basically the compiler will try to find the more specialized version of
-`has_perimeter` for a given set of template arguments. If the expression `(<value of T>).perimeter` is invalid, the compiler cannot
-pick that specialization and will fallback to the default, which is equal to false. On the other hand, if the expression is valid,
+It's not an article about sfinae, since I consider this topic quite well covered, maybe another article. Anyways, in this case,  the compiler will try to find the more specialized version of `has_perimeter` for a given set of template arguments. If the expression `(<value of T>).perimeter` is invalid, the compiler cannot pick that specialization and will fallback to the default, which is equal to false. On the other hand, if the expression is valid,
 the specialization can be picked, then yeild true.
 
-This is a simple case of very basic reflection capability, but just this feature alone can yeild impressive results.
+This is a simple case of very basic reflection capability, but just this feature alone can yeild impressive results, such as emulating concepts.
 
 If you're interested in introspection capabilities of C++, please go check
 Jean Guegant's blog post [An introduction to C++'s SFINAE concept: compile-time introspection of a class member](https://jguegant.github.io/blogs/tech/sfinae-introduction.html)
@@ -203,12 +201,51 @@ int main() {
     // The type of the first argument
     auto arg1 = std::tuple_element_t<0, function_arguments_t<F>>{};
     
-    // Equivalent to decltype(auto)
+    // Equivalent to decltype(auto) in that case
     function_result_t<F> result = some_function(arg1, 4.3);
 }
 ```
 
-The cool thing here is it enable `decltype(auto)` like deduction without using return type deduction. Useful
+The cool thing here is it enable `decltype(auto)` like deduction without using return type deduction. Useful if you don't have C++14 enabled on your project.
 
 ## Reification
 
+At this point, we are able to extract information about a function type and use it in a meaningful way. Yet our facility supports a powerful feature of reflection: reification.
+
+What is that? Reification is to make something real, concrete. Here's a quote from wikipedia:
+
+> Reification is making something real, bringing something into being, or making something concrete.
+
+The idea is this: since we have meta information about an object, we can make another object made from this meta information. We will re-use the return type and parameter type to create a new, different object type.
+
+Here's an example of reification, which we recreate the call operator of a lambda:
+
+```c++
+// Here's a 
+template<std::size_t N, typename F>
+using nth_argument_t = std::tuple_element_t<N, function_arguments_t<F>>;
+
+template<typename F>
+constexpr auto arguments_count = std::tuple_size<function_arguments_t<F>>::value;
+
+template<typename L>
+auto wrap_lambda(L lambda) {
+    return wrap_lambda(lambda, std::make_index_sequence<arguments_count<F>>());
+}
+
+template<typename L, std::size_t... S>
+auto wrap_lambda(L lambda, std::index_sequence<S...>) {
+    struct Wrapper : private L {
+        using L::L;
+        
+        // Note: We could use using L::operator(), but we reify instead
+        auto operator() (nth_argument_t<S, L>... args) const -> function_result_t<L> {
+            return L::operator()(std::forward<nth_argument_t<S, L>>(args)...);
+        }
+    };
+    
+    retrurn Wrapper{std::move(lambda)};
+}
+```
+
+Here in this example we are creating a new callable
