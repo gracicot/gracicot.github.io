@@ -248,4 +248,67 @@ auto wrap_lambda(L lambda, std::index_sequence<S...>) {
 }
 ```
 
-Here in this example we are creating a new callable
+Here in this example we are creating a new callable type that extend privately the lambda. Yet, for the sake of this example, we expose a function that has the same parameters as the lambda function we recieve. We used riefication to recreate the call operator, but we can go further and implement something we could not see without reflection and reification. 
+
+```c++
+template<typename L>
+auto make_deferred(L lambda) {
+    return wrap_lambda(lambda, std::make_index_sequence<arguments_count<F>>());
+}
+
+template<typename L, std::size_t... S>
+auto make_deferred(L lambda, std::index_sequence<S...>) {
+    struct Wrapper : private L {
+        using parameter_pack = std::tuple<nth_argument_t<S, L>...>;
+        using L::L;
+        
+        void bind(nth_argument_t<S, L>... args) {
+            bound.reset();
+            bound = parameter_pack{std::forward<nth_argument_t<S, L>>(args)...};
+        }
+        
+        explicit operator bool () const {
+            return bound;
+        }
+        
+        auto operator()() -> function_result_t<L> {
+            return L::operator()(std::forward<nth_argument_t<S, L>>(std::get<S>(*bound))...);
+        }
+        
+    private:
+        std::optional<parameter_pack> bound;
+    };
+    
+    retrurn Wrapper{std::move(lambda)};
+}
+```
+Now that's something! We have now an object that supports deferring a call and bind parameter separately from the creation site of the callable. And that without heap allocation!
+
+We simply reify a bind function that takes the exact parameters as the lambda, and then store them in a reified tuple.
+
+Let's look at some useage of our `make_deferred` function:
+
+```c++
+int main() {
+    // We make a deffered lambda
+    auto func = make_deffered([](int a, std::vector<int>& b, double c) {
+        std::cout << a << '\n';
+        
+        for (auto&& i : b) {
+            std::cout << ' ' << a;
+        }
+        
+        std::cout << '\n' << c;
+    });
+    
+    auto vec = std::vector{1, 2, 3, 4, 5, 42};
+    
+    // Bind parameters to our function
+    func.bind(12, vec, 5.4);
+    
+    // call the function with bound parameters:
+    func();
+}
+```
+
+Now that's handy! 
