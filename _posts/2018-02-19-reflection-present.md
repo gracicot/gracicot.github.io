@@ -184,6 +184,26 @@ using function_arguments_t = typename function_traits<F>::parameters;
 
 Since we cannot make an alias to a argument pack, we make an alias to a tuple type.
 
+## Using function reflection
+
+Using the facilities we make if fairly straightforward. Simply send a function type to an alias and use the types:
+
+```c++
+int some_function(std::string, double);
+
+int main() {
+    using F = decltype(&some_function);
+    
+    // The type of the first argument
+    auto arg1 = std::tuple_element_t<0, function_arguments_t<F>>{};
+    
+    // Equivalent to decltype(auto) in that case
+    function_result_t<F> result = some_function(arg1, 4.3);
+}
+```
+
+The cool thing here is it enable `decltype(auto)` like deduction without using return type deduction. Useful if you don't have C++14 enabled on your project.
+
 ## Lambda
 
 Of course, we also want to support lambda types. Inspecting a lambda type isn't much harder than inspecting a function pointer directly. A lambda is a compiler generated type that has a member `operator()`. If we take a pointer to that member, we can send it to our `function_traits` struct so we can see its gut!
@@ -210,26 +230,6 @@ using T = std::tuple_element_t<0, function_arguments_t<decltype(lambda)>>;
 
 // T is int
 ```
-
-## Using function reflection
-
-Using the facilities we make if fairly straightforward. Simply send a function type to an alias and use the types:
-
-```c++
-int some_function(std::string, double);
-
-int main() {
-    using F = decltype(&some_function);
-    
-    // The type of the first argument
-    auto arg1 = std::tuple_element_t<0, function_arguments_t<F>>{};
-    
-    // Equivalent to decltype(auto) in that case
-    function_result_t<F> result = some_function(arg1, 4.3);
-}
-```
-
-The cool thing here is it enable `decltype(auto)` like deduction without using return type deduction. Useful if you don't have C++14 enabled on your project.
 
 ## Reification
 
