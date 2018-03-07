@@ -248,7 +248,7 @@ auto wrap_lambda(L lambda, std::index_sequence<S...>) {
 }
 ```
 
-Here in this example we are creating a new callable type that extend privately the lambda. Yet, for the sake of this example, we expose a function that has the same parameters as the lambda function we recieve. We used riefication to recreate the call operator, but we can go further and implement something we could not see without reflection and reification. 
+Here in this example we are creating a new callable type that extend privately the lambda. Yet, for the sake of this example, we expose a function that has the same parameters as the lambda function we recieve. We used reification to recreate the call operator, but we can go further and implement something we could not see without reflection and reification. 
 
 ```c++
 template<typename L>
@@ -259,9 +259,11 @@ auto make_deferred(L lambda) {
 template<typename L, std::size_t... S>
 auto make_deferred(L lambda, std::index_sequence<S...>) {
     struct Wrapper : private L {
+        // We create a tuple type that can store the list of arguments of the lambda 
         using parameter_pack = std::tuple<nth_argument_t<S, L>...>;
         using L::L;
         
+        // We make a bind function that take the same arguments as our lambda
         void bind(nth_argument_t<S, L>... args) {
             bound.reset();
             bound = parameter_pack{std::forward<nth_argument_t<S, L>>(args)...};
@@ -271,6 +273,7 @@ auto make_deferred(L lambda, std::index_sequence<S...>) {
             return bound;
         }
         
+        // We make a call operator that has the same return type as our lambda
         auto operator()() -> function_result_t<L> {
             return L::operator()(std::forward<nth_argument_t<S, L>>(std::get<S>(*bound))...);
         }
@@ -311,4 +314,4 @@ int main() {
 }
 ```
 
-Now that's handy! 
+That's the power of reflection + reification.
