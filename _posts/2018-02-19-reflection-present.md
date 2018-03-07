@@ -186,7 +186,30 @@ Since we cannot make an alias to a argument pack, we make an alias to a tuple ty
 
 ## Lambda
 
-Of course, we also want to support lambda types.
+Of course, we also want to support lambda types. Inspecting a lambda type isn't much harder than inspecting a function pointer directly. A lambda is a compiler generated type that has a member `operator()`. If we take a pointer to that member, we can send it to our `function_traits` struct so we can see its gut!
+
+```c++
+template<typename Lambda>
+struct function_traits : function_traits<decltype(&Lambda::operator())> {}; /// #1
+
+template<typename R, typename C, typename... Args>
+struct function_traits<R(C::*)(Args...) const> { // #2
+    using result = R;
+    using parameters = std::tuple<Args...>;
+};
+```
+
+We changed two things here. First, at line marked `#1`, we changed our default case. We will assume (for the sake of simplicity) that when a type that is not a function pointer is sent it's a lambda.
+
+We can now use our utility update for a lambda:
+
+```c++
+auto lambda = [](int) {};
+
+using T = std::tuple_element_t<0, function_arguments_t<decltype(lambda)>>;
+
+// T is int
+```
 
 ## Using function reflection
 
