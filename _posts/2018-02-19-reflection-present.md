@@ -329,15 +329,15 @@ That's the power of reflection + reification.
 
 ## Generic Lambdas
 
-At this point, we simply reflect on normal function. Indeed, they are the easiest to reflect, but why stop there? There may be useful use case where you'd want to reflect on generic lambda. Imagine you're in a situation where the user gives you a lambda, and a partial set of arguments. Let's say you have a function that gives you a value of any type called `get_val<T>()`, and you have to call the lambda function. To do that, you'll have to inspect the parameters of the lambda to know the type of the missing parameter from the user provided set.
+At this point, we simply reflect on normal function. Indeed, they are the easiest to reflect, but why stop there? There may be useful use case where you'd want to reflect on generic lambda. Imagine you're in a situation where the user gives you a lambda, and a partial set of arguments. Let's say you have a function that gives you a value of any type called `magic_val<T>()`, and you have to call the lambda function. To do that, you'll have to inspect the parameters of the lambda to know the type of the missing parameter from the user provided set.
 
 Here's an example of usage:
 
 ```c++
 // This is our goal:
 magic_call(
-// get_val<T> called for those two
-//     v----------v-----/
+// magic_val<T>() called for those two
+//     v----  ----v
     [](SomeType1, SomeType2, int, double, auto&&, auto&&  ) {},
        /*magic*/  /*magic*/  4,   5.4,    "str",  "strv"sv
 );
@@ -392,9 +392,30 @@ template<typename F, typename... Args>
 using deduced_function_traits = deduced_function_traits_helper<F, std::tuple<Args...>>;
 
 template<typename F, typename... Args>
-using deduced_function_result_t = typename deduced_function_traits<F>::result;
+using deduced_function_result_t = typename deduced_function_traits<F, Args...>::result;
 
 template<typename F, typename... Args>
-using deduced_function_arguments_t = typename deduced_function_traits<F>::parameters;
+using deduced_function_arguments_t = typename deduced_function_traits<F, Args...>::parameters;
+
+template<std::size_t N, typename F, typename... Args>
+using deduced_nth_argument_t = std::tuple_element_t<N, deduced_function_arguments_t<F, Args...>>;
+
+template<typename F, typename... Args>
+constexpr auto deduced_arguments_count = std::tuple_size<deduced_function_arguments_t<F, Args...>>::value;
 ```
 
+Now, the implementation of `magic_call`:
+
+```c++
+template<typename L, typename... Args, std::size_t... S>
+auto magic_call(std::index_sequence<S...>, L lambda, Args&&... args) -> decltype(auto) {
+    lambda(magic_val<deduced_nth_argument_t<S, L, Args...>>()..., std::forward<Args>(args)...);
+}
+
+template<typename L, typename... Args>
+auto magic_call(L lambda, Args&&... args) -> decltype(auto) {
+    // We generate a sequence from 0 up to the number of parameter we need to get through `get_val`
+    auto sequence = std::make_index_sequence<deduced_arguments_count<L, Args...> - sizeof...(args)>{};
+    magic_call(sequence, std::move(lambda), std::forward<Args>(args)...);
+}
+```
