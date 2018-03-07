@@ -414,7 +414,7 @@ auto magic_call(std::index_sequence<S...>, L lambda, Args&&... args) -> decltype
 
 template<typename L, typename... Args>
 auto magic_call(L lambda, Args&&... args) -> decltype(auto) {
-    // We generate a sequence from 0 up to the number of parameter we need to get through `get_val`
+    // We generate a sequence from 0 up to the number of parameter we need to get through `magic_val`
     auto sequence = std::make_index_sequence<deduced_arguments_count<L, Args...> - sizeof...(args)>{};
     magic_call(sequence, std::move(lambda), std::forward<Args>(args)...);
 }
