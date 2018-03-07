@@ -218,27 +218,27 @@ What is that? Reification is to make something real, concrete. Here's a quote fr
 
 The idea is this: since we have meta information about an object, we can make another object made from this meta information. We will re-use the return type and parameter type to create a new, different object type.
 
-Here's an example of reification, which we recreate the call operator of a lambda:
+First, let's make some additional utilities about function related traits:
 
 ```c++
-// Here's a 
 template<std::size_t N, typename F>
 using nth_argument_t = std::tuple_element_t<N, function_arguments_t<F>>;
 
 template<typename F>
 constexpr auto arguments_count = std::tuple_size<function_arguments_t<F>>::value;
+```
 
-template<typename L>
-auto wrap_lambda(L lambda) {
-    return wrap_lambda(lambda, std::make_index_sequence<arguments_count<F>>());
-}
+Then, here's a simple example of reification, which we recreate the call operator of a lambda:
 
+```c++
 template<typename L, std::size_t... S>
 auto wrap_lambda(L lambda, std::index_sequence<S...>) {
+
+    // A wrapper, local struct
     struct Wrapper : private L {
         using L::L;
         
-        // Note: We could use using L::operator(), but we reify instead
+        // Note: We could use `using L::operator()`, but we reify instead
         auto operator() (nth_argument_t<S, L>... args) const -> function_result_t<L> {
             return L::operator()(std::forward<nth_argument_t<S, L>>(args)...);
         }
@@ -246,18 +246,21 @@ auto wrap_lambda(L lambda, std::index_sequence<S...>) {
     
     retrurn Wrapper{std::move(lambda)};
 }
+
+// Provide an overload without the sequence:
+template<typename L>
+auto wrap_lambda(L lambda) {
+    return wrap_lambda(lambda, std::make_index_sequence<arguments_count<F>>());
+}
 ```
 
 Here in this example we are creating a new callable type that extend privately the lambda. Yet, for the sake of this example, we expose a function that has the same parameters as the lambda function we recieve. We used reification to recreate the call operator, but we can go further and implement something we could not see without reflection and reification. 
 
 ```c++
-template<typename L>
-auto make_deferred(L lambda) {
-    return wrap_lambda(lambda, std::make_index_sequence<arguments_count<F>>());
-}
-
 template<typename L, std::size_t... S>
 auto make_deferred(L lambda, std::index_sequence<S...>) {
+
+    // We define our wrapper struct
     struct Wrapper : private L {
         // We create a tuple type that can store the list of arguments of the lambda 
         using parameter_pack = std::tuple<nth_argument_t<S, L>...>;
@@ -284,10 +287,18 @@ auto make_deferred(L lambda, std::index_sequence<S...>) {
     
     retrurn Wrapper{std::move(lambda)};
 }
+
+// Make an overload without the index sequence
+template<typename L>
+auto make_deferred(L lambda) {
+    return wrap_lambda(lambda, std::make_index_sequence<arguments_count<F>>());
+}
 ```
 Now that's something! We have now an object that supports deferring a call and bind parameter separately from the creation site of the callable. And that without heap allocation!
 
 We simply reify a bind function that takes the exact parameters as the lambda, and then store them in a reified tuple.
+
+Although note that this implementation is minimal and does not handle some ceveats, such as lifetime extension.
 
 Let's look at some useage of our `make_deferred` function:
 
@@ -315,3 +326,7 @@ int main() {
 ```
 
 That's the power of reflection + reification.
+
+## Generic Lambdas
+
+At this point, we simply reflect on normal function. Indeed, they are the easiest to reflect, but why stop there? There may be useful use case where you'd want to reflect on generic lambda.
