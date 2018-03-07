@@ -329,4 +329,72 @@ That's the power of reflection + reification.
 
 ## Generic Lambdas
 
-At this point, we simply reflect on normal function. Indeed, they are the easiest to reflect, but why stop there? There may be useful use case where you'd want to reflect on generic lambda.
+At this point, we simply reflect on normal function. Indeed, they are the easiest to reflect, but why stop there? There may be useful use case where you'd want to reflect on generic lambda. Imagine you're in a situation where the user gives you a lambda, and a partial set of arguments. Let's say you have a function that gives you a value of any type called `get_val<T>()`, and you have to call the lambda function. To do that, you'll have to inspect the parameters of the lambda to know the type of the missing parameter from the user provided set.
+
+Here's an example of usage:
+
+```c++
+// This is our goal:
+magic_call(
+// get_val<T> called for those two
+//     v----------v-----/
+    [](SomeType1, SomeType2, int, double, auto&&, auto&&  ) {},
+       /*magic*/  /*magic*/  4,   5.4,    "str",  "strv"sv
+);
+```
+
+As we know, we cannot just take the address of a template function, we have to send it the template parameter first:
+
+```c++
+auto lambda = [](auto) {};
+
+auto fctptr1 = &decltype(lambda)::operator(); // Error!
+auto fctptr1 = &decltype(lambda)::operator()<int>; // works.
+```
+
+For the example of `magic_call` to work, we must deduce template parameters from a potentially different set. In the example of usage above, the user send `int, double, char const(&)[4], std::string_view`, but the template argument to deduce are `const const(&)[4]` and `std::string_view` only, so we must drop the `int` and the `double`.
+
+So our utility `function_traits` won't work directly, since it needs the type to extract the call operator directly. To support generic lambdas, we will introduce a new utility.
+
+To deduce template arguments, we will use a simple algorithm. We will try to instanciate the template with all every parameter type the use send to us. If it result in a subtitution failure (since we sent too many template arguments) then we will drop the first parameter and try again. In pseudocode, it will look like that:
+
+    function deduced_function_traits(tfunc, ...arg_types)
+        if tfunc instantiable with arg_types... then
+            return function_traits(tfunc<arg_types...>)
+        else if size of arg_types larger than 0
+            return deduced_function_traits(tfunc, drop first arg_types...)
+        else
+            return nothing
+
+In C++ template syntax, a functioning algorithm would look like that: 
+
+```c++
+// Else return nothing, end of algorithm
+template<typename, typename, typename = void>
+struct deduced_function_traits_helper {};
+
+template<typename F, typename... Args>
+struct deduced_function_traits_helper<
+    F, std::tuple<Args...>, // arguments tfunc and arg_types
+    std::void_t<decltype(&F::template operator()<Args...>)> // if is instantiable
+> // return function_traits with function pointer
+    : function_traits<decltype(&F::template operator()<Args...>)> {};
+
+template<typename F, typename First, typename... Rest>
+struct deduced_function_traits_helper<
+    F, std::tuple<Args...>, // arguments tfunc and arg_types
+    void // if not instantiable
+> // return deduced_function_traits dropping the first argument
+    :  deduced_function_traits<F, std::tuple<Rest...>> {};
+
+// Define some alias to ease it's usage:
+template<typename F, typename... Args>
+using deduced_function_traits = deduced_function_traits_helper<F, std::tuple<Args...>>;
+
+template<typename F, typename... Args>
+using deduced_function_result_t = typename deduced_function_traits<F>::result;
+
+template<typename F, typename... Args>
+using deduced_function_arguments_t = typename deduced_function_traits<F>::parameters;
+```
+
