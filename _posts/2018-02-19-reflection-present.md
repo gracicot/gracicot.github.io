@@ -368,7 +368,7 @@ As we know, we cannot just take the address of a template function, we have to s
 auto lambda = [](auto) {};
 
 auto fctptr1 = &decltype(lambda)::operator(); // Error!
-auto fctptr1 = &decltype(lambda)::operator()<int>; // works.
+auto fctptr2 = &decltype(lambda)::operator()<int>; // works.
 ```
 
 For the example of `magic_call` to work, we must deduce template parameters from a potentially different set. In the example of usage above, the user send `int, double, char const(&)[4], std::string_view`, but the template argument to deduce are `const const(&)[4]` and `std::string_view` only, so we must drop the `int` and the `double`.
@@ -438,3 +438,31 @@ auto magic_call(L lambda, Args&&... args) -> decltype(auto) {
     magic_call(sequence, std::move(lambda), std::forward<Args>(args)...);
 }
 ```
+
+## Caveats of reflecting Generic Lambdas
+
+As showed above, reflecting generic lambdas require us to deduce template arguments manually. The showned algorithm is far from perfect. It may produce oncorrect result with variadic generic lambda, because any number of template parameter can be sent. Here's an example of that:
+
+```c++
+magic_call(
+    [](int, auto&&... args) {},
+       1,   2, 3
+);
+```
+
+What should be part of `...args`? Our current algorithm will find that `operator()<int, int, int>` can instantiated, so the first int will be obtained through `magic_val<int>()` instead of the first argument sent.
+
+Other than that, deduction will only produce the exact result if the template arguments are forwading references. Consider this code:
+
+```c++
+auto vec = std::vector{1, 2, 3};
+
+magic_call(
+    [](auto) {},
+    vec
+);
+```
+
+What's happening here? The `operator()` is instanciated two times. Since we are using perfect forwarding and we send template parameter manually, we first instantiate the call operator like that in our algorithm: `operator()<std::vector<int>&>`. So even though `auto` parameter should not deduce references, we are instnaciating it with a reference type.
+
+Then, we call the function normally, instantiating the call operator with the correctly deduced arguments. This may produce incorrect result or unwanted compilation slowdown.
