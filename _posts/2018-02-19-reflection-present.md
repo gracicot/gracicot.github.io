@@ -83,6 +83,10 @@ This is a simple case of very basic reflection capability, but just this feature
 If you're interested in introspection capabilities of C++, please go check
 Jean Guegant's blog post [An introduction to C++'s SFINAE concept: compile-time introspection of a class member](https://jguegant.github.io/blogs/tech/sfinae-introduction.html)
 
+#### Type Traits
+
+We also cannot dismiss the type traits library provided by the STL. To some extents, it allows reflecting on types by implementing predefine capability or property to check. Some on these traits such as `std::is_final` or `std::is_polymorphic` cannot be implemented in pure C++, and needs compiler support.
+
 ## Querying Objects in C++
 
 Who dream of writing `$Foo.members()`? yeah, me too. But this isn't about the future but what we can do now. Does C++ let you
@@ -466,3 +470,15 @@ magic_call(
 What's happening here? The `operator()` is instanciated two times. Since we are using perfect forwarding and we send template parameter manually, we first instantiate the call operator like that in our algorithm: `operator()<std::vector<int>&>`. So even though `auto` parameter should not deduce references, we are instnaciating it with a reference type.
 
 Then, we call the function normally, instantiating the call operator with the correctly deduced arguments. This may produce incorrect result or unwanted compilation slowdown.
+
+We are also assuming all deduced parameters are at the end of the argument list. This may be a limitation in some cases.
+
+## Reflecting Other Functions
+
+In all the example above we reflected the call  operator of lambda and function pointers. Hovever, everything there is also applicable with other member function than `operator()`. Just replace `&T::opreator()` by `&T::funcName` and you can reflect specific member functions.
+
+# Conclusion
+
+Reflection in C++ is yet to be added to the language, but that doesn't mean C++ don't havy any reflection capabilities. We just demonstrated that to some extent, C++ is capable of providing some reflection features that can solve some of today's problems.
+
+What will be possible with tomorrow's reflection? What are the competing proposal and what are the pros and cons of each of those? We will se that in the next part of this blog post series.
