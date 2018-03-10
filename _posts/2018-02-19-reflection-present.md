@@ -19,25 +19,15 @@ limitations.
 
 ## Reflection Broken Down
 
-There are two main part that people refer when talking about reflection: reflection and reification. Here I want to bring to light multiple facets of the reflection part: introspection and querying.
+There are two main part that people refer when talking about reflection: reflection and reification. Here I want to bring to light multiple facets of the reflection part: introspection and querying. Both are really useful in many applications. C++ has support for introspectoin in a quite complete way, and ahas a basic suport of querying. We'll see how the two compares.
 
-### Introspection
+Introspection is the feature of reflection to ask the object something about something in particular. For example, you could ask an object if it has a `get_area()` member function in order to call it, or you could query the object to know if it has a `perimeter` data member convertible to int. What we're doing here is basically inspect the object to check if it fulfill a set of crieria. You can check for the validity of almost any expression in C++.
 
-Introspection is the feature of reflection to ask the object something about something in particular.
-For example, you could ask an object if it has a `get_area()` member function in order to call it,
-or you could query the object to know if it has a `perimeter` data member convertible to int.
-
-What we're doing here is basically inspect the object to check if it fulfill a set of crieria.
-
-### Querying
-
-This is what I refer when I have an object and ask it to expose a set of it's attributes. For example, having a set of data members
-to iterate on and process. This is what most people think about when talking about reflection in programming languages.
+Querying is what I refer when I have an object and ask it to expose a set of it's attributes. For example, having a set of data members to iterate on and process. This is what most people think about when talking about reflection in programming languages.
 
 ## Introspection in C++
 
-C++ offers a quite powerful way to test any expression validity and let you inspect whether an object has a specific member or not.
-This is done with sfinae today. Here's a basic sfinae example:
+C++ offers a quite powerful way to test any expression validity and let you inspect whether an object has a specific member or not. This is done with sfinae today. Here's a basic sfinae example:
 
 ```c++
 template<typename T> // foo version
@@ -61,6 +51,10 @@ int main() {
 }
 ```
 
+The expression `t.foo()` and `t.bar()` are part of the signature of the function, more precisely it's return type. While performming overload resolution, the compiler will drop any function that thier instantiation would cause an ill-formed expression from the list of possible overloads.
+
+So in the example above, we were able to check for the presence of `T::bar()` and `T::foo()` using sfinae.
+
 In simply a few lines you can create a predicate that let you check an expression, therefore the presence of a member:
 
 ```c++
@@ -81,10 +75,8 @@ struct Bar {};
 static_assert(has_perimeter<Foo>);
 static_assert(!has_perimeter<Bar>);
 ```
-> How does it work?
 
-It's not an article about sfinae, since I consider this topic quite well covered, maybe another article. Anyways, in this case,  the compiler will try to find the more specialized version of `has_perimeter` for a given set of template arguments. If the expression `(<value of T>).perimeter` is invalid, the compiler cannot pick that specialization and will fallback to the default, which is equal to false. On the other hand, if the expression is valid,
-the specialization can be picked, then yeild true.
+It's not an article about sfinae, and I consider this topic quite well covered. Anyways, in this case,  the compiler will try to find the more specialized version of `has_perimeter` for a given set of template arguments. If the expression `(<value of T>).perimeter` is invalid, the compiler cannot pick that specialization and will fallback to the default, which is equal to false. On the other hand, if the expression is valid, the specialization can be picked, then yeild true.
 
 This is a simple case of very basic reflection capability, but just this feature alone can yeild impressive results, such as emulating concepts.
 
@@ -221,7 +213,9 @@ struct function_traits<R(C::*)(Args...) const> { // #2
 
 We changed two things here. First, at line marked `#1`, we changed our default case. We will assume (for the sake of simplicity) that when a type that is not a function pointer is sent it's a lambda.
 
-We can now use our utility update for a lambda:
+At line `#2`, we specialize our `function_traits` struct for a member function type. This will let us inspect the call operator of lambdas.
+
+We can now use our updated utility for reflecting lambdas:
 
 ```c++
 auto lambda = [](int) {};
@@ -255,7 +249,7 @@ Then, here's a simple example of reification, which we recreate the call operato
 
 ```c++
 template<typename L, std::size_t... S>
-auto wrap_lambda(L lambda, std::index_sequence<S...>) {
+auto wrap_lambda(, std::index_sequence<S...>, L lambda) {
 
     // A wrapper, local struct
     struct Wrapper : private L {
@@ -273,15 +267,17 @@ auto wrap_lambda(L lambda, std::index_sequence<S...>) {
 // Provide an overload without the sequence:
 template<typename L>
 auto wrap_lambda(L lambda) {
-    return wrap_lambda(lambda, std::make_index_sequence<arguments_count<F>>());
+    return wrap_lambda(std::make_index_sequence<arguments_count<F>>(), lambda);
 }
 ```
 
 Here in this example we are creating a new callable type that extend privately the lambda. Yet, for the sake of this example, we expose a function that has the same parameters as the lambda function we recieve. We used reification to recreate the call operator, but we can go further and implement something we could not see without reflection and reification. 
 
+Here an example of a function object that allows binding it's parameters before usage:
+
 ```c++
 template<typename L, std::size_t... S>
-auto make_deferred(L lambda, std::index_sequence<S...>) {
+auto make_deferred(std::index_sequence<S...>, L lambda) {
 
     // We define our wrapper struct
     struct Wrapper : private L {
@@ -314,7 +310,7 @@ auto make_deferred(L lambda, std::index_sequence<S...>) {
 // Make an overload without the index sequence
 template<typename L>
 auto make_deferred(L lambda) {
-    return wrap_lambda(lambda, std::make_index_sequence<arguments_count<F>>());
+    return wrap_lambda(std::make_index_sequence<arguments_count<F>>(), lambda);
 }
 ```
 Now that's something! We have now an object that supports deferring a call and bind parameter separately from the creation site of the callable. And that without heap allocation!
@@ -438,7 +434,7 @@ auto magic_call(std::index_sequence<S...>, L lambda, Args&&... args) -> decltype
 template<typename L, typename... Args>
 auto magic_call(L lambda, Args&&... args) -> decltype(auto) {
     // We generate a sequence from 0 up to the number of parameter we need to get through `magic_val`
-    auto sequence = std::make_index_sequence<deduced_arguments_count<L, Args...> - sizeof...(args)>{};
+    auto sequence = std::make_index_sequence<deduced_arguments_count<L, Args...> - sizeof...(args)>();
     magic_call(sequence, std::move(lambda), std::forward<Args>(args)...);
 }
 ```
