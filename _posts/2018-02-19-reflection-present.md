@@ -282,14 +282,16 @@ Here an example of a function object that allows binding it's parameters before 
 ```c++
 template<typename L, std::size_t... S>
 auto make_deferred(std::index_sequence<S...>, L lambda) {
-
+    // We create a tuple type that can store the list of arguments of the lambda 
+    // We are going to store that in our callable type to cache parameters before call
+    using parameter_pack = std::tuple<nth_argument_t<S, L>...>;
+        
     // We define our wrapper struct
     struct Wrapper : private L {
-        // We create a tuple type that can store the list of arguments of the lambda 
-        using parameter_pack = std::tuple<nth_argument_t<S, L>...>;
         using L::L;
         
         // We make a bind function that take the same arguments as our lambda
+        // we are going to store each argument in ...args for a later call
         void bind(nth_argument_t<S, L>... args) {
             bound.reset();
             bound = parameter_pack{std::forward<nth_argument_t<S, L>>(args)...};
@@ -301,6 +303,7 @@ auto make_deferred(std::index_sequence<S...>, L lambda) {
         
         // We make a call operator that has the same return type as our lambda
         auto operator()() -> function_result_t<L> {
+            // Here we are using the stored parameters set in the `bind` function
             return L::operator()(std::forward<nth_argument_t<S, L>>(std::get<S>(*bound))...);
         }
         
