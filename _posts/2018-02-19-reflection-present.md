@@ -19,13 +19,13 @@ limitations.
 
 ## Reflection Broken Down
 
-There are two main part that people refer when talking about reflection: reflection and reification. Here I want to bring to light multiple facets of the reflection part: introspection and querying. Both are really useful in many applications. C++ has support for introspectoin in a quite complete way, and ahas a basic suport of querying. We'll see how the two compares.
+There are two main part that people refer when talking about reflection: reflection and reification. Here I want to bring to light multiple facets of the reflection part. For the lack of official term, I'll refer to what I call type introspection and meta querying. Both are really useful in many applications. C++ has support a great support for type introspection, and has a basic suport of meta querying. We'll see how the two compares.
 
-Introspection is the feature of reflection to ask the object something about something in particular. For example, you could ask an object if it has a `get_area()` member function in order to call it, or you could query the object to know if it has a `perimeter` data member convertible to int. What we're doing here is basically inspect the object to check if it fulfill a set of crieria. You can check for the validity of almost any expression in C++.
+**Type introspection** is the feature of reflection to ask the object something about something in particular. For example, you could ask an object if it has a `get_area()` member function in order to call it, or you could query the object to know if it has a `perimeter` data member convertible to int. What we're doing here is basically inspect the object to check if it fulfill a set of crieria. You can check for the validity of almost any expression in C++.
 
-Querying is what I refer when I have an object and ask it to expose a set of it's attributes. For example, having a set of data members to iterate on and process. This is what most people think about when talking about reflection in programming languages.
+**Meta querying** is what I refer when I have an object and ask it to expose a set of it's attributes. For example, having a set of data members to iterate on and process. This is what most people think about when talking about reflection in programming languages. It's the kind of information you can get out of a meta object.
 
-## Introspection in C++
+## Type Introspection in C++
 
 C++ offers a quite powerful way to test any expression validity and let you inspect whether an object has a specific member or not. This is done with sfinae today. Here's a basic sfinae example:
 
@@ -76,7 +76,7 @@ static_assert(has_perimeter<Foo>);
 static_assert(!has_perimeter<Bar>);
 ```
 
-It's not an article about sfinae, and I consider this topic quite well covered. Anyways, in this case,  the compiler will try to find the more specialized version of `has_perimeter` for a given set of template arguments. If the expression `(<value of T>).perimeter` is invalid, the compiler cannot pick that specialization and will fallback to the default, which is equal to false. On the other hand, if the expression is valid, the specialization can be picked, then yeild true.
+It's not an article about sfinae, maybe I'll write one in the future. In the meantime, there are great articles that explains it much better than I think I can do! Anyways, I'll give it a shot. In this particular case,  the compiler will try to find the more specialized version of `has_perimeter` for a given set of template arguments. If the expression `(<value of T>).perimeter` is invalid, the compiler cannot pick that specialization and will fallback to the default, which is equal to false. On the other hand, if the expression is valid, the specialization can be picked, then yeild true.
 
 This is a simple case of very basic reflection capability, but just this feature alone can yeild impressive results, such as emulating concepts.
 
@@ -87,21 +87,20 @@ Jean Guegant's blog post [An introduction to C++'s SFINAE concept: compile-time 
 
 We also cannot dismiss the type traits library provided by the STL. To some extents, it allows reflecting on types by implementing predefine capability or property to check. Some on these traits such as `std::is_final` or `std::is_polymorphic` cannot be implemented in pure C++, and needs compiler support.
 
-## Querying Objects in C++
+## Meta-Querying Objects in C++
 
 Who dream of writing `$Foo.members()`? yeah, me too. But this isn't about the future but what we can do now. Does C++ let you
 list the set of members or the set of other things? For listing members, unfortunately, no. I don't have a magical solution for you today.
 You can't ask the compiler to instanciate some code for each data members, or for each member functions.
-However, there is one construct in the language that exposes how it's composed
-and let you do all sorts of metaprogramming on it.
+However, there is one particular construct in the language that exposes it's interface in such a way that let you do all sorts of metaprogramming on it.
 
-Functions. Yes, normal functions, member function, function objects and even function templates. As long as it's not overloaded,
+*Functions*. Yes, normal functions, member function, function objects and even function templates (to some extent). As long as it's not overloaded,
 you can inspect it's return type, it's parameter types, it's member of which type in case of member functions, and even let you
 inspect how many template parameter it need to take in some cases.
 
-Why this is big you ask? Why do I seem to act like this is a revolutionnary thing? Simply because it's rarely seen
-as a reflection capability. But it is, give me a function object or function pointer, I can meta-tell you how can call it!
-This can happen because function and therefore function objects are the only entities (besides tuples) that exposes valuable information in their type, such as taken parameters and return type. We'll see how we can use this property to make a small reflection library.
+Why is this big you ask? Why do I seem to act like this is a revolutionnary thing? Well first, we can use function to transfer behavior and data around quite easily. But it is, give me a function object or function pointer, I can tell you how can call it using meta information!
+
+This can happen because function and function objects exposes their whole interface in their type or call operator type, such as parameter types and return type. We'll see how we can use this property to make a small reflection library.
 
 ## Reflecting Free Function
 
@@ -122,7 +121,7 @@ auto main() -> int {
 
 In this example, we are using some reflection capability of the compiler to get the return type of a free function, and default initialize the return value. Is it really reflection? In some way, yes. We can send a function to the `print_default_result` function, and it can infer the return type from the function we sent it. This can work because of template argument deduction. We will use this feature to make our small reflection library.
 
-In the example abouve, we only extracted the return type of the function. In fact, our `print_default_result` function only work with function that takes no parameter. Let's fix that by adding a version that accept a function with a parameter:
+In the example above, we only extracted the return type of the function. In fact, our `print_default_result` function only work with function that takes no parameter. Let's fix that by adding a version that accept a function with a parameter:
 
 ```c++
 template<typename R, typename Arg1>
@@ -326,7 +325,7 @@ We simply reify a bind function that takes the exact parameters as the lambda, a
 
 Although note that this implementation is minimal and does not handle some ceveats, such as lifetime extension.
 
-Let's look at some useage of our `make_deferred` function:
+Let's look at some usage of our `make_deferred` function:
 
 ```c++
 int main() {
@@ -412,8 +411,9 @@ struct deduced_function_traits_helper<
     void // if not instantiable
 > // return deduced_function_traits dropping the first argument
     :  deduced_function_traits<F, std::tuple<Rest...>> {};
-
-// Define some alias to ease it's usage:
+```
+We can also define some alias to ease it's usage:
+```c++
 template<typename F, typename... Args>
 using deduced_function_traits = deduced_function_traits_helper<F, std::tuple<Args...>>;
 
@@ -479,6 +479,10 @@ We are also assuming all deduced parameters are at the end of the argument list.
 ## Reflecting Other Functions
 
 In all the example above we reflected the call  operator of lambda and function pointers. Hovever, everything there is also applicable with other member function than `operator()`. Just replace `&T::opreator()` by `&T::funcName` and you can reflect specific member functions.
+
+## Don't Reinvent The Wheel!
+
+This look all beautiful, but it can be quite hard to create and maintain it by yourself. This is why boost ship a complete implementation of function traits. I found it actually amazing the amount of information that can be reflected on function types. If you're interested, check out [Boost.CallableTraits](https://github.com/boostorg/callable_traits)!
 
 # Conclusion
 
