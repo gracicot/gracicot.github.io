@@ -301,7 +301,7 @@ auto make_deferred(std::index_sequence<S...>, L lambda) {
         }
         
         // We make a call operator that has the same return type as our lambda
-        auto operator()() -> function_result_t<L> {
+        auto operator() () -> function_result_t<L> {
             // Here we are using the stored parameters set in the `bind` function
             return L::operator()(std::forward<nth_argument_t<S, L>>(std::get<S>(*bound))...);
         }
