@@ -8,22 +8,22 @@ excerpt_separator: <!--more-->
 
 # Reflection in C++ Part 1: The Present
 
-New popular languages often comes with reflection baked in the language. All python, Java, Ruby and Javascript folk all shows up
-with fancy way to reflect on data structures.
-What about C++? It's often criticized for it's lack of reflection, but it doesn't mean it don't have any reflection capabilities.
+New popular languages often come with reflection baked in the language. All python, Java, Ruby and Javascript folk all shows up
+with some fancy way to reflect on data structures.
+What about C++? It's often criticized for its lack of reflection, but it doesn't mean it doesn't have any reflection capabilities.
 
-In this post we're gonna explore what reflection facilities are available to us today and what is possible to achieve given it's
+In this post, we're gonna explore what reflection facilities are available to us today and what is possible to achieve given its
 limitations. 
 
 <!--more-->
 
 ## Reflection Broken Down
 
-There are two main part that people refer when talking about reflection: reflection and reification. Here I want to bring to light multiple facets of the reflection part. For the lack of official term, I'll refer to what I call type introspection and meta querying. Both are really useful in many applications. C++ has support a great support for type introspection, and has a basic suport of meta querying. We'll see how the two compares.
+There is two main part that people refer when talking about reflection: reflection and reification. Here I want to bring to light multiple facets of the reflection part. For the lack of official terms, I'll refer to what I call type introspection and meta querying. Both are really useful in many applications. C++ has a great support for type introspection and has a basic support of meta querying. We'll see how the two compares.
 
-**Type introspection** is the feature of reflection to ask the object something about something in particular. For example, you could ask an object if it has a `get_area()` member function in order to call it, or you could query the object to know if it has a `perimeter` data member convertible to int. What we're doing here is basically inspect the object to check if it fulfill a set of crieria. You can check for the validity of almost any expression in C++.
+**Type introspection** is the feature of reflection to ask the object something about something in particular. For example, you could ask an object if it has a `get_area()` member function in order to call it, or you could query the object to know if it has a `perimeter` data member convertible to int. What we're doing here is basically inspect the object to check if it fulfills a set of criteria. You can check for the validity of almost any expression in C++.
 
-**Meta querying** is what I refer when I have an object and ask it to expose a set of it's attributes. For example, having a set of data members to iterate on and process. This is what most people think about when talking about reflection in programming languages. It's the kind of information you can get out of a meta object.
+**Meta querying** is what I refer when I have an object and ask it to expose a set of its attributes. For example, having a set of data members to iterate on and process. This is what most people think about when talking about reflection in programming languages. It's the kind of information you can get out of a meta object.
 
 ## Type Introspection in C++
 
@@ -51,7 +51,7 @@ int main() {
 }
 ```
 
-The expression `t.foo()` and `t.bar()` are part of the signature of the function, more precisely it's return type. While performming overload resolution, the compiler will drop any function that thier instantiation would cause an ill-formed expression from the list of possible overloads.
+The expression `t.foo()` and `t.bar()` are part of the signature of the function, more precisely it's return type. While performing overload resolution, the compiler will drop any function that their instantiation would cause an ill-formed expression from the list of possible overloads.
 
 So in the example above, we were able to check for the presence of `T::bar()` and `T::foo()` using sfinae.
 
@@ -76,35 +76,35 @@ static_assert(has_perimeter<Foo>);
 static_assert(!has_perimeter<Bar>);
 ```
 
-It's not an article about sfinae, maybe I'll write one in the future. In the meantime, there are great articles that explains it much better than I think I can do! Anyways, I'll give it a shot. In this particular case,  the compiler will try to find the more specialized version of `has_perimeter` for a given set of template arguments. If the expression `(<value of T>).perimeter` is invalid, the compiler cannot pick that specialization and will fallback to the default, which is equal to false. On the other hand, if the expression is valid, the specialization can be picked, then yeild true.
+It's not an article about sfinae, maybe I'll write one in the future. In the meantime, there are great articles that explain it much better than I think I can do! Anyways, I'll give it a shot. In this particular case,  the compiler will try to find the more specialized version of `has_perimeter` for a given set of template arguments. If the expression `(<value of T>).perimeter` is invalid, the compiler cannot pick that specialization and will fallback to the default, which is equal to false. On the other hand, if the expression is valid, the specialization can be picked, then yield true.
 
-This is a simple case of very basic reflection capability, but just this feature alone can yeild impressive results, such as emulating concepts.
+This is a simple case of very basic reflection capability, but just this feature alone can yield impressive results, such as emulating concepts.
 
 If you're interested in introspection capabilities of C++, please go check
 Jean Guegant's blog post [An introduction to C++'s SFINAE concept: compile-time introspection of a class member](https://jguegant.github.io/blogs/tech/sfinae-introduction.html)
 
 #### Type Traits
 
-We also cannot dismiss the type traits library provided by the STL. To some extents, it allows reflecting on types by implementing predefine capability or property to check. Some on these traits such as `std::is_final` or `std::is_polymorphic` cannot be implemented in pure C++, and needs compiler support.
+We also cannot dismiss the type traits library provided by the STL. To some extents, it allows reflecting on types by implementing predefine capability or property to check. Some of these traits such as `std::is_final` or `std::is_polymorphic` cannot be implemented in pure C++, and needs compiler support.
 
 ## Meta-Querying Objects in C++
 
 Who dream of writing `$Foo.members()`? yeah, me too. But this isn't about the future but what we can do now. Does C++ let you
 list the set of members or the set of other things? For listing members, unfortunately, no. I don't have a magical solution for you today.
-You can't ask the compiler to instanciate some code for each data members, or for each member functions.
-However, there is one particular construct in the language that exposes it's interface in such a way that let you do all sorts of metaprogramming on it.
+You can't ask the compiler to instantiate some code for each data members, or for each member functions.
+However, there is one particular construct in the language that exposes its interface in such a way that let you do all sorts of metaprogramming on it.
 
 *Functions*. Yes, normal functions, member function, function objects and even function templates (to some extent). As long as it's not overloaded,
-you can inspect it's return type, it's parameter types, it's member of which type in case of member functions, and even let you
-inspect how many template parameter it need to take in some cases.
+you can inspect its return type, it's parameter types, member of which class in case of member functions, and even let you
+inspect how many template parameter it needs to take in some cases.
 
-Why is this big you ask? Why do I seem to act like this is a revolutionnary thing? Well first, we can use function to transfer behavior and data around quite easily. But it is, give me a function object or function pointer, I can tell you how can call it using meta information!
+Why is this big you ask? Why do I seem to act like this is a revolutionary thing? Well first, we can use functions to transfer behaviour and data around quite easily. Also, the whole interface of a function is the way you call it. Give me a function object or function pointer, I can tell you how can call it using meta information!
 
-This can happen because function and function objects exposes their whole interface in their type or call operator type, such as parameter types and return type. We'll see how we can use this property to make a small reflection library.
+This can happen because function and function objects expose their whole interface in their type or `operator()` type, such as parameter types and return type. We'll see how we can use this property to make a small reflection library.
 
 ## Reflecting Free Function
 
-Querying function to get a list of parameters can be done because all that data is encoded in it's type. You probably did once reflected a function type by accident, but you know, many good things in C++ happened by accident. Here's an example of such code:
+Querying function to get a list of parameters can be done because all that data is encoded in its type. You probably did once reflected a function type by accident, but you know, many good things in C++ happened by accident. Here's an example of such code:
 
 ```c++
 template<typename R>
@@ -119,7 +119,7 @@ auto main() -> int {
 }
 ```
 
-In this example, we are using some reflection capability of the compiler to get the return type of a free function, and default initialize the return value. Is it really reflection? In some way, yes. We can send a function to the `print_default_result` function, and it can infer the return type from the function we sent it. This can work because of template argument deduction. We will use this feature to make our small reflection library.
+In this example, we are using some reflection capability of the compiler to get the return type of a free function, and default initializes the return value. Is it really reflection? In some way, yes. We can send a function to the `print_default_result` function, and it can infer the return type from the function we sent it. This can work because of template argument deduction. We will use this feature to make our small reflection library.
 
 In the example above, we only extracted the return type of the function. In fact, our `print_default_result` function only work with function that takes no parameter. Let's fix that by adding a version that accept a function with a parameter:
 
@@ -141,9 +141,9 @@ auto print_default_result(R(*)(Args...)) -> void { // Accept a function with any
 }
 ```
 
-As we said, functions are almost the only basic entities that exposes valuable properties in their type. Since what we want to reflect is part of their type, we can use the pattern matching habilities of template argument deduction to extract and expose the return and argument types.
+As we said, functions are almost the only basic entities that expose valuable properties in their type. Since what we want to reflect is part of their type, we can use the pattern matching abilities of template argument deduction to extract and expose the return and argument types.
 
-Can we do something more useful than print a defaut constructed object when reflecting the return type of a function? Yes of course! Here's the first building block of our reflection library:
+Can we do something more useful than print a default constructed object when reflecting the return type of a function? Yes of course! Here's the first building block of our reflection library:
 
 ```c++
 template<typename NotAFunction>
@@ -160,7 +160,7 @@ using function_result_t = typename function_traits<F>::result; /// #3
 
 So what is happening here? Here instead of using template argument deduction for our pattern matching, we used partial specialization. At the line marked `#1`, we are defining the base case, where the type sent to us is not a function. We expose nothing in this case. That way we stay sfinae friendly.
 
-Then, at line marked `#2` we expose an alias equal to the return type of the function type sent as template parameter.
+Then, at the line marked `#2` we expose an alias equal to the return type of the function type sent as template parameter.
 
 Finally, at line `#3`, we are making an alias to the member type alias to make it easier to use.
 
@@ -177,7 +177,7 @@ template<typename F>
 using function_arguments_t = typename function_traits<F>::parameters;
 ```
 
-Since we cannot make an alias to a argument pack, we make an alias to a tuple type.
+Since we cannot make an alias to a parameter pack, we make an alias to a tuple type.
 
 ## Using function reflection
 
@@ -197,11 +197,11 @@ int main() {
 }
 ```
 
-The cool thing here is it enable `decltype(auto)` like deduction without using return type deduction. Useful if you don't have C++14 enabled on your project.
+The cool thing here is it enables `decltype(auto)` like deduction without using return type deduction. Useful if you don't have C++14 enabled on your project.
 
 ## Lambda
 
-Of course, we also want to support lambda types. Inspecting a lambda type isn't much harder than inspecting a function pointer directly. A lambda is a compiler generated type that has a member `operator()`. If we take a pointer to that member, we can send it to our `function_traits` struct so we can see its gut!
+Of course, we also want to support lambda types. Inspecting a lambda type isn't much harder than inspecting a function pointer directly. A lambda is a compiler-generated type that has a member `operator()`. If we take a pointer to that member, we can send it to our `function_traits` struct so we can see its gut!
 
 ```c++
 template<typename Lambda>
@@ -214,7 +214,7 @@ struct function_traits<R(C::*)(Args...) const> { // #2
 };
 ```
 
-We changed two things here. First, at line marked `#1`, we changed our default case. We will assume (for the sake of simplicity) that when a type that is not a function pointer is sent it's a lambda.
+We changed two things here. First, at the line marked `#1`, we changed our default case. We will assume (for the sake of simplicity) that when a type that is not a function pointer is sent it's a lambda.
 
 At line `#2`, we specialize our `function_traits` struct for a member function type. This will let us inspect the call operator of lambdas.
 
@@ -232,11 +232,11 @@ using T = std::tuple_element_t<0, function_arguments_t<decltype(lambda)>>;
 
 At this point, we are able to extract information about a function type and use it in a meaningful way. Yet our facility supports a powerful feature of reflection: reification.
 
-What is that? Reification is to make something real, concrete. Here's a quote from wikipedia:
+What is that? Reification is to make something real, concrete. Here's a quote from Wikipedia:
 
 > Reification is making something real, bringing something into being, or making something concrete.
 
-The idea is this: since we have meta information about an object, we can make another object made from this meta information. We will re-use the return type and parameter type to create a new, different object type.
+The idea is this: since we have meta-information about an object, we can make another object made from this meta information. We will re-use the return type and parameter type to create a new, different object type.
 
 First, let's make some additional utilities about function related traits:
 
@@ -274,7 +274,7 @@ auto wrap_lambda(L lambda) {
 }
 ```
 
-Here in this example we are creating a new callable type that extend privately the lambda. Yet, for the sake of this example, we expose a function that has the same parameters as the lambda function we recieve. We used reification to recreate the call operator, but we can go further and implement something we could not see without reflection and reification. 
+Here in this example, we are creating a new callable type that extends privately the lambda. Yet, for the sake of this example, we expose a function that has the same parameters as the lambda function we receive. We used reification to recreate the call operator, but we can go further and implement something we could not see without reflection and reification. 
 
 Here an example of a function object that allows binding it's parameters before usage:
 
@@ -323,7 +323,7 @@ Now that's something! We have now an object that supports deferring a call and b
 
 We simply reify a bind function that takes the exact parameters as the lambda, and then store them in a reified tuple.
 
-Although note that this implementation is minimal and does not handle some ceveats, such as lifetime extension.
+Although note that this implementation is minimal and does not handle some caveats, such as lifetime extension.
 
 Let's look at some usage of our `make_deferred` function:
 
@@ -354,7 +354,7 @@ That's the power of reflection + reification.
 
 ## Generic Lambdas
 
-At this point, we simply reflect on normal function. Indeed, they are the easiest to reflect, but why stop there? There may be useful use case where you'd want to reflect on generic lambda. Imagine you're in a situation where the user gives you a lambda, and a partial set of arguments. Let's say you have a function that gives you a value of any type called `magic_val<T>()`, and you have to call the lambda function. To do that, you'll have to inspect the parameters of the lambda to know the type of the missing parameter from the user provided set.
+At this point, we simply reflect on normal function. Indeed, they are the easiest to reflect, but why stop there? There may be a useful use case where you'd want to reflect on generic lambda. Imagine you're in a situation where the user gives you a lambda, and a partial set of arguments. Let's say you have a function that gives you a value of any type called `magic_val<T>()`, and you have to call the lambda function. To do that, you'll have to inspect the parameters of the lambda to know the type of the missing parameter from the user provided set.
 
 Here's an example of usage:
 
@@ -377,11 +377,11 @@ auto fctptr1 = &decltype(lambda)::operator(); // Error!
 auto fctptr2 = &decltype(lambda)::operator()<int>; // works.
 ```
 
-For the example of `magic_call` to work, we must deduce template parameters from a potentially different set. In the example of usage above, the user send `int, double, char const(&)[4], std::string_view`, but the template argument to deduce are `const const(&)[4]` and `std::string_view` only, so we must drop the `int` and the `double`.
+For the example of `magic_call` to work, we must deduce template parameters from a potentially different set. In the example of usage above, the user sends `int, double, char const(&)[4], std::string_view`, but the template argument to deduce are `const const(&)[4]` and `std::string_view` only, so we must drop the `int` and the `double`.
 
-So our utility `function_traits` won't work directly, since it needs the type to extract the call operator directly. To support generic lambdas, we will introduce a new utility.
+So our utility `function_traits` won't work directly since it needs the type to extract the call operator directly. To support generic lambdas, we will introduce a new utility.
 
-To deduce template arguments, we will use a simple algorithm. We will try to instanciate the template with all every parameter type the use send to us. If it result in a subtitution failure (since we sent too many template arguments) then we will drop the first parameter and try again. In pseudocode, it will look like that:
+To deduce template arguments, we will use a simple algorithm. We will try to instantiate the template with all every parameter type the use send to us. If it results in a substitution failure (since we sent too many template arguments) then we will drop the first parameter and try again. In pseudocode, it will look like that:
 
     function deduced_function_traits(tfunc, ...arg_types)
         if tfunc instantiable with arg_types... then
@@ -457,9 +457,9 @@ magic_call(
 );
 ```
 
-What should be part of `...args`? Our current algorithm will find that `operator()<int, int, int>` can instantiated, so the first int will be obtained through `magic_val<int>()` instead of the first argument sent.
+What should be part of `...args`? Our current algorithm will find that `operator()<int, int, int>` can be instantiated, so the first int will be obtained through `magic_val<int>()` instead of the first argument sent.
 
-Other than that, deduction will only produce the exact result if the template arguments are forwading references. Consider this code:
+Other than that, the deduction will only produce the exact result if the template arguments are forwarding references. Consider this code:
 
 ```c++
 auto vec = std::vector{1, 2, 3};
@@ -470,22 +470,22 @@ magic_call(
 );
 ```
 
-What's happening here? The `operator()` is instanciated two times. Since we are using perfect forwarding and we send template parameter manually, we first instantiate the call operator like that in our algorithm: `operator()<std::vector<int>&>`. So even though `auto` parameter should not deduce references, we are instnaciating it with a reference type.
+What's happening here? The `operator()` is instantiated two times. Since we are using perfect forwarding and we send template parameter manually, we first instantiate the call operator like that in our algorithm: `operator()<std::vector<int>&>`. So even though `auto` parameter should not deduce references, we are instantiating it with a reference type.
 
-Then, we call the function normally, instantiating the call operator with the correctly deduced arguments. This may produce incorrect result or unwanted compilation slowdown.
+Then, we call the function normally, instantiating the call operator with the correctly deduced arguments. This may produce an incorrect result or unwanted compilation slowdown.
 
 We are also assuming all deduced parameters are at the end of the argument list. This may be a limitation in some cases.
 
 ## Reflecting Other Functions
 
-In all the example above we reflected the call  operator of lambda and function pointers. Hovever, everything there is also applicable with other member function than `operator()`. Just replace `&T::opreator()` by `&T::funcName` and you can reflect specific member functions.
+In all the example above we reflected the call  operator of lambda and function pointers. However, everything there is also applicable to other member function than `operator()`. Just replace `&T::opreator()` by `&T::funcName` and you can reflect specific member functions.
 
 ## Don't Reinvent The Wheel!
 
-This look all beautiful, but it can be quite hard to create and maintain it by yourself. This is why boost ship a complete implementation of function traits. I found it actually amazing the amount of information that can be reflected on function types. If you're interested, check out [Boost.CallableTraits](https://github.com/boostorg/callable_traits)!
+This looks all beautiful, but it can be quite hard to create and maintain it by yourself. This is why boost ship a complete implementation of function traits. I found it actually amazing the amount of information that can be reflected on function types. If you're interested, check out [Boost.CallableTraits](https://github.com/boostorg/callable_traits)!
 
 # Conclusion
 
-Reflection in C++ is yet to be added to the language, but that doesn't mean C++ don't havy any reflection capabilities. We just demonstrated that to some extent, C++ is capable of providing some reflection features that can solve some of today's problems.
+Reflection in C++ is yet to be added to the language, but that doesn't mean C++ don't have any reflection capabilities. We just demonstrated that to some extent, C++ is capable of providing some reflection features that can solve some of today's problems.
 
-What will be possible with tomorrow's reflection? What are the competing proposal and what are the pros and cons of each of those? We will se that in the next part of this blog post series.
+What will be possible with tomorrow's reflection? What are the competing proposal and what are the pros and cons of each of those? We will see that in the next part of this blog post series.
