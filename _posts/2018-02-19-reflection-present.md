@@ -394,23 +394,31 @@ To deduce template arguments, we will use a simple algorithm. We will try to ins
 In C++ template syntax, a functioning algorithm would look like that: 
 
 ```c++
+// Declaration of our function. Must be declared to provide specializations.
+template<typename, typename, typename>
+struct deduced_function_traits_helper;
+
+// This specialization matches the first scope,
+// more presicely `if TFunc instantiable with ArgTypes... then`
+template<typename TFunc, typename... ArgTypes>
+struct deduced_function_traits_helper<TFunc, std::tuple<ArgTypes...>, // arguments TFunc and ArgTypes
+    // if TFunc is instantiable with ArgTypes
+    std::void_t<decltype(&TFunc::template operator()<ArgTypes...>)>
+> // return function_traits with function pointer
+     : function_traits<decltype(&TFunc::template operator()<ArgTypes...>)> {};
+
+// This specialisation matches the second scope of the pseudocode,
+// the `else if size of ArgTypes larger than 0`
+template<typename TFunc, typename First, typename... ArgTypes>
+struct deduced_function_traits_helper<TFunc, std::tuple<First, ArgTypes...>, // arguments TFunc and First, ArgTypes...
+    // if not instantiable (expressed as void)
+    void
+> // return deduced_function_traits(TFunc, drop first ArgTypes...)
+     :  deduced_function_traits<TFunc, std::tuple<ArgTypes...>> {};
+
 // Else return nothing, end of algorithm
 template<typename, typename, typename = void>
 struct deduced_function_traits_helper {};
-
-template<typename TFunc, typename... ArgTypes>
-struct deduced_function_traits_helper<TFunc, std::tuple<ArgTypes...>, // arguments TFunc and ArgTypes
- // if is instantiable
-    std::void_t<decltype(&TFunc::template operator()<ArgTypes...>)>
-> // return function_traits with function pointer
-    : function_traits<decltype(&TFunc::template operator()<ArgTypes...>)> {};
-
-template<typename TFunc, typename First, typename... ArgTypes>
-struct deduced_function_traits_helper<TFunc, std::tuple<First, ArgTypes...>, // arguments TFunc and First, ArgTypes...
-    // if not instantiable
-    void
-> // return deduced_function_traits(TFunc, drop first ArgTypes...)
-    :  deduced_function_traits<TFunc, std::tuple<ArgTypes...>> {};
 ```
 We can also define some alias to ease it's usage:
 ```c++
