@@ -76,7 +76,7 @@ static_assert(has_perimeter<Foo>);
 static_assert(!has_perimeter<Bar>);
 ```
 
-It's not an article about sfinae, maybe I'll write one in the future. In the meantime, there are great articles that explain it much better than I think I can do! Anyways, I'll give it a shot. In this particular case,  the compiler will try to find the more specialized version of `has_perimeter` for a given set of template arguments. If the expression `(<value of T>).perimeter` is invalid, the compiler cannot pick that specialization and will fallback to the default, which is equal to false. On the other hand, if the expression is valid, the specialization can be picked, then yield true.
+It's not an article about sfinae, maybe I'll write one in the future. In the meantime, there are great articles that explain it much better than I think I can do! Anyways, I'll make a quick summary. In this particular case,  the compiler will try to find the more specialized version of `has_perimeter` for a given set of template arguments. If the expression `(<value of T>).perimeter` is invalid, the compiler cannot pick that specialization and will fallback to the default, which is equal to false. On the other hand, if the expression is valid, the specialization can be picked, then yield true.
 
 This is a simple case of very basic reflection capability, but just this feature alone can yield impressive results, such as emulating concepts.
 
@@ -90,7 +90,7 @@ We also cannot dismiss the type traits library provided by the STL. To some exte
 ## Meta-Querying Objects in C++
 
 Who dream of writing `$Foo.members()`? yeah, me too. But this isn't about the future but what we can do now. Does C++ let you
-list the set of members or the set of other things? For listing members, unfortunately, no. I don't have a magical solution for you today.
+list the set of members or the set of other things? For listing members, unfortunately, no. We don't have a magical solution to do this today, at least, without serious limitation.
 You can't ask the compiler to instantiate some code for each data members, or for each member functions.
 However, there is one particular construct in the language that exposes its interface in such a way that let you do all sorts of metaprogramming on it.
 
