@@ -411,7 +411,7 @@ struct deduced_function_traits_helper<TFunc, std::tuple<ArgTypes...>, // argumen
 // the `else if size of ArgTypes larger than 0`
 template<typename TFunc, typename First, typename... ArgTypes>
 struct deduced_function_traits_helper<TFunc, std::tuple<First, ArgTypes...>, // arguments TFunc and First, ArgTypes...
-    // if not instantiable (expressed as void)
+    // if not instantiable (expressed as `void`)
     void
 > // return deduced_function_traits(TFunc, drop first ArgTypes...)
      :  deduced_function_traits<TFunc, std::tuple<ArgTypes...>> {};
@@ -420,6 +420,7 @@ struct deduced_function_traits_helper<TFunc, std::tuple<First, ArgTypes...>, // 
 template<typename, typename, typename = void>
 struct deduced_function_traits_helper {};
 ```
+
 We can also define some alias to ease it's usage:
 ```c++
 template<typename F, typename... Args>
@@ -438,21 +439,68 @@ template<typename F, typename... Args>
 constexpr auto deduced_arguments_count = std::tuple_size<deduced_function_arguments_t<F, Args...>>::value;
 ```
 
-Now, the implementation of `magic_call`:
+Now, we have the tools to reflect on generic lambdas. To reflect parameters off them, we will use `deduced_function_arguments_t` instead of `function_arguments_t`.
+
+Now to implement magic call, we will call `magic_val<P>` for all the first parameters. The number of parameters to get through `magic_val` is the total number of parameter the function takes minus the number of provided arguments. To do this, we will use an index sequence:
+```c++
+//                                      the lambda type `L`  -----v
+auto sequence = std::make_index_sequence< deduced_arguments_count<L, Args...> - sizeof...(Args) >();
+//                                       The provided arguments  ----^
+```
+
+The Lambda of type `L` man now be called with the set of provided arguments and the remaining argument to get through `magic_val`. Let `S` the the sequence generated above:
+
+```c++
+lambda(magic_val<deduced_nth_argument_t<S, L, Args...>>()..., std::forward<Args>(args)...);
+```
+
+Now to implement the `magic_call` function, we will simply need to call the expression above with the generated sequence. Here's how it would look like:
 
 ```c++
 template<typename L, typename... Args, std::size_t... S>
 auto magic_call(std::index_sequence<S...>, L lambda, Args&&... args) -> decltype(auto) {
-    lambda(magic_val<deduced_nth_argument_t<S, L, Args...>>()..., std::forward<Args>(args)...);
+    return lambda(magic_val<deduced_nth_argument_t<S, L, Args...>>()..., std::forward<Args>(args)...);
 }
 
 template<typename L, typename... Args>
 auto magic_call(L lambda, Args&&... args) -> decltype(auto) {
     // We generate a sequence from 0 up to the number of parameter we need to get through `magic_val`
-    auto sequence = std::make_index_sequence<deduced_arguments_count<L, Args...> - sizeof...(args)>();
-    magic_call(sequence, std::move(lambda), std::forward<Args>(args)...);
+    auto sequence = std::make_index_sequence<deduced_arguments_count<L, Args...> - sizeof...(Args)>();
+    return magic_call(sequence, std::move(lambda), std::forward<Args>(args)...);
 }
 ```
+
+And that will do the trick! Now, back to our usage example of `magic_call`:
+```c++
+magic_call(
+    [](SomeType1, SomeType2, int, double, auto&&, auto&&  ) {},
+       /*magic*/  /*magic*/  4,   5.4,    "str1", "str2"sv
+);
+```
+
+The implementation will expand to this code (pseudo template expansion):
+```c++
+template<>
+auto magic_call(
+                std::index_sequence<0, 1>,
+                L lambda,
+                int&& arg0,
+                double&& arg1,
+                char const(&arg2)[5],
+                std::string_view&& arg3
+    ) -> decltype(auto)
+{
+    return lambda(
+        magic_val<SomeType1>(),  // deduced_nth_argument_t<0, L, int, double, char const(&)[5], std::string_view>
+        magic_val<SomeType2>(),  // deduced_nth_argument_t<1, L, int, double, char const(&)[5], std::string_view>
+        std::forward<int>(arg0), // std::forward<Args>(args)...
+        std::forward<double>(arg1),
+        std::forward<char const(&)[5]>(arg2),
+        std::forward<std::string_view>(arg3)
+    );
+}
+```
+
 
 ## Caveats of reflecting Generic Lambdas
 
