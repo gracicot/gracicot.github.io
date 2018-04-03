@@ -377,7 +377,7 @@ auto fctptr1 = &decltype(lambda)::operator(); // Error!
 auto fctptr2 = &decltype(lambda)::operator()<int>; // works.
 ```
 
-For the example of `magic_call` to work, we must deduce template parameters from a potentially different set. In the example of usage above, the user sends `int, double, char const(&)[4], std::string_view`, but the template argument to deduce are `const const(&)[4]` and `std::string_view` only, so we must drop the `int` and the `double`.
+For the example of `magic_call` to work, we must deduce template parameters from a potentially different set. In the example of usage above, the user sends `int, double, char const(&)[5], std::string_view`, but the template argument to deduce are `char const(&)[5]` and `std::string_view` only, so we must drop the `int` and the `double`.
 
 So our utility `function_traits` won't work directly since it needs the type to extract the call operator directly. To support generic lambdas, we will introduce a new utility.
 
