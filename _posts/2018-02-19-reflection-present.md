@@ -364,7 +364,7 @@ magic_call(
 // magic_val<T>() called for those two
 //     v----  ----v
     [](SomeType1, SomeType2, int, double, auto&&, auto&&  ) {},
-       /*magic*/  /*magic*/  4,   5.4,    "str",  "strv"sv
+       /*magic*/  /*magic*/  4,   5.4,    "str1", "str2"sv
 );
 ```
 
@@ -459,6 +459,7 @@ Now to implement the `magic_call` function, we will simply need to call the expr
 ```c++
 template<typename L, typename... Args, std::size_t... S>
 auto magic_call(std::index_sequence<S...>, L lambda, Args&&... args) -> decltype(auto) {
+    // Call the lambda with both magic_val and provided parameter in ...args 
     return lambda(magic_val<deduced_nth_argument_t<S, L, Args...>>()..., std::forward<Args>(args)...);
 }
 
@@ -470,14 +471,13 @@ auto magic_call(L lambda, Args&&... args) -> decltype(auto) {
 }
 ```
 
-And that will do the trick! Now, back to our usage example of `magic_call`:
+And that will do the trick! We have the first call that generate an index sequence and call the functoin that invokes the lambda with both parameter sets. Now, for a use case like this one:
 ```c++
 magic_call(
     [](SomeType1, SomeType2, int, double, auto&&, auto&&  ) {},
        /*magic*/  /*magic*/  4,   5.4,    "str1", "str2"sv
 );
 ```
-
 The implementation will expand to this code (pseudo template expansion):
 ```c++
 template<>
@@ -501,6 +501,7 @@ auto magic_call(
 }
 ```
 
+Implement `magic_val` for a set of predefined types and we basically have implemented automatic dependency injection of function parameter, just like those fancy Javascript framework are doing! 
 
 ## Caveats of reflecting Generic Lambdas
 
