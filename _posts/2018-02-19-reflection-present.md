@@ -76,7 +76,9 @@ static_assert(has_perimeter<Foo>);
 static_assert(!has_perimeter<Bar>);
 ```
 
-It's not an article about sfinae, maybe I'll write one in the future. In the meantime, there are great articles that explain it much better than I think I can do! Anyways, I'll make a quick summary. In this particular case,  the compiler will try to find the more specialized version of `has_perimeter` for a given set of template arguments. If the expression `(<value of T>).perimeter` is invalid, the compiler cannot pick that specialization and will fallback to the default, which is equal to false. On the other hand, if the expression is valid, the specialization can be picked, so the value true is obtained.
+It's not an article about sfinae, but I'll make a quick summary.
+
+In this particular case, the compiler will try to find the more specialized version of `has_perimeter` for a given set of template arguments. If the expression `(<value of T>).perimeter` is invalid, the compiler cannot pick that specialization and will fallback to the default, which is equal to false. On the other hand, if the expression is valid, the specialization can be picked, so the value true is obtained.
 
 This is a simple case of very basic reflection capability, but just this feature alone can yield impressive results, such as emulating concepts.
 
