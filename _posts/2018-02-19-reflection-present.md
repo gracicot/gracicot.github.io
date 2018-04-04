@@ -23,7 +23,7 @@ There is two main part that people refer when talking about reflection: reflecti
 
 **Type introspection** is the feature of reflection to ask the object something about something in particular. For example, you could ask an object if it has a `get_area()` member function in order to call it, or you could query the object to know if it has a `perimeter` data member convertible to int. What we're doing here is basically inspect the object to check if it fulfills a set of criteria. You can check for the validity of almost any expression in C++.
 
-**Meta querying** is what I refer when I have an object and ask it to expose a set of its attributes. For example, querying the  set of data members of a class to iterate on and process. . This is what most people think about when talking about reflection in programming languages. It's the kind of information you can get out of a meta object.
+**Meta querying** is what I refer when I have an object and ask it to expose a set of its attributes, like querying the set of data members of a class. It's the kind of reflection we can do `for(auto member : $SomeType.members()) { }`, what most people think about when talking about reflection in programming languages. That information is usually obtained through meta objects.
 
 ## Type Introspection in C++
 
