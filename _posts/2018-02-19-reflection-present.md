@@ -514,7 +514,7 @@ Implement `magic_val` for a set of predefined types and we basically have implem
 
 ## Caveats of reflecting Generic Lambdas
 
-As showed above, reflecting generic lambdas require us to deduce template arguments manually. The showned algorithm is far from perfect. It may produce oncorrect result with variadic generic lambda, because any number of template parameter can be sent. Here's an example of that:
+As showed above, reflecting generic lambdas require us to deduce template arguments manually. The showned algorithm is far from perfect. It may produce incorrect result with variadic generic lambda, because any number of template parameter can be sent. Here's an example of that:
 
 ```c++
 magic_call(
