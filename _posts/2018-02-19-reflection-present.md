@@ -87,12 +87,18 @@ Jean Guegant's blog post [An introduction to C++'s SFINAE concept: compile-time 
 
 We also cannot dismiss the type traits library provided by the STL. To some extents, it allows reflecting on types by implementing predefine capability or property to check. Some of these traits such as `std::is_final` or `std::is_polymorphic` cannot be implemented in pure C++, and needs compiler support.
 
-## Meta-Querying Objects in C++
+## Meta Querying Objects in C++
 
 Who dream of writing `$Foo.members()`? yeah, me too. But this isn't about the future but what we can do now. Does C++ let you
-list the set of members or the set of other things? For listing members, unfortunately, no. We don't have a magical solution to do this today, at least, without serious limitation.
-You can't ask the compiler to instantiate some code for each data members, or for each member functions.
-However, there is one particular construct in the language that exposes its interface in such a way that let you do all sorts of metaprogramming on it.
+list the set of members or the set of other things? For listing members, unfortunately, no. We can do it today, but not without serious limitations.
+
+Using dark wizardry, some genious people managed to reflect members of class types to some extent. The library implementing this is [`magic_get`](https://github.com/apolukhin/magic_get). The limitation is that the reflected class must be an aggregate type. Sadly, many reflection use case for class member also need member names, such as serialization. magic_get cannot fetch member names, only the count of members in the reflected class and their types.
+
+The mechanism implementing this is too complicated for a single blog post. If you're intereted in the implementation details of magic_get, I suggest you to watch the cppcon 2016 talk [C++14 Reflections Without Macros, Markup nor External Tooling..](https://www.youtube.com/watch?v=abdeAew3gmQ).
+
+## Another Kind Of Reflection?
+
+There is another particular construct in the language I want to bring our attention into. It exposes its interface in such a way that let you do all sorts of metaprogramming on it, and I want to focus on it today.
 
 *Functions*. Yes, normal functions, member function, function objects and even function templates (to some extent). As long as it's not overloaded,
 you can inspect its return type, it's parameter types, member of which class in case of member functions, and even let you
@@ -102,7 +108,7 @@ Why is this big you ask? Why do I seem to act like this is a revolutionary thing
 
 This can happen because function and function objects expose their whole interface in their type or `operator()` type, such as parameter types and return type. We'll see how we can use this property to make a small reflection library.
 
-## Reflecting Free Function
+## Reflecting Function Types
 
 Querying function to get a list of parameters can be done because all that data is encoded in its type. You probably did once reflected a function type by accident, but you know, many good things in C++ happened by accident. Here's an example of such code:
 
