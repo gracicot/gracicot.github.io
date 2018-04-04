@@ -23,7 +23,7 @@ There is two main part that people refer when talking about reflection: reflecti
 
 **Type introspection** is the feature of reflection to ask the object something about something in particular. For example, you could ask an object if it has a `get_area()` member function in order to call it, or you could query the object to know if it has a `perimeter` data member convertible to int. What we're doing here is basically inspect the object to check if it fulfills a set of criteria. You can check for the validity of almost any expression in C++.
 
-**Meta querying** is what I refer when I have an object and ask it to expose a set of its attributes. For example, having a set of data members to iterate on and process. This is what most people think about when talking about reflection in programming languages. It's the kind of information you can get out of a meta object.
+**Meta querying** is what I refer when I have an object and ask it to expose a set of its attributes. For example, querying the  set of data members of a class to iterate on and process. . This is what most people think about when talking about reflection in programming languages. It's the kind of information you can get out of a meta object.
 
 ## Type Introspection in C++
 
@@ -51,7 +51,7 @@ int main() {
 }
 ```
 
-The expression `t.foo()` and `t.bar()` are part of the signature of the function, more precisely it's return type. While performing overload resolution, the compiler will drop any function that their instantiation would cause an ill-formed expression from the list of possible overloads.
+The expression `t.foo()` and `t.bar()` are part of the signature of the function, more precisely it's return type. While performing overload resolution, the compiler will ignore any function that their instantiation would cause an ill-formed expression.
 
 So in the example above, we were able to check for the presence of `T::bar()` and `T::foo()` using sfinae.
 
@@ -76,7 +76,7 @@ static_assert(has_perimeter<Foo>);
 static_assert(!has_perimeter<Bar>);
 ```
 
-It's not an article about sfinae, maybe I'll write one in the future. In the meantime, there are great articles that explain it much better than I think I can do! Anyways, I'll make a quick summary. In this particular case,  the compiler will try to find the more specialized version of `has_perimeter` for a given set of template arguments. If the expression `(<value of T>).perimeter` is invalid, the compiler cannot pick that specialization and will fallback to the default, which is equal to false. On the other hand, if the expression is valid, the specialization can be picked, then yield true.
+It's not an article about sfinae, maybe I'll write one in the future. In the meantime, there are great articles that explain it much better than I think I can do! Anyways, I'll make a quick summary. In this particular case,  the compiler will try to find the more specialized version of `has_perimeter` for a given set of template arguments. If the expression `(<value of T>).perimeter` is invalid, the compiler cannot pick that specialization and will fallback to the default, which is equal to false. On the other hand, if the expression is valid, the specialization can be picked, so the value true is obtained.
 
 This is a simple case of very basic reflection capability, but just this feature alone can yield impressive results, such as emulating concepts.
 
@@ -89,10 +89,9 @@ We also cannot dismiss the type traits library provided by the STL. To some exte
 
 ## Meta Querying Objects in C++
 
-Who dream of writing `$Foo.members()`? yeah, me too. But this isn't about the future but what we can do now. Does C++ let you
-list the set of members or the set of other things? For listing members, unfortunately, no. Well I mean, we can do it today, but not without serious limitations.
+Right now, C++ has very limited support for meta querying. For example, we cannot *yet* write `$Foo.members()`. There are some tricks that exists that we can use today, but not without serious limitations.
 
-Using dark wizardry, some genious people managed to reflect members of class types to some extent using only C++14. The library implementing this is called [`magic_get`](https://github.com/apolukhin/magic_get). The limitation is that the reflected class must be an aggregate type. Sadly, many of reflection use case for class member also need member names, such as serialization. magic_get cannot fetch member names, only the count of members in the reflected class and their types.
+Using dark wizardry, some geniuses managed to reflect members of class types to some extent using only C++14. The library implementing this is called [`magic_get`](https://github.com/apolukhin/magic_get). The limitation is that the reflected class must be an aggregate type. Sadly, many of reflection use case for class member also need member names, such as serialization. magic_get cannot fetch member names, only the count of members in the reflected class and their types.
 
 The mechanism implementing this is too complicated for a single blog post. If you're interested in the implementation details of magic_get, I suggest you to watch the cppcon 2016 talk [C++14 Reflections Without Macros, Markup nor External Tooling..](https://www.youtube.com/watch?v=abdeAew3gmQ).
 
@@ -220,7 +219,7 @@ struct function_traits<R(C::*)(Args...) const> { // #2
 };
 ```
 
-We changed two things here. First, at the line marked `#1`, we changed our default case. We will assume (for the sake of simplicity) that when a type that is not a function pointer is sent it's a lambda.
+We changed two things here. First, at the line marked `#1`, we changed our default case. We will assume (for the sake of simplicity) that when a type that is not a function pointer it's a lambda.
 
 At line `#2`, we specialize our `function_traits` struct for a member function type. This will let us inspect the call operator of lambdas.
 
