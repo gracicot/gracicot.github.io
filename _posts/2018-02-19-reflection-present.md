@@ -449,16 +449,16 @@ template<typename F, typename... Args>
 constexpr auto deduced_arguments_count = std::tuple_size<deduced_function_arguments_t<F, Args...>>::value;
 ```
 
-Now, we have the tools to reflect on generic lambdas. To reflect parameters off them, we will use `deduced_function_arguments_t` instead of `function_arguments_t`.
+This implements the tool we need in order to reflect on generic lambdas. Istead of using `function_arguments_t` to reflect parameters off them, we will use `deduced_function_arguments_t`.
 
-Now to implement magic call, we will call `magic_val<P>` for all the first parameters. The number of parameters to get through `magic_val` is the total number of parameter the function takes minus the number of provided arguments. To do this, we will use an index sequence:
+To implement magic call, we will call `magic_val<P>` for all the first parameters. The number of parameters to get through `magic_val` is the total number of parameter the function takes minus the number of provided arguments. To do this, we will use an index sequence:
 ```c++
 //                                      the lambda type `L`  -----v
 auto sequence = std::make_index_sequence< deduced_arguments_count<L, Args...> - sizeof...(Args) >();
 //                                       The provided arguments  ----^
 ```
 
-The Lambda of type `L` man now be called with the set of provided arguments and the remaining argument to get through `magic_val`. Let `S` the the sequence generated above:
+The Lambda of type `L` can be called with the set of provided arguments and the remaining parameters get through `magic_val`. Let `S` the the sequence generated above:
 
 ```c++
 lambda(magic_val<deduced_nth_argument_t<S, L, Args...>>()..., std::forward<Args>(args)...);
@@ -467,14 +467,20 @@ lambda(magic_val<deduced_nth_argument_t<S, L, Args...>>()..., std::forward<Args>
 Now to implement the `magic_call` function, we will simply need to call the expression above with the generated sequence. Here's how it would look like:
 
 ```c++
-template<typename L, typename... Args, std::size_t... S>
-auto magic_call(std::index_sequence<S...>, L lambda, Args&&... args) -> decltype(auto) {
+template<typename T>
+T magic_val() {
+    return T{}; // Simple implementation that default construct the type
+}
+
+//   We could have used decltype(auto) instead of reflection here ------|
+template<typename L, typename... Args, std::size_t... S> //             v
+auto magic_call(std::index_sequence<S...>, L lambda, Args&&... args) -> deduced_function_result_t<L, Args...> {
     // Call the lambda with both magic_val and provided parameter in ...args 
     return lambda(magic_val<deduced_nth_argument_t<S, L, Args...>>()..., std::forward<Args>(args)...);
 }
 
 template<typename L, typename... Args>
-auto magic_call(L lambda, Args&&... args) -> decltype(auto) {
+auto magic_call(L lambda, Args&&... args) -> deduced_function_result_t<L, Args...> {
     // We generate a sequence from 0 up to the number of parameter we need to get through `magic_val`
     auto sequence = std::make_index_sequence<deduced_arguments_count<L, Args...> - sizeof...(Args)>();
     return magic_call(sequence, std::move(lambda), std::forward<Args>(args)...);
@@ -511,7 +517,7 @@ auto magic_call(
 }
 ```
 
-Implement `magic_val` for a set of predefined types and we basically have implemented automatic dependency injection of function parameter, just like those fancy Javascript framework are doing! 
+Implement `magic_val` for a set of predefined types and we basically have implemented automatic dependency injection of function parameter, just like those fancy Javascript framework are so proud of! 
 
 ## Caveats of reflecting Generic Lambdas
 
@@ -539,9 +545,9 @@ magic_call(
 
 What's happening here? The `operator()` is instantiated two times. Since we are using perfect forwarding and we send template parameter manually, we first instantiate the call operator like that in our algorithm: `operator()<std::vector<int>&>`. So even though `auto` parameter should not deduce references, we are instantiating it with a reference type.
 
-Then, we call the function normally, instantiating the call operator with the correctly deduced arguments. This may produce an incorrect result or unwanted compilation slowdown.
+Then, we call the function normally, instantiating the call operator with the correctly deduced arguments. This may produce an incorrect result or unwanted compilation slowdown. Using `auto&&` or sending prvalues + `auto`  will prevent the double instantiation.
 
-We are also assuming all deduced parameters are at the end of the argument list. This may be a limitation in some cases.
+We are also requiring all deduced parameters are at the end of the argument list. This may be a limitation in some cases.
 
 ## Reflecting Other Functions
 
