@@ -243,7 +243,7 @@ What is that? Here's a quote from Wikipedia:
 
 > Reification is making something real, bringing something into being, or making something concrete.
 
- Reification is the action of make something real and concrete. In our case, we use meta infomation to generate a concrete class. 
+ Reification is the action of make something concrete. In our case, we use meta infomation to generate a concrete class. 
 
 The idea is this: since we have meta-information about an object, we can make another object made from this meta information. We will re-use the return type and parameter type to create a new, different object type.
 
