@@ -273,7 +273,7 @@ auto wrap_lambda(, std::index_sequence<S...>, L lambda) {
         }
     };
     
-    retrurn Wrapper{std::move(lambda)};
+    return Wrapper{std::move(lambda)};
 }
 
 // Provide an overload without the sequence:
