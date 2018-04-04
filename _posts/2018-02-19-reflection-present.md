@@ -169,7 +169,7 @@ So what is happening here? Here instead of using template argument deduction for
 
 Then, at the line marked `#2` we expose an alias equal to the return type of the function type sent as template parameter.
 
-Finally, at line `#3`, we are making an alias to the member type alias to make it easier to use.
+Finally, at line `#3`, we are making an alias to the member type to make it easier to use.
 
 Note that we are not handling parameter types yet. As with our function `print_default_result`, we simply add an argument pack so it will also deduce the argument types:
 
