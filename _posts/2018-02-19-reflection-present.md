@@ -472,7 +472,7 @@ T magic_val() {
     return T{}; // Simple implementation that default construct the type
 }
 
-//   We could have used decltype(auto) instead of reflection here ------|
+//   We could have used decltype(auto) instead of reflection here ------v
 template<typename L, typename... Args, std::size_t... S> //             v
 auto magic_call(std::index_sequence<S...>, L lambda, Args&&... args) -> deduced_function_result_t<L, Args...> {
     // Call the lambda with both magic_val and provided parameter in ...args 
