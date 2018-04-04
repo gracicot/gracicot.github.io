@@ -548,7 +548,7 @@ In all the example above we reflected the call  operator of lambda and function 
 
 ## Don't Reinvent The Wheel!
 
-This looks all beautiful, but it can be quite hard to create and maintain it by yourself. This is why boost ship a complete implementation of function traits. I found it actually amazing the amount of information that can be reflected on function types. If you're interested, check out [Boost.CallableTraits](https://github.com/boostorg/callable_traits)!
+This looks all beautiful, but it can be quite hard to create and maintain it by yourself. This is why boost ship a complete implementation of function traits. I found it actually amazing how much information can be reflected in function types. If you're interested, check out [Boost.CallableTraits](https://github.com/boostorg/callable_traits)!
 
 # Conclusion
 
