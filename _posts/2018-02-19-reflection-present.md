@@ -504,7 +504,7 @@ auto magic_call(
                 double&& arg1,
                 char const(&arg2)[5],
                 std::string_view&& arg3
-    ) -> decltype(auto)
+    ) -> void
 {
     return lambda(
         magic_val<SomeType1>(),  // deduced_nth_argument_t<0, L, int, double, char const(&)[5], std::string_view>
