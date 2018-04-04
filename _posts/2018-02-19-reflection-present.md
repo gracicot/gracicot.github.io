@@ -221,7 +221,7 @@ struct function_traits<R(C::*)(Args...) const> { // #2
 };
 ```
 
-We changed two things here. First, at the line marked `#1`, we changed our default case. We will assume (for the sake of simplicity) that when a type that is not a function pointer it's a lambda.
+We changed two things here. First, at the line marked `#1`, we changed our default case. We will assume (for the sake of simplicity) that when a type that is not a function pointer it's a lambda. It's a bit less SFINAE friendly but simpler to show here.
 
 At line `#2`, we specialize our `function_traits` struct for a member function type. This will let us inspect the call operator of lambdas.
 
@@ -332,7 +332,6 @@ Now that's something! We have now an object that supports deferring a call and b
 
 We simply reify a bind function that takes the exact parameters as the lambda, and then store them in a reified tuple.
 
-Although note that this implementation is minimal and does not handle some caveats, such as lifetime extension.
 
 Let's look at some usage of our `make_deferred` function:
 
@@ -360,6 +359,8 @@ int main() {
 ```
 
 That's the power of reflection + reification.
+
+Note that this implementation is minimal for the sake of simplicity and does not handle some caveats, such as the lifetime of references sent to `bind(...)`.
 
 ## Generic Lambdas
 
