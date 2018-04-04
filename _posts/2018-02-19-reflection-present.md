@@ -27,7 +27,7 @@ There is two main part that people refer when talking about reflection: reflecti
 
 ## Type Introspection in C++
 
-C++ offers a quite powerful way to test any expression validity and let you inspect whether an object has a specific member or not. This is done with sfinae today. Here's a basic sfinae example:
+C++ offers a quite powerful way to test any expression validity and let you inspect whether an object has a specific member or not. This is done with [SFINAE](http://en.cppreference.com/w/cpp/language/sfinae) today. Here's a basic example of this technique:
 
 ```c++
 template<typename T> // foo version
@@ -53,7 +53,7 @@ int main() {
 
 The expression `t.foo()` and `t.bar()` are part of the signature of the function, more precisely it's return type. While performing overload resolution, the compiler will ignore any function that their instantiation would cause an ill-formed expression.
 
-So in the example above, we were able to check for the presence of `T::bar()` and `T::foo()` using sfinae.
+So in the example above, we were able to check for the presence of `T::bar()` and `T::foo()` using SFINAE.
 
 In simply a few lines you can create a predicate that let you check an expression, therefore the presence of a member:
 
@@ -76,7 +76,7 @@ static_assert(has_perimeter<Foo>);
 static_assert(!has_perimeter<Bar>);
 ```
 
-It's not an article about sfinae, but I'll make a quick summary.
+It's not an article about SFINAE, but I'll make a quick summary.
 
 In this particular case, the compiler will try to find the more specialized version of `has_perimeter` for a given set of template arguments. If the expression `(<value of T>).perimeter` is invalid, the compiler cannot pick that specialization and will fallback to the default, which is equal to false. On the other hand, if the expression is valid, the specialization can be picked, so the value true is obtained.
 
@@ -165,7 +165,7 @@ template<typename F>
 using function_result_t = typename function_traits<F>::result; /// #3
 ```
 
-So what is happening here? Here instead of using template argument deduction for our pattern matching, we used partial specialization. At the line marked `#1`, we are defining the base case, where the type sent to us is not a function. We expose nothing in this case. That way we stay sfinae friendly.
+So what is happening here? Here instead of using template argument deduction for our pattern matching, we used partial specialization. At the line marked `#1`, we are defining the base case, where the type sent to us is not a function. We expose nothing in this case. That way we stay SFINAE friendly.
 
 Then, at the line marked `#2` we expose an alias equal to the return type of the function type sent as template parameter.
 
