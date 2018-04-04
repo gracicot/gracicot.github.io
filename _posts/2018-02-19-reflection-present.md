@@ -261,7 +261,7 @@ Then, here's a simple example of reification, which we recreate the call operato
 
 ```c++
 template<typename L, std::size_t... S>
-auto wrap_lambda(, std::index_sequence<S...>, L lambda) {
+auto wrap_lambda(std::index_sequence<S...>, L lambda) {
 
     // A wrapper, local struct
     struct Wrapper : private L {
