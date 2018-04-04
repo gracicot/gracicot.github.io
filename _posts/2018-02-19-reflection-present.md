@@ -404,8 +404,8 @@ In C++ template syntax, a functioning algorithm would look like that:
 template<typename, typename, typename>
 struct deduced_function_traits_helper;
 
-// This specialization matches the first scope,
-// more presicely `if TFunc instantiable with ArgTypes... then`
+// This specialization matches the first scope of the pseudocode,
+// more presicely the condition `if TFunc instantiable with ArgTypes... then`
 template<typename TFunc, typename... ArgTypes>
 struct deduced_function_traits_helper<TFunc, std::tuple<ArgTypes...>, // arguments TFunc and ArgTypes
     // if TFunc is instantiable with ArgTypes
