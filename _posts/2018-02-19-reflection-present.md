@@ -1,7 +1,7 @@
 ---
 layout: default
 title:  "Reflection in C++: The Present"
-date:   2018-02-19 15:32:00 +0500
+date:   2018-04-03 22:00:00 +0500
 categories: reflection
 excerpt_separator: <!--more-->
 ---
