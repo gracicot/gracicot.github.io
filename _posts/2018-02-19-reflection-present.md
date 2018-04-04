@@ -105,7 +105,7 @@ There is another particular construct in the language I want to bring our attent
 you can inspect its return type, it's parameter types, member of which class in case of member functions, and even let you
 inspect how many template parameter it needs to take in some cases.
 
-Why is this big you ask? Why do I seem to act like this is a revolutionary thing? Well first, we can use functions to transfer behaviour and data around quite easily. Also, the whole interface of a function is the way you call it. Give me a function object or function pointer, I can tell you how can call it using meta information!
+Why do I seem to act like this is a revolutionary thing? Well first, we can use functions to transfer behaviour and data around quite easily. Also, the whole interface of a function is the way you call it. Give me a function object or function pointer, I can tell you how can call it using meta data!
 
 This can happen because function and function objects expose their whole interface in their type or `operator()` type, such as parameter types and return type. We'll see how we can use this property to make a small reflection library.
 
