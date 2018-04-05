@@ -414,12 +414,25 @@ To deduce template arguments, we will use a simple algorithm. We will try to ins
             return deduced_function_traits(TFunc, drop first ArgTypes...)
         else
             return nothing
+            
+To implement this in C++, we will need to know if a lambda is instantiable using a given set of template arguments.
 
-In C++ template syntax, a functioning algorithm would look like that: 
+We will use SFINAE to do this:
 
 ```c++
+template<typename, typename, typename = void>
+constexpr bool is_call_operator_instantiable = false;
+
+template<typename L, typename... Args>
+constexpr bool is_call_operator_instantiable<
+    L, std::tuple<Args...>,
+    std::void_t<decltype(&L::template operator()<Args...>)> > = true;
+```
+
+Using this predicate we can then implement the algorithm just like in the pseudocode above:
+```c++
 // Declaration of our function. Must be declared to provide specializations.
-template<typename, typename, typename>
+template<typename, typename, typename = void>
 struct deduced_function_traits_helper;
 
 // This specialization matches the first scope of the pseudocode,
@@ -427,7 +440,7 @@ struct deduced_function_traits_helper;
 template<typename TFunc, typename... ArgTypes>
 struct deduced_function_traits_helper<TFunc, std::tuple<ArgTypes...>, // arguments TFunc and ArgTypes
     // if TFunc is instantiable with ArgTypes
-    std::void_t<decltype(&TFunc::template operator()<ArgTypes...>)>
+    std::enable_if_t<is_call_operator_instantiable<TFunc, std::tuple<ArgTypes...>>>
 > // return function_traits with function pointer
      : function_traits<decltype(&TFunc::template operator()<ArgTypes...>)> {};
 
@@ -435,13 +448,13 @@ struct deduced_function_traits_helper<TFunc, std::tuple<ArgTypes...>, // argumen
 // the `else if size of ArgTypes larger than 0`
 template<typename TFunc, typename First, typename... ArgTypes>
 struct deduced_function_traits_helper<TFunc, std::tuple<First, ArgTypes...>, // arguments TFunc and First, ArgTypes...
-    // if not instantiable (expressed as `void`)
-    void
+    // if not instantiable
+    std::enable_if_t<!is_call_operator_instantiable<TFunc, std::tuple<First, ArgTypes...>>>
 > // return deduced_function_traits(TFunc, drop first ArgTypes...)
-     :  deduced_function_traits<TFunc, std::tuple<ArgTypes...>> {};
+     :  deduced_function_traits_helper<TFunc, std::tuple<ArgTypes...>> {};
 
 // Else return nothing, end of algorithm
-template<typename, typename, typename = void>
+template<typename, typename, typename>
 struct deduced_function_traits_helper {};
 ```
 
@@ -482,19 +495,19 @@ Now to implement the `magic_call` function, we will simply need to call the expr
 
 ```c++
 template<typename T>
-T magic_val() {
+constexpr T magic_val() {
     return T{}; // Simple implementation that default construct the type
 }
 
 //   We could have used decltype(auto) instead of reflection here ------v
 template<typename L, typename... Args, std::size_t... S> //             v
-auto magic_call(std::index_sequence<S...>, L lambda, Args&&... args) -> deduced_function_result_t<L, Args...> {
+constexpr auto magic_call(std::index_sequence<S...>, L lambda, Args&&... args) -> deduced_function_result_t<L, Args...> {
     // Call the lambda with both magic_val and provided parameter in ...args 
     return lambda(magic_val<deduced_nth_argument_t<S, L, Args...>>()..., std::forward<Args>(args)...);
 }
 
 template<typename L, typename... Args>
-auto magic_call(L lambda, Args&&... args) -> deduced_function_result_t<L, Args...> {
+constexpr auto magic_call(L lambda, Args&&... args) -> deduced_function_result_t<L, Args...> {
     // We generate a sequence from 0 up to the number of parameter we need to get through `magic_val`
     auto sequence = std::make_index_sequence<deduced_arguments_count<L, Args...> - sizeof...(Args)>();
     return magic_call(sequence, std::move(lambda), std::forward<Args>(args)...);
@@ -508,17 +521,19 @@ magic_call(
        /*magic*/  /*magic*/  4,   5.4,    "str1", "str2"sv
 );
 ```
+[Compile this code on godbolt](https://gcc.godbolt.org/#z:OYLghAFBqd5QCxAYwPYBMCmBRdBLAF1QCcAaPECAKxAEZSAbAQwDtRkBSAJgCFufSAZ1QBXYskwgA5NwDMeFsgYisAag6yAwgREAHBpg3YOABgAipgIJyFSlZnVbUugnlQsmDI6YsnrXeUVlNQ1NADdMZCJib3MrHysAekSEv2TVAEkAW31MLMwWAiZXd1VUADNVcpFFEpZVAmImQkFUy2S2gjz9YsMtAgBPXQKmfNUAGVGAI3QmWN9LQUaRKKqaqLcWAH1G5oJBVRA12s2dppbQrCVB4YhuADZJrJmmEBBnTCboiABKH6N1AB2PiAiyyPhxPydbrMLqhG4jMYAJVIDSGiMwADpsapLMRgK1ZMZIYtlqtqid3Gc9oTNEiIAAqH4QPEE7GY/5EoEQhaqPmqESCBTAVTETCCEQMAiOMyqJEaHlWfkCoVsVS6JhNfJdYgHDSypboN46XKhVmCdnecFtDighU2kldHKwvradEeZGohEehyaL3u0ZYnHm%2BZWJbEFbSikbKm7C5aemaN5Mln4i3Yn6qNAsJYA22KvzKwXC0XiyXS/Vy%2B0kouqkUarWYHV62QGghGkAmgxmtOWonVha2sEF6yOmG9eEBsYAMVDfmLaujdS2YolUp2MrRwx9xxj2zj%2B1Cs6Jb1X5YH8THzon/SnDmPxIWC5FS9OmuAInyhUEG8r3sDu7LgetIPm8DaBs2F5QlePRwlohpvEKABemAbgAcv624AQ%2BbTPqohQIFs76fgUBC/q2qgIZ2egGFsmAGF%2BZEEKEGGAW%2B%2BIkd%2BOxHlaxjWiS0LXnBbpYTOc6WNmSyYAAHroxCqEwIhEApHGMT%2BaA1BWFFUV2qHIa6r5UsRancVoOEniAYSeCIfQjg6CwdCS6RmJg6ArK5bGlAeqh4M6eSkcUmxtI5g5OYkfIACoIA4ShMIIBxYG5EjoFshn7uc%2BxbNFDDDPJvm5GpDTRVUqAMAwqAAO4lp4wAkIQCBZMFKRhcqaWqIl7kpWl1ItBAEXTusqLsqyEXooI/wtcq/J4JU/XrD5OZFIUeBMFMBiqFVBAILi%2BKjcM6aYkVBRNVNp2ljoxD1N1wF9QNig9sAe3in22ATQ54VnfRggODNlF4ChZSVCNY2qMw%2BKfEVrCqCYJ1ncqYoXfUHXJal6xARlgi3YN7XEM4VR4Lq0rA/t7JvUkH2nV9hiTXDfII2I9QsKgW3CvZVhOrBrr/vkmEYrzO6VmEqB4Og4mSV0snyVMqClT56meAwWwfF8JBbAoSysK4q3rZW5SeN9UGjgsHMupOokOOM/OBuyO0EmL7hSZLqjS7LeDy2VSu5cUqvq0tWtra6luUe2xo0a65ovaiVFCyLpmaFcUroncXCPMa45dGUXvfJymgR9iRicnx2Cbsstls2k4UubFXybIDZRiJ5LCHQAsoK0pTA4Ceah5ylyagYQiw4gjDMgK0MP9gUO5igmc2bfNbvP3MOILwui/2JLhpG7WuZ1qOUulNJZfRuWGydUVu5RI9jxPdSqFkxTINFBxbQ45QE0slFoMMdcv%2Bq30qKgNAWBSAnSyCQBwclxR4AkAwAYR0szuHwLfDg9wTC/TmooBaGtlrawcJtbaxNno4hfiwFBMMYKm1vObVQGDkBW3yDbQhhJHxhjJNKZGrk957h6plbKJ8tC0KjiHaipotBMMjqodIxlSIHFoQpFg6BbZPVaDWfk6R0F3WQHLLBfsVoBw2vVJRY02jKioiMAOatyhxzdlsZACtPafG9sQNWi1NZ6O7AIzRQiOy6Qesol6vEbRcnSPTS6jceEHHwY3dUwtCifBMcqI410MaXEiInW4DxaFpyEg4ZWTjfh%2BLGi9Qu3IhynxaufA4w9IjX0EJPeo98CCP3FPA762ZFGCC/rkyov9dD/3QIAjAmAQEtV/mQqmPlKj6Trkw0G74IZbShjDVBM9KEiQxDQrxC8dzTnfgQehQZDpMPEpvVYHCupo1OMBI%2BOV4meOxjpMOR49monEfnIkqIpGqRkZs%2BarBFG7MJq83aRT86qL5OoyoTNpS%2BzcbghJfIzEeAsTNOOYAwA2LsR7PJ0QXHYP9h4zQgjg4%2BKeWZF5RiSbvKLuJAEISmwM23klThySaRY0UKidAuNdD40JpSohHIEV8iOEy3erKWg3P4USrZjzRG5xBVS6e/YuT5jKfxUK71VDYAYN9c6jLoUIGFKiAoiiKgKQYLVYg9VGoUJvOsn0ByDknLYaKlG4reHHwhqqu06rLwavJqoAAyqgMYngVrP1QKoPhKoVQ/WYgJW1wkl6qGnAcxhaZxJ4XOVw9GNJNzZvdT%2BPhdzNCppJaHOVeclU0t9dBY26cuZ3hTWm4MGb15PjrK6lllyqRnnXFpWUyaC09oPvGUtwK2TUtPGWKU5T605LnjsltRy20sPnJ24d%2B8iLfK4gO7ZAFN3cOAkeCdB0jBgU1BBT4hI7KJtdFRfS6EDnNv3Qw1tdt21WCzTvFGBFt0fkYuRNspLch0QYqROOrFD3Lmkbuk9tsz3Kr4re%2Bds8qEbLLUvdNH610SQdhLOSCklKRuzbBzKGlCibllbRfSqTmUXK3WRn8zEzKnoCRZKyygy4Jv9RXE6zcmDAGgVmBWPk/KMXqU1culgTZ2uTRFe2i0ZKEYinfQT0Cticd%2BKU8FeqwkKeBGqngkjwqBvyutcz/lCj1MhuwzAetywIMWhGVYv8EQ2jtDxgNfIADqMVRAMEUQgJgERY2KITgiCAikiCZl9pgJgprKhinKAYPcUbPgOAALTZZy2EVZcmm1Byw%2B%2BwQ3jEL/VQgQG2ga6UU1pqoPLJJxbKfktFyN98hPIFsQrCAVEFBYGklsb6ABHGyihXSBokeMOZzxZinoeA8G275xqqEywCaDpw%2B1MVCEHKteZDO6fSJoUTv9mCzaYAYraztmbbQ6xpzj8jFF9wHoldUl7tQQwUKodky31C6dCfUM7LwIB3a65xuju8/1kbjoG1Eu3ezUqML8dkZWQDlBIBVTUa95U4ai2mH4pNT6ed4zJhti6AJFbvNh5hbRmtOza2pzr3WyoQGm0DubCGFspyW/j1b62f3dq3VtuO8PJ3Vp07yNR4U/OqGAAURxGcLsjbGxIKouMsjQwFDy5Sv8WCfg7vJM14EPvyQqg4FgmAe6Rrl9KLauMRDAG2mQ0HmnPBkKFQz5XBRVeViovfAA1qhfrMkhuYFG9710pGd3kdEIUHbbHqWrb%2BihCo7JUwEkLgU2tlh4YMrCS7rFDBeth5V8M8tIAwERAgOzpgPxUfo%2BIJj4g2OQxEjxxnwn2eyleb8AoaU98FDadVbp050pg35CerQUpPqRymJdePzAT0uDT%2BHEKoVeEfTDyYKrqi48dT6znUqfkBeetCuVBwAArHwC/ZgIAL8n6ie/6IuCoj75y0QAdURta5/cL/xGf98iZjepmAjKS60yJAMig4MgfQQFQEfQAAsqIfIF%2BmIiB5%2BXAXA4YtA3AL%2B6gGB4YXAOBggjWYBqgnIdkxOVgUgdeDA0gF%2BUgpALA0gJgDBqA0gmg/A/AlEog4gy8AQtADBBAzB1Bde/uIAF%2BsgmIAAnLIICBfvARgVIfcKgvcPAYgbQVIPAQwUwVICwaQGwVIAwYICACYKQEIbodQaQHALADAIgCgCGroHgAYGQBQBAGgDkE4Z8CgMwGwKgqYW/FKNepQFMMIaQFMAoJqAMNIAIaQO4YxAAPIsCwKhFYD3xsAGApEEyRCuARDGEWGkAySRBKSSBSAxF970ShGNC%2BTRGWE%2BHsCcG8CMB4BTDGGQB17OB1B5GZbxGyCraGj6icC8D8C0CAirblBMyZYyQSAuCbCCBGE8ESB0A0F0HaGhEGHSQAAc9wmWqhWYdRqg9wmIJgRxqgEAuAhAJAeBsg9AqgmgDhnh8kcgtAmYHBQxvAghwhfwpAYh8BhxJg9wXA8BF%2BgIgIJgsgsgMhF%2Bv%2BGhWhpAWQIAsghxF%2BJgtAUhKJtA8B/xGxah9AOhehBhRhJhZhnxVhthEASAogBAugSk5AlA7hjhzhdABRSCJATJFUTQugNRyxUg9BjBax0gTxl220mx2xuxsUaofxRxHxFhXx0UCWXhvwjA0gsJ8J9wkh8BUhGxJgmpGxF%2BMhtAF%2BepfJ%2BRBJQgRJ5hLBXxPxfxAJQJIJYJEJsgUJSpUgsgqxJp0g0plp3JXA7p%2BJnpxJMpdeEQuomwIA8BQAA)
+
 The implementation will expand to this code (pseudo template expansion):
 ```c++
 template<>
-auto magic_call(
-                std::index_sequence<0, 1>,
-                L lambda,
-                int&& arg0,
-                double&& arg1,
-                char const(&arg2)[5],
-                std::string_view&& arg3
-    ) -> void
+constexpr auto magic_call(
+    std::index_sequence<0, 1>,
+    L lambda,
+    int&& arg0,
+    double&& arg1,
+    char const(&arg2)[5],
+    std::string_view&& arg3
+) -> void
 {
     return lambda(
         magic_val<SomeType1>(),  // deduced_nth_argument_t<0, L, int, double, char const(&)[5], std::string_view>
