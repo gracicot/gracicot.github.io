@@ -376,6 +376,14 @@ That's the power of reflection + reification. You can generate new classes that 
 
 Note that this implementation is minimal for the sake of simplicity and does not handle some caveats, such as the lifetime of references sent to `bind(...)`.
 
+## Reflecting Other Functions
+
+In all the example above we reflected the call  operator of lambda and function pointers. However, everything there is also applicable to other member function than `operator()`. Just replace `&T::opreator()` by `&T::funcName` and you can reflect specific member functions.
+
+## Don't Reinvent The Wheel!
+
+This looks all beautiful, but it can be quite hard to create and maintain it by yourself. This is why boost ship a complete implementation of function traits. I found it actually amazing how much information can be reflected in function types. If you're interested, check out [Boost.CallableTraits](https://github.com/boostorg/callable_traits)!
+
 ## Generic Lambdas
 
 At this point, we simply reflect on normal function. Indeed, they are the easiest to reflect, but why stop there? There may be a useful use case where you'd want to reflect on generic lambda. Imagine you're in a situation where the user gives you a lambda, and a partial set of arguments. Let's say you have a function that gives you a value of any type called `magic_val<T>()`, and you have to call the lambda function. To do that, you'll have to inspect the parameters of the lambda to know the type of the missing parameter from the user provided set.
@@ -577,14 +585,6 @@ What's happening here? The `operator()` is instantiated two times. Since we are 
 Then, we call the function normally, instantiating the call operator with the correctly deduced arguments. This may produce an incorrect result or unwanted compilation slowdown. Using `auto&&` or sending prvalues + `auto`  will prevent the double instantiation.
 
 We are also requiring all deduced parameters are at the end of the argument list. This may be a limitation in some cases.
-
-## Reflecting Other Functions
-
-In all the example above we reflected the call  operator of lambda and function pointers. However, everything there is also applicable to other member function than `operator()`. Just replace `&T::opreator()` by `&T::funcName` and you can reflect specific member functions.
-
-## Don't Reinvent The Wheel!
-
-This looks all beautiful, but it can be quite hard to create and maintain it by yourself. This is why boost ship a complete implementation of function traits. I found it actually amazing how much information can be reflected in function types. If you're interested, check out [Boost.CallableTraits](https://github.com/boostorg/callable_traits)!
 
 # Conclusion
 
