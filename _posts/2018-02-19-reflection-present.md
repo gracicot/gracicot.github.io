@@ -428,9 +428,11 @@ To implement this in C++, we will need to know if a lambda is instantiable using
 We will use SFINAE to do this:
 
 ```c++
+// Default case, the lambda cannot be instantiated
 template<typename, typename, typename = void>
 constexpr bool is_call_operator_instantiable = false;
 
+// Specialization if the expression `&L::template operator()<Args...>` is valid
 template<typename L, typename... Args>
 constexpr bool is_call_operator_instantiable<
     L, std::tuple<Args...>,
