@@ -261,14 +261,14 @@ Then, here's a simple example of reification, which we recreate the call operato
 
 ```c++
 template<typename L, std::size_t... S>
-auto wrap_lambda(std::index_sequence<S...>, L lambda) {
+constexpr auto wrap_lambda(std::index_sequence<S...>, L lambda) {
 
     // A wrapper, local struct
     struct Wrapper : private L {
-        using L::L;
+        constexpr Wrapper(L l) noexcept : L{std::move(l)} {}
         
         // Note: We could use `using L::operator()`, but we reify instead
-        auto operator() (nth_argument_t<S, L>... args) const -> function_result_t<L> {
+        constexpr auto operator() (nth_argument_t<S, L>... args) const -> function_result_t<L> {
             return L::operator()(std::forward<nth_argument_t<S, L>>(args)...);
         }
     };
@@ -278,10 +278,21 @@ auto wrap_lambda(std::index_sequence<S...>, L lambda) {
 
 // Provide an overload without the sequence:
 template<typename L>
-auto wrap_lambda(L lambda) {
-    return wrap_lambda(std::make_index_sequence<arguments_count<F>>(), lambda);
+constexpr auto wrap_lambda(L lambda) {
+    return wrap_lambda(std::make_index_sequence<arguments_count<L>>(), std::move(lambda));
 }
 ```
+
+Here's a quick demo of it's usage:
+```c++
+int main() {
+    constexpr auto wrapped = wrap_lambda([](int i) { return i * 2; });
+
+    // Brace initialization works too, we are not using templates deduction.
+    static_assert(wrapped({4}) == 8);
+}
+```
+[Compile this code on godbolt](https://godbolt.org/g/ZMj5oo)
 
 Here in this example, we are creating a new callable type that extends privately the lambda. Yet, for the sake of this example, we expose a function that has the same parameters as the lambda function we receive. We used reification to recreate the call operator, but we can go further and implement something we could not see without reflection and reification. 
 
@@ -289,14 +300,14 @@ Here an example of a function object that allows binding it's parameters before 
 
 ```c++
 template<typename L, std::size_t... S>
-auto make_deferred(std::index_sequence<S...>, L lambda) {
+constexpr auto make_deferred(std::index_sequence<S...>, L lambda) {
     // We create a tuple type that can store the list of arguments of the lambda 
     // We are going to store that in our callable type to cache parameters before call
     using parameter_pack = std::tuple<nth_argument_t<S, L>...>;
         
     // We define our wrapper struct
     struct Wrapper : private L {
-        using L::L;
+        constexpr Wrapper(L l) : L{std::move(l)} {}
         
         // We make a bind function that take the same arguments as our lambda
         // we are going to store each argument in ...args for a later call
@@ -306,7 +317,7 @@ auto make_deferred(std::index_sequence<S...>, L lambda) {
         }
         
         explicit operator bool () const {
-            return bound;
+            return bound.has_value();
         }
         
         // We make a call operator that has the same return type as our lambda
@@ -319,13 +330,13 @@ auto make_deferred(std::index_sequence<S...>, L lambda) {
         std::optional<parameter_pack> bound;
     };
     
-    retrurn Wrapper{std::move(lambda)};
+    return Wrapper{std::move(lambda)};
 }
 
 // Make an overload without the index sequence
 template<typename L>
-auto make_deferred(L lambda) {
-    return wrap_lambda(std::make_index_sequence<arguments_count<F>>(), lambda);
+constexpr auto make_deferred(L lambda) {
+    return make_deferred(std::make_index_sequence<arguments_count<L>>(), lambda);
 }
 ```
 Now that's something! We have now an object that supports deferring a call and bind parameter separately from the creation site of the callable. And that without heap allocation!
@@ -338,15 +349,17 @@ Let's look at some usage of our `make_deferred` function:
 ```c++
 int main() {
     // We make a deffered lambda
-    auto func = make_deffered([](int a, std::vector<int>& b, double c) {
-        std::cout << a << '\n';
-        
-        for (auto&& i : b) {
-            std::cout << ' ' << a;
+    auto func = make_deffered(
+        [](int a, std::vector<int>& b, double c) {
+            std::cout << a << '\n';
+
+            for (auto&& i : b) {
+                std::cout << ' ' << i;
+            }
+
+            std::cout << '\n' << c;
         }
-        
-        std::cout << '\n' << c;
-    });
+    );
     
     auto vec = std::vector{1, 2, 3, 4, 5, 42};
     
@@ -357,8 +370,9 @@ int main() {
     func();
 }
 ```
+[Run this example on Coliru](http://coliru.stacked-crooked.com/a/921de6cee166ed2a) (sorry godbolt, you can't run code yet)
 
-That's the power of reflection + reification.
+That's the power of reflection + reification. You can generate new classes that changes their implementation according to our lambda.
 
 Note that this implementation is minimal for the sake of simplicity and does not handle some caveats, such as the lifetime of references sent to `bind(...)`.
 
