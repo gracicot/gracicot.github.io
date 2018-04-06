@@ -141,8 +141,8 @@ auto print_default_result(R(*)(Arg1)) -> void {
 This can be easily generalized using a variadic template:
 
 ```c++
-template<typename R, typename... Args>
-auto print_default_result(R(*)(Args...)) -> void { // Accept a function with any number of parameter
+template<typename R, typename... Args> // Accept a function with any number of parameter
+auto print_default_result(R(*)(Args...)) -> void {
     std::cout << R{} << '\n';
     // Do other stuff with Args, maybe...
 }
