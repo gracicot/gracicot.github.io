@@ -93,9 +93,9 @@ We also cannot dismiss the type traits library provided by the STL. To some exte
 
 Right now, C++ has very limited support for meta querying. For example, we cannot *yet* write `$Foo.members()`. There are some tricks that exists that we can use today, but not without serious limitations.
 
-Using dark wizardry, some geniuses managed to reflect members of class types to some extent using only C++14. The library implementing this is called [`magic_get`](https://github.com/apolukhin/magic_get). The limitation is that the reflected class must be an aggregate type. Sadly, many of reflection use case for class member also need member names, such as serialization. magic_get cannot fetch member names, only the count of members in the reflected class and their types.
+Using dark wizardry, some geniuses managed to reflect members of class types to some extent using only C++14. The library implementing this is called [`magic_get`](https://github.com/apolukhin/magic_get). The limitation is that the reflected class must be an aggregate type. Sadly, many of reflection use case for class member also need member names, such as serialization. `magic_get` cannot fetch member names, only the count of members in the reflected class and their types.
 
-The mechanism implementing this is too complicated for a single blog post. If you're interested in the implementation details of magic_get, I suggest you to watch the cppcon 2016 talk [C++14 Reflections Without Macros, Markup nor External Tooling..](https://www.youtube.com/watch?v=abdeAew3gmQ).
+The mechanism implementing this is too complicated for a single blog post. If you're interested in the implementation details of `magic_get`, I suggest you to watch the cppcon 2016 talk [C++14 Reflections Without Macros, Markup nor External Tooling..](https://www.youtube.com/watch?v=abdeAew3gmQ).
 
 ## Another Kind Of Reflection?
 
