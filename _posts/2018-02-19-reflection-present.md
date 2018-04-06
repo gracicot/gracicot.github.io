@@ -381,11 +381,11 @@ That's the power of reflection + reification. You can generate new classes that 
 
 Note that this implementation is minimal for the sake of simplicity and does not handle some caveats, such as the lifetime of references sent to `bind(...)`.
 
-## Reflecting Other Functions
+### Reflecting Other Functions
 
 In all the example above we reflected the call  operator of lambda and function pointers. However, everything there is also applicable to other member function than `operator()`. Just replace `&T::opreator()` by `&T::funcName` and you can reflect specific member functions.
 
-## Don't Reinvent The Wheel!
+### Don't Reinvent The Wheel!
 
 This looks all beautiful, but it can be quite hard to create and maintain it by yourself. This is why boost ship a complete implementation of function traits. I found it actually amazing how much information can be reflected in function types. If you're interested, check out [Boost.CallableTraits](https://github.com/boostorg/callable_traits)!
 
