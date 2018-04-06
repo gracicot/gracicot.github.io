@@ -532,7 +532,7 @@ constexpr auto magic_call(L lambda, Args&&... args) -> deduced_function_result_t
 }
 ```
 
-And that will do the trick! We have the first call that generate an index sequence and call the functoin that invokes the lambda with both parameter sets. Now, for a use case like this one:
+And that will do the trick! We have the first call that generate an index sequence and call the function that invokes the lambda with both parameter sets. Now, for a use case like this one:
 ```c++
 magic_call(
     [](SomeType1, SomeType2, int, double, auto&&, auto&&  ) {},
