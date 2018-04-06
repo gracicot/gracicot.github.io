@@ -602,4 +602,4 @@ Reflection in C++ is yet to be added to the language, but that doesn't mean C++ 
 
 What will be possible with tomorrow's reflection? What are the competing proposals and what are the pros and cons of each of those? We will see that in the next part of this blog post series about reflection in C++.
 
-Let me know your opinion and comments in the Reddit post, take part of the discussion with me and share your thoughts on the subject!
+Let me know your opinion and comments in the [Reddit post](https://www.reddit.com/r/cpp/comments/8aalir/reflection_in_c_part_1_the_present/), take part of the discussion with me and share your thoughts on the subject!
