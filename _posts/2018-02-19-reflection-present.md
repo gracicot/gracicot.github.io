@@ -85,7 +85,7 @@ This is a simple case of very basic reflection capability, but just this feature
 If you're interested in introspection capabilities of C++, please go check
 Jean Guegant's blog post [An introduction to C++'s SFINAE concept: compile-time introspection of a class member](https://jguegant.github.io/blogs/tech/sfinae-introduction.html)
 
-#### Type Traits
+### Type Traits
 
 We also cannot dismiss the type traits library provided by the STL. To some extents, it allows reflecting on types by implementing predefine capability or property to check. Some of these traits such as `std::is_final` or `std::is_polymorphic` cannot be implemented in pure C++, and needs compiler support.
 
