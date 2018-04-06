@@ -494,7 +494,7 @@ template<typename F, typename... Args>
 constexpr auto deduced_arguments_count = std::tuple_size<deduced_function_arguments_t<F, Args...>>::value;
 ```
 
-This implements the tool we need in order to reflect on generic lambdas. Istead of using `function_arguments_t` to reflect parameters off them, we will use `deduced_function_arguments_t`.
+This implements the tool we need in order to reflect on generic lambdas. Instead of using `function_arguments_t` to reflect parameters off them, we will use `deduced_function_arguments_t`.
 
 To implement magic call, we will call `magic_val<P>` for all the first parameters. The number of parameters to get through `magic_val` is the total number of parameter the function takes minus the number of provided arguments. To do this, we will use an index sequence:
 ```c++
