@@ -598,6 +598,8 @@ We are also requiring all deduced parameters are at the end of the argument list
 
 # Conclusion
 
-Reflection in C++ is yet to be added to the language, but that doesn't mean C++ don't have any reflection capabilities. We just demonstrated that to some extent, C++ is capable of providing some reflection features that can solve some of today's problems.
+Reflection in C++ is yet to be added to the language, but that doesn't mean C++ don't have any reflection capabilities today. We just demonstrated that to some extent, C++ is capable of providing some reflection features that can solve some of today's problems.
 
-What will be possible with tomorrow's reflection? What are the competing proposal and what are the pros and cons of each of those? We will see that in the next part of this blog post series.
+What will be possible with tomorrow's reflection? What are the competing proposal and what are the pros and cons of each of those? We will see that in the next part of this blog post series about reflection in C++.
+
+Let me know your opinion and comments in the Reddit post, take part of the discussion with me and share your thoughts on the subject!
