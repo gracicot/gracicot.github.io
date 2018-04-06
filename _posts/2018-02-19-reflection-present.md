@@ -206,7 +206,7 @@ int main() {
 
 The cool thing here is it enables `decltype(auto)` like deduction without using return type deduction. Useful if you don't have C++14 enabled on your project.
 
-## Lambda
+## Lambdas
 
 Of course, we also want to support lambda types. Inspecting a lambda type isn't much harder than inspecting a function pointer directly. A lambda is a compiler-generated type that has a member `operator()`. If we take a pointer to that member, we can send it to our `function_traits` struct so we can see its gut!
 
