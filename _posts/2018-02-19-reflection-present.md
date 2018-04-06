@@ -243,7 +243,7 @@ What is that? Here's a quote from Wikipedia:
 
 > Reification is making something real, bringing something into being, or making something concrete.
 
- Reification is the action of make something concrete. In our case, we use meta infomation to generate a concrete class. 
+Like this quote is decribing, we will use reification to create something concrete out of high level meta data.
 
 The idea is this: since we have meta-information about an object, we can make another object made from this meta information. We will re-use the return type and parameter type to create a new, different object type.
 
@@ -263,14 +263,17 @@ Then, here's a simple example of reification, which we recreate the call operato
 template<typename L, std::size_t... S>
 constexpr auto wrap_lambda(std::index_sequence<S...>, L lambda) {
 
-    // A wrapper, local struct
-    struct Wrapper : private L {
-        constexpr Wrapper(L l) noexcept : L{std::move(l)} {}
+    // A wrapper, local struct that recreate the lambda passed as parameter.
+    struct Wrapper {
+        constexpr Wrapper(L l) noexcept : lambda{std::move(l)} {}
         
         // Note: We could use `using L::operator()`, but we reify instead
         constexpr auto operator() (nth_argument_t<S, L>... args) const -> function_result_t<L> {
-            return L::operator()(std::forward<nth_argument_t<S, L>>(args)...);
+            return lambda(std::forward<nth_argument_t<S, L>>(args)...);
         }
+        
+    private:
+        L lambda;
     };
     
     return Wrapper{std::move(lambda)};
@@ -292,12 +295,13 @@ int main() {
     static_assert(wrapped({4}) == 8);
 }
 ```
-[Compile this code on godbolt](https://godbolt.org/g/ZMj5oo)
+[Compile this code on godbolt](https://godbolt.org/g/Rbu3bk)
 
-Here in this example, we are creating a new callable type that extends privately the lambda. Yet, for the sake of this example, we expose a function that has the same parameters as the lambda function we receive. We used reification to recreate the call operator, but we can go further and implement something we could not see without reflection and reification. 
+Here in this example, we are creating a new callable type that privately contain the lambda. Yet, we expose a function that has the same parameters as the lambda function we receive. Since we don't use a variadic template to forward them into the lambda, we can still use brace initialization and we can still take a pointer to `operator()` and reflect on it again. We used reification to recreate the call operator and expose the *exact* same interface as our lambda.
 
-Here an example of a function object that allows binding it's parameters before usage:
+Ne can go even further than that and implement something we could not see without reflection and reification. A function wrapper that contains the function to call and the parameters. The parameter will first be bound, then the call operator will be called without parameters. In other words, we will create a function object that allows binding parameter before calling the function.
 
+Here's the implementation of that using reflection and reification:
 ```c++
 template<typename L, std::size_t... S>
 constexpr auto make_deferred(std::index_sequence<S...>, L lambda) {
@@ -306,6 +310,8 @@ constexpr auto make_deferred(std::index_sequence<S...>, L lambda) {
     using parameter_pack = std::tuple<nth_argument_t<S, L>...>;
         
     // We define our wrapper struct
+    // We inherit privately to leverage empty base class optimization, but we could easily
+    // have choose to contain a private member instead.
     struct Wrapper : private L {
         constexpr Wrapper(L l) : L{std::move(l)} {}
         
@@ -339,10 +345,9 @@ constexpr auto make_deferred(L lambda) {
     return make_deferred(std::make_index_sequence<arguments_count<L>>(), lambda);
 }
 ```
-Now that's something! We have now an object that supports deferring a call and bind parameter separately from the creation site of the callable. And that without heap allocation!
+Now that's something! We have now an object that supports calling and binding parameters in separate steps. Without reflection, dynamic allocation would have been required, since the list of types to forward to the lambda would only have been known at the moment we called `bind(...)`.
 
-We simply reify a bind function that takes the exact parameters as the lambda, and then store them in a reified tuple.
-
+Instead, we simply reify a bind function that takes the exact same parameters as the lambda, and then store them in a reified tuple tailored to contain them.
 
 Let's look at some usage of our `make_deferred` function:
 
@@ -363,10 +368,10 @@ int main() {
     
     auto vec = std::vector{1, 2, 3, 4, 5, 42};
     
-    // Bind parameters to our function
+    // Bind the parameters to our function
     func.bind(12, vec, 5.4);
     
-    // call the function with bound parameters:
+    // Call the function with bound parameters:
     func();
 }
 ```
@@ -386,7 +391,7 @@ This looks all beautiful, but it can be quite hard to create and maintain it by 
 
 ## Generic Lambdas
 
-At this point, we simply reflect on normal function. Indeed, they are the easiest to reflect, but why stop there? There may be a useful use case where you'd want to reflect on generic lambda. Imagine you're in a situation where the user gives you a lambda, and a partial set of arguments. Let's say you have a function that gives you a value of any type called `magic_val<T>()`, and you have to call the lambda function. To do that, you'll have to inspect the parameters of the lambda to know the type of the missing parameter from the user provided set.
+At this point, we simply reflect on normal function. Indeed, they are the easiest to reflect, and there are even libraries to do this. But... why stop there? There may be a useful use case where you'd want to reflect on generic lambda. Imagine you're in a situation where the user gives you a lambda, and a partial set of arguments. Let's say you have a function that gives you a value of any type called `magic_val<T>()`, and you have to call the lambda function using the partial set of parameter, and use `magic_val<T>` for all other non-provided parameters. To do that, you'll have to inspect the parameters of the lambda to know the type of the missing parameter from the user provided set.
 
 Here's an example of usage:
 
@@ -413,7 +418,7 @@ For the example of `magic_call` to work, we must deduce template parameters from
 
 So our utility `function_traits` won't work directly since it needs the type to extract the call operator directly. To support generic lambdas, we will introduce a new utility.
 
-To deduce template arguments, we will use a simple algorithm. We will try to instantiate the template with all every parameter type the use send to us. If it results in a substitution failure (since we sent too many template arguments) then we will drop the first parameter and try again. In pseudocode, it will look like that:
+To deduce template arguments, we will use a simple type deduction algorithm. We will try to instantiate the template with all parameter type from the user provided set. If it results in a substitution failure (since we sent too many template arguments)  we will drop the first parameter and try again. In pseudocode, it will look like that:
 
     function deduced_function_traits(TFunc, ...ArgTypes)
         if TFunc instantiable with ArgTypes... then
@@ -428,41 +433,44 @@ To implement this in C++, we will need to know if a lambda is instantiable using
 We will use SFINAE to do this:
 
 ```c++
-// Default case, the lambda cannot be instantiated
+// Default case, the lambda cannot be instantiated, yields false
 template<typename, typename, typename = void>
 constexpr bool is_call_operator_instantiable = false;
 
-// Specialization if the expression `&L::template operator()<Args...>` is valid
+// Specialization if the expression `&L::template operator()<Args...>` is valid, yields true
 template<typename L, typename... Args>
 constexpr bool is_call_operator_instantiable<
     L, std::tuple<Args...>,
     std::void_t<decltype(&L::template operator()<Args...>)> > = true;
 ```
 
-Using this predicate we can then implement the algorithm just like in the pseudocode above:
+Using this predicate we can then implement the algorithm just like in the pseudocode above. Each branch of the if in the pseudocode will become a partial specialization. Since there are three possible branch, we will need three specializations.
 ```c++
 // Declaration of our function. Must be declared to provide specializations.
 template<typename, typename, typename = void>
 struct deduced_function_traits_helper;
 
-// This specialization matches the first scope of the pseudocode,
+// This specialization matches the first path of the pseudocode,
 // more presicely the condition `if TFunc instantiable with ArgTypes... then`
 template<typename TFunc, typename... ArgTypes>
 struct deduced_function_traits_helper<TFunc, std::tuple<ArgTypes...>, // arguments TFunc and ArgTypes
     // if TFunc is instantiable with ArgTypes
     std::enable_if_t<is_call_operator_instantiable<TFunc, std::tuple<ArgTypes...>>>
 > // return function_traits with function pointer
+  // Returning is modelized as inheritance. We inherit (returning) the function trait with the deduced pointer to member.
      : function_traits<decltype(&TFunc::template operator()<ArgTypes...>)> {};
 
-// This specialisation matches the second scope of the pseudocode,
+// This specialisation matches the second path of the pseudocode,
 // the `else if size of ArgTypes larger than 0`
 template<typename TFunc, typename First, typename... ArgTypes>
 struct deduced_function_traits_helper<TFunc, std::tuple<First, ArgTypes...>, // arguments TFunc and First, ArgTypes...
     // if not instantiable
     std::enable_if_t<!is_call_operator_instantiable<TFunc, std::tuple<First, ArgTypes...>>>
 > // return deduced_function_traits(TFunc, drop first ArgTypes...)
+  // again, returning is modelized as inheritance. We are returning the next step of the algorithm (recursion)
      :  deduced_function_traits_helper<TFunc, std::tuple<ArgTypes...>> {};
 
+// Third path of the algorithm.
 // Else return nothing, end of algorithm
 template<typename, typename, typename>
 struct deduced_function_traits_helper {};
