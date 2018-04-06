@@ -267,7 +267,7 @@ constexpr auto wrap_lambda(std::index_sequence<S...>, L lambda) {
     struct Wrapper {
         constexpr Wrapper(L l) noexcept : lambda{std::move(l)} {}
         
-        // Note: We could use `using L::operator()`, but we reify instead
+        // Reify the call operator with the exact same parameter type and return type.
         constexpr auto operator() (nth_argument_t<S, L>... args) const -> function_result_t<L> {
             return lambda(std::forward<nth_argument_t<S, L>>(args)...);
         }
