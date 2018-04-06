@@ -291,7 +291,7 @@ Here's a quick demo of it's usage:
 int main() {
     constexpr auto wrapped = wrap_lambda([](int i) { return i * 2; });
 
-    // Brace initialization works too, we are not using templates deduction.
+    // Brace initialization works too, we are not using forwarding references and argument deduction.
     static_assert(wrapped({4}) == 8);
 }
 ```
