@@ -295,7 +295,7 @@ int main() {
     static_assert(wrapped({4}) == 8);
 }
 ```
-[Compile this code on godbolt](https://godbolt.org/g/Rbu3bk)
+[Compile this code on godbolt](https://godbolt.org/g/iaZfMX)
 
 Here in this example, we are creating a new callable type that privately contain the lambda. Yet, we expose a function that has the same parameters as the lambda function we receive. Since we don't use a variadic template to forward them into the lambda, we can still use brace initialization and we can still take a pointer to `operator()` and reflect on it again. We used reification to recreate the call operator and expose the *exact* same interface as our lambda.
 
