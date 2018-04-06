@@ -577,7 +577,7 @@ magic_call(
 );
 ```
 
-What should be part of `...args`? Our current algorithm will find that `operator()<int, int, int>` can be instantiated, so the first int will be obtained through `magic_val<int>()` instead of the first argument sent.
+What should be part of `...args`? Our current algorithm will find that `operator()<int, int, int>` can be instantiated, so the first int will be obtained through `magic_val<int>()` instead of the first argument sent. This could in theory be fixed by trying to find the *minimum* amount of template parameter to send, but I haven't tried yet.
 
 Other than that, the deduction will only produce the exact result if the template arguments are forwarding references. Consider this code:
 
