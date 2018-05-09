@@ -1,0 +1,27 @@
+---
+layout: default
+title:  "IPR May make modules faster"
+date:   2018-05-08 18:11:01 +0500
+categories: general
+excerpt_separator: <!--more-->
+---
+
+# IPR May make modules faster
+
+Module. I just cannot wait to move all my code to them. I'm sick of headers.
+Well, they won't disappear in an instant, but a whole bunch of them will when module will be official. I see modules as a
+general, clean way to componentize my code and expose clear interfaces. Some see then primarly as a tool to make compilation faster,
+and indeed it will most of the time, make your code compile faster... wait... *most* of the time? Can module really slow down compilation?
+
+In this post we will see how module can slow down compilation in some case, and how I see IPR as a viable solution to fix it.
+
+## From parallel To Serial
+
+Compiling a large mode base is slow. Right now, each cpp file is preprocessed. Every file a compilation unit includes is textually
+appended at the inclusion point. Do that for 800 compilation unit, and you'll compile 800 times the same code. What a waste of resource!
+
+Even if it seems stupid, it has an advantage: each compilation unit is 
+
+## What's IPR?
+
+
