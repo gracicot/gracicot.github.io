@@ -20,7 +20,12 @@ In this post we will see how module can slow down compilation in some case, and 
 Compiling a large mode base is slow. Right now, each cpp file is preprocessed. Every file a compilation unit includes is textually
 appended at the inclusion point. Do that for 800 compilation unit, and you'll compile 800 times the same code. What a waste of resource!
 
-Even if it seems stupid, it has an advantage: each compilation unit is 
+Even if it seems stupid, it has an advantage: each compilation unit is completely independent. I could compile each processed unit
+one by one or... all at once! This is the advantage of the current model: one compilation unit is not waiting for another one to be compiled.
+
+> What modules have to do with that?
+
+Well, module don't have
 
 ## What's IPR?
 
