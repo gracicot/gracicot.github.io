@@ -48,4 +48,16 @@ of that! Is there a solution to keep my favourite style and keep compilation fas
 
 ## What's IPR?
 
-Fist we'll discuss a bit about IPR, for those not aware on what it is.  
+Fist we'll discuss a bit about IPR, for those not aware on what it is. let's read what their readme says:
+
+> The IPR, short for *Internal Program Representation*, is an open source project originally developed as the core data structures of a framework for semantics-based analysis and transformation of C++ programs. 
+
+So IPR is a binary format that can be used to represent C++ in a concise and efficient way, such as declaration and definitions. It was developed by Gabriel Dos Reis and Bjarne Stroustrup. Lately, it was proposed to be a candidate for a common binary format for module interfaces that would work cross-compiler, and could be shipped alongside or embedded in binaries.
+
+This seem great! Right now, every compilers have their own binary format that can change from version to versions. They are not shippable and they serve as a kind of cache for binary interfaces. If we don't have a common binary format, we will have to ship module interfaces just like we ship headers today.
+
+As Gabriel Dos Reis said, IPR won't be forced in compilers to be the *one format to rule them all*. Instead, if IPR is adopted, compilers will simply transform IPR into their own, optimized format. Their own binary format won't be shippable, but if every compiler (or an external tool) can output IPR and every compilers can translate it, we basically have a common format for compiled module interface.
+
+## IDEs and IPR
+
+IDEs are great tools that help us write code in many ways. Take auto completion, highlighting, fixit, find use and other goodies the offers. All these features need to understand the code for then to work. It must understand auto and even sfinae to give accurate information about the code. To do that, they must parse the code and store a representation of the code in memory. Does that sound familiar to you? Indeed, it sound like a compiler that store information about the code, it's interface and implementation, and other helpful informations. 
