@@ -48,4 +48,4 @@ of that! Is there a solution to keep my favourite style and keep compilation fas
 
 ## What's IPR?
 
-Fist we'll discuss a bit about IPR, for those not aware on what it is. 
+Fist we'll discuss a bit about IPR, for those not aware on what it is.  
