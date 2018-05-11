@@ -60,4 +60,7 @@ As Gabriel Dos Reis said, IPR won't be forced in compilers to be the *one format
 
 ## IDEs and IPR
 
-IDEs are great tools that help us write code in many ways. Take auto completion, highlighting, fixit, find use and other goodies the offers. All these features need to understand the code for then to work. It must understand auto and even sfinae to give accurate information about the code. To do that, they must parse the code and store a representation of the code in memory. Does that sound familiar to you? Indeed, it sound like a compiler that store information about the code, it's interface and implementation, and other helpful informations. 
+IDEs are great tools that help us write code in many ways. Take auto completion, highlighting, fixit, find use and other goodies the offers. All these features need to understand the code for then to work. It must understand auto and even sfinae to give accurate information about the code. To do that, they must parse the code and store a representation of the code in memory. Does that sound familiar to you? Indeed, it sound like a compiler that store information about the code, it's interface and implementation, and other helpful informations.
+
+Sometimes, the parsing can be long. Indeed, it has to parse every file you include to make autocompletion and correctly identify which entity is used. But will that change with modules? Sure, the IDE can recusively parse the interface you need and 
+
