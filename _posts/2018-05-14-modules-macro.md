@@ -80,6 +80,8 @@ the clang folks. I mean, the Google proposal initially proposed the `import "leg
 
 I didn't try making a tool with this particular API, but I don't think it would be impossible to do. Invoking a generator like that can be done by the build system automatically, making the integration of legacy code and C code seamless.
 
+This script won't magically make every code modular, but can greatly help the current situation and make the transition easier.
+
 ## Config Macros
 
 Config macros are a common pattern in some libraries. We use it to enable or disable some features of a library by defining a macro before including it. Consider this code:
@@ -107,8 +109,8 @@ Modules enforce a more robust solution for config macros, and without spilling m
 
 ## A Reasonable Compromise
 
-Do I believe macros support in modules should never be added?
-My personal option is "No". I'm not enthusiastic about supporting macros in modules, but I still believe a reasonable compromise can be made.
+Do I believe macros support in modules should *never* be added?
+My personal option is *No*. I'm not enthusiastic about supporting macros in modules, but I still believe a reasonable compromise can be made.
 
 I don't want to transform the `import` directive into a preprocessor directive.
 I don't think a C++ statement should influence in any way the state of the preprocessor.
