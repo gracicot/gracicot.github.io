@@ -139,4 +139,6 @@ This is great because it won't impact The language, or the community as a whole,
  #conclude "blogpost.md"
 ========================
 
-Modules 
+Modules are indeed a huge transition, and probably the biggest transition the C++ community has seen, bigger than C++11.
+We can't simply drop all the old code that exists. But I think that if we provide the required tool and help, the transition
+can be done elegantly. The perfect solution don't exist. This is why we are engineers, to work out solutions to difficult problems.
