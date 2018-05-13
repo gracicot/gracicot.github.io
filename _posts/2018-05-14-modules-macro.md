@@ -114,19 +114,19 @@ I don't want to transform the `import` directive into a preprocessor directive.
 I don't think a C++ statement should influence in any way the state of the preprocessor.
 But new preprocessor directives to cope with the problem can be added.
 
-I presume my concerns are valid and are shared by many developers, but I would be okay with something like this:
+I presume my concerns are valid and are shared by many developers, and I would be okay if we end up with something like this:
 
 ```c++
-//Module A
-export module a;
+//Module libD
+export module lib.d;
 export void f();
-#define A_MACRO 46
-#export A_MACRO // export preprocessor directive
+#define D_MACRO 46
+#export D_MACRO // export preprocessor directive
 ```
 ```c++
 // Module B
-import a; // make `f` visible
-#import a // defines A_MACRO
+import lib.d; // make `f` visible
+#import lib.d // defines D_MACRO
 ```
 
 I think this is a reasonable compromise since the import C++ statement will not change the preprocessor state,
