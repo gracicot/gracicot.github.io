@@ -59,7 +59,7 @@ module;
 #include "SDL2/SDL.h"
 export module sdl;
 
-extern "C" { // can I do this? No really, I'm curious
+extern "C" {
 export namespace sdl {
     using SDL_Init = ::SDL_Init;
 }
