@@ -1,4 +1,12 @@
+---
+layout: default
+title:  "Modules And Macros: A Resonable Compromise"
+date:   2018-05-14 14:00:00 +0500
+categories: modules
+excerpt_separator: <!--more-->
+---
 
+# Modules And Macros: A Resonable Compromise
 
 The debate on whether we should support macro in module has always been very polarized. This is a response to the recent reddit post
 [Really think that the macro story in Modules is doing more harm than good](https://www.reddit.com/r/cpp/comments/8j1edf/really_think_that_the_macro_story_in_modules_is/)
@@ -32,7 +40,7 @@ which is not bad either.
 
 > It breaks the goal of modules! You have to include!
 
-I think that even in a modular world, `#include`'ing should not be banned. There is nothing wrong by using `#include` .
+I think that even in a modular world, `#include`'ing should not be banned. There is nothing wrong with using `#include`.
 Just like when smart pointers has been added, we didn't ban raw pointers, we are still using them, there is still a need for it.
 With modules, there is still a need for including: interacting with the preprocessor across multiple files. And there is nothing wrong with it.
 
@@ -40,10 +48,10 @@ With modules, there is still a need for including: interacting with the preproce
 
 Ok. The small header above don't have a huge impact on compile time, the header only contained preprocessor directive to change
 it's state by defining some macros.
-For whole libraries, compile time will be negatively affected.
-It will break the purpose of modules by making every modular translation unit including the same code over and over.
+For whole libraries, compile time will be negatively affected... right?
+Well, making every modular translation unit including the same code over and over kind of break the purpose of modules.
 It may work, but would not by optimal.
-A better for external libraries would be to do something like that:
+A better for external libraries would be to create a module interface for the library:
 
 ```c++
 // sdl.ixx
@@ -65,8 +73,7 @@ Then if you really need to also export macros, add a header that only define tho
 Good! This is actually a good point. Repetitive and tedious stuff like that can be done by a script.
 Using the clang tooling API, you can make a tool can generate your module interface and your defining header for you.
 This should be even easier of the header for which you create such module interface is a "modularizable header", as defined by
-the clang fork. I mean, if it's easy to write a magic `import "legacy.h"` that work like a module,
-it would be fairly easy to generate a module interface alongside a preprocessor state header.
+the clang fork. I mean, the Google proposal initially proposed the `import "legacy.h"` syntax that would transform a legacy header inclusion to an importation. If that is possible within clang, I cannot imagine why it won't be possible to genrate a module interface and a header that applies the preprocessor state.
 I didn't tried making a tool with this particular API, but it I don't think it would be impossible to do.
 
 ## Config Macros
