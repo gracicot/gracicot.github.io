@@ -1,0 +1,70 @@
+Modules is not the end of macro. I think modules as currently proposed by the TS (not mixing macro in them) has good interactions with macros.
+
+It makes explicit when macros are included with a module. Indeed, it even enforce a separation between preprocessor code and C++ code. Importing a module with macro will look like this:
+
+    // Module and macros "logging.h"
+    import lib.logging;
+    #define MACRO_A ...
+    #define MACRO_B ...
+
+    // Importer "user.cpp"
+    import lib.graphic; // traditional import
+    #include "logging.h" // import with macros
+
+In this example, C++ symbols and preprocessor directives are separated. The C++ symbols come from a modules, but macro are included using the preprocessor. Of course, one can also separate them completely, and forcing the user to explicitly both import and include, which is not bad either.
+
+Should you use this strategy to include whole legacy libraries? No I think not. Not as a permanent solution. It will break the purpose of modules by making every modular translation unit including the same code over and over. This is possible, but not optimal. The real solution would be to do something like that:
+
+    // sdl.ixx
+    module;
+    #include "SDL2/SDL.h"
+    export module sdl;
+
+    extern "C" {
+    export namespace sdl {
+        using SDL_Init = ::SDL_Init;
+    }
+    }
+
+Then if you really need to also export macros, add a header that only define those macros.
+
+> But this is repetitive and tedious! I don't want to do this, I use 10 libraries like that!
+
+Good! This is actually a good point. Repetitive and long stuff like that can be done by a script. Using the clang tooling API, you can make a tool can generate your module interface and your defining header for you. I didn't tried making a tool with this particular API, but it I don't think it would be impossible to do.
+
+## Config Macros
+
+Config macros are a common pattern in some libraries. Consider this code:
+
+    #define LIBA_NO_EXCEPTIONS
+    #include "liba.h"
+
+Familiar? But what happen if somewhere you forget to define it? Yes, you get an ODR violation. It can be sometimes hard to debug such mistakes. Sure, the best solution would be to add the compile definition for all your translation unit, but some prefer to do it this way.
+
+So... What's happening with modules? Of course, defining a macro before importing has no effect, and adding the compile definition for all the TU either won't have effect, how could we do this?
+
+When compiling the module interface, we can add a compile definition, but only for the specific module interface. If you add the `LIBA_NO_EXCEPTIONS` definition for the `liba` module interface, the BMI will only contain the functions without exceptions.
+
+The great thing about this, is we now cable forget to define it before including. You can only import! No trace of the option in the code, and no added definition for the entirety of the code base. Modules enforce a more robust solution for config macros, and without spilling macros in the code.
+
+## A Compromise
+
+Do I believe macros support in module should never be added? No. I'm not enthusiastic about supporting macros in modules, but I still believe a reasonable compromise can be made.
+
+I don't want to transform the `import` directive into a preprocessor directive. I don't think a C++ statement should influence in any way the state of the preprocessor. But new preprocessor directives can be added.
+
+    //Module A
+    export module a;
+    export void f();
+    #define A_MACRO 46
+    #export A_MACRO // export preprocessor directive
+
+    // Module B
+    import a; // make `f` visible
+    #import a // defines A_MACRO
+
+I think this is a reasonable compromise since the import C++ statement will not change the preprocessor state, and yet macro coulis be exported, and imported by other modules.
+
+Do I believe this is ideal? No. From my point of view, preprocessor and modules are two separated things that should stay separated. But a lot pushes for this feature.
+
+Another compromise would be to ship macro support in modules as an extension. This would allow giant codebase to make a smooth transition and disable the extension when done. This is great because it won't impact The language, but still allow the smooth transition large codebase are requiring.
