@@ -132,7 +132,9 @@ import lib.d; // make `f` visible
 ```
 
 I think this is a reasonable compromise since the import C++ statement will not change the preprocessor state,
-and yet macro coulis be exported, and imported by other modules.
+and yet macro could be exported, and imported by other modules.
+
+This is great because the feature exposed above is, I believe, implementable as a preprocessor only solution that won't directly change how C++ works, and the impact on build system should be reduced.
 
 Do I believe this is ideal? No. From my point of view, preprocessor and modules are two separate things that
 should stay separated. But a lot of big players are pushing for this feature, and there is no reason why we should exclude their needs.
