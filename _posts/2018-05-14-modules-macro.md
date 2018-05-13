@@ -74,9 +74,11 @@ Then if you really need to also export macros, add a header that only defines th
 
 Good! This is actually a good point. Fortunately, repetitive and tedious stuff like that can be done by a script.
 Using the clang tooling API, you can make a tool can generate your module interface and your defining header for you.
+
 This should be even easier if the library exposes a "modularizable header", as defined by
-the clang folks. I mean, the Google proposal initially proposed the `import "legacy.h"` syntax that would transform a modularizable legacy header inclusion to an importation. If that is possible within clang, I cannot imagine why it won't be possible to generate a module interface and a header that applies the preprocessor state.
-I didn't try making a tool with this particular API, but I don't think it would be impossible to do. And invoking a generator like that can be done by the build system automatically.
+the clang folks. I mean, the Google proposal initially proposed the `import "legacy.h"` syntax that would transform a modularizable legacy header inclusion to an importation. If that is possible within clang, I cannot imagine why it won't be possible to generate a module interface and a separated header that applies the required preprocessor state.
+
+I didn't try making a tool with this particular API, but I don't think it would be impossible to do. Invoking a generator like that can be done by the build system automatically, making the integration of legacy code and C code seamless.
 
 ## Config Macros
 
