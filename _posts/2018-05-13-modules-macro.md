@@ -1,7 +1,7 @@
 
 
 The debate on whether we should support macro in module has always been very polarized. This is a response to the recent reddit post
-[Really think that the macro story in Modules is doing more harm than good.](https://www.reddit.com/r/cpp/comments/8j1edf/really_think_that_the_macro_story_in_modules_is/)
+[Really think that the macro story in Modules is doing more harm than good](https://www.reddit.com/r/cpp/comments/8j1edf/really_think_that_the_macro_story_in_modules_is/)
 and the paper [p1052r0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1052r0.html).
 I want to make a small post showing what is possible to do, and how we can solve the need for modular macros and find common ground in this story.
 
