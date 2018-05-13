@@ -110,7 +110,7 @@ I don't want to transform the `import` directive into a preprocessor directive.
 I don't think a C++ statement should influence in any way the state of the preprocessor.
 But new preprocessor directives to cope with the problem can be added.
 
-Imagine something like this:
+I presume my concerns are valid and are shared by many developers, but I would be okay with something like this:
 
 ```c++
 //Module A
