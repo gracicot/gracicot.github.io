@@ -61,11 +61,7 @@ module;
 #include "SDL2/SDL.h"
 export module sdl;
 
-extern "C" {
-export namespace sdl {
-    using SDL_Init = ::SDL_Init;
-}
-}
+export using SDL_Init = ::SDL_Init;
 ```
 
 Then if you really need to also export macros, add a header that only defines those macros.
