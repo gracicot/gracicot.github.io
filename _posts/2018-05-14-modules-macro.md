@@ -1,21 +1,21 @@
 ---
 layout: default
-title:  "Modules And Macros: A Resonable Compromise"
+title:  "Modules And Macros: A Reasonable Compromise"
 date:   2018-05-14 14:00:00 +0500
 categories: modules
 excerpt_separator: <!--more-->
 ---
 
-# Modules And Macros: A Resonable Compromise
+# Modules And Macros: A Reasonable Compromise
 
-The debate on whether we should support macro in module has always been very polarized. This is a response to the recent reddit post
+The debate on whether we should support macro in modules has always been very polarized. This is a response to the recent Reddit post
 [Really think that the macro story in Modules is doing more harm than good](https://www.reddit.com/r/cpp/comments/8j1edf/really_think_that_the_macro_story_in_modules_is/)
 and the paper [p1052r0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1052r0.html).
 I want to make a small post showing what is possible to do, and how we can solve the need for modular macros and find common ground in this story.
 
 ## Macros Surviving The Transition
 
-Modules is not the end of macro. I think modules as currently proposed by the TS (not mixing macro in them) has good interactions with macros for most needs. I'll show you what I mean with examples of how we can use.
+Modules are not the end of macros. I think modules as currently proposed by the TS (not mixing macro in them) has good interactions with macros for most needs. I'll show you what I mean with examples of how we can use.
 
 The current proposal makes it explicit when macros are included with a module. Indeed, it even enforce a separation between preprocessor
 code and C++ code, and I think this is important to keep our interfaces clean. Importing a module with macro will look like this:
@@ -34,23 +34,23 @@ import lib.graphic; // traditional import
 ```
 
 In this example, C++ symbols and preprocessor directives are separated.
-The C++ symbols come from a modules, but macro are included using the preprocessor.
-Of course, one can also separate them completely, and forcing the user to explicitly both import and include,
+The C++ symbols come from a module, but macros are included using the preprocessor.
+Of course, one can also separate them completely, and make the user to explicitly both import and include, a
 which is not bad either.
 
 > It breaks the goal of modules! You have to include!
 
 I think that even in a modular world, `#include`'ing should not be banned. There is nothing wrong with using `#include`.
-Just like when smart pointers has been added, we didn't ban raw pointers, we are still using them, there is still a need for it.
+Just like when smart pointers have been added, we didn't ban raw pointers, we are still using them, there is still a need for it.
 With modules, there is still a need for including: interacting with the preprocessor across multiple files. And there is nothing wrong with it.
 
-> But... Now you have duplicated code across TU, you are including everywhere! Imagine of you have many many large headers for other parts of your code or even external libraries.
+> But... Now you have duplicated code across TU, you are including everywhere! Imagine if you have many many large headers for other parts of your code or even external libraries.
 
-Ok. The small header above don't have a huge impact on compile time, the header only contained preprocessor directive to change
-it's state by defining some macros.
+Ok. The small header above don't have a huge impact on compile time, the header only contained the directives to change
+the preprocessor state by defining some macros.
 For whole libraries, compile time will be negatively affected... right?
 Well, making every modular translation unit including the same code over and over kind of break the purpose of modules.
-It may work, but would not by optimal.
+It may work, but would not be optimal.
 A better for external libraries would be to create a module interface for the library:
 
 ```c++
@@ -66,15 +66,15 @@ export namespace sdl {
 }
 ```
 
-Then if you really need to also export macros, add a header that only define those macros.
+Then if you really need to also export macros, add a header that only defines those macros.
 
 > But this is repetitive and tedious! I don't want to do this, I use 10 libraries like that!
 
 Good! This is actually a good point. Repetitive and tedious stuff like that can be done by a script.
 Using the clang tooling API, you can make a tool can generate your module interface and your defining header for you.
 This should be even easier of the header for which you create such module interface is a "modularizable header", as defined by
-the clang fork. I mean, the Google proposal initially proposed the `import "legacy.h"` syntax that would transform a legacy header inclusion to an importation. If that is possible within clang, I cannot imagine why it won't be possible to genrate a module interface and a header that applies the preprocessor state.
-I didn't tried making a tool with this particular API, but it I don't think it would be impossible to do.
+the clang fork. I mean, the Google proposal initially proposed the `import "legacy.h"` syntax that would transform a legacy header inclusion to an importation. If that is possible within clang, I cannot imagine why it won't be possible to generate a module interface and a header that applies the preprocessor state.
+I didn't try making a tool with this particular API, but I don't think it would be impossible to do.
 
 ## Config Macros
 
@@ -85,13 +85,13 @@ Config macros are a common pattern in some libraries. Consider this code:
 #include "liba.h"
 ```
 
-Familiar? But what happen if somewhere you forget to define it?
+Familiar? But what happens if somewhere you forget to define it?
 Yes, you get an ODR violation. It can be sometimes hard to debug such mistakes.
 Sure, the best solution would be to add the compile definition for all your translation unit,
 but some prefer to do it this way.
 
 So... What's happening with modules? Of course, defining a macro before importing has no effect,
-and adding the compile definition for all the TU either won't have effect, how could we do this?
+and adding the compile definition for all the TU either won't have an effect, how could we do this?
 
 When compiling the module interface, we can add a compile definition, but only for the specific module interface.
 If you add the `LIBA_NO_EXCEPTIONS` definition for the `liba` module interface,
@@ -101,9 +101,9 @@ The great thing about this, is we now cable forget to define it before including
 You can only import! No trace of the option in the code, and no added definition for the entirety of the code base.
 Modules enforce a more robust solution for config macros, and without spilling macros in the code.
 
-## A Resonable Compromise
+## A Reasonable Compromise
 
-Do I believe macros support in module should never be added?
+Do I believe macros support in modules should never be added?
 No. I'm not enthusiastic about supporting macros in modules, but I still believe a reasonable compromise can be made.
 
 I don't want to transform the `import` directive into a preprocessor directive.
@@ -128,23 +128,23 @@ import a; // make `f` visible
 I think this is a reasonable compromise since the import C++ statement will not change the preprocessor state,
 and yet macro coulis be exported, and imported by other modules.
 
-Do I believe this is ideal? No. From my point of view, preprocessor and modules are two separated things that
-should stay separated. But a lot of big player are pushing for this feature.
+Do I believe this is ideal? No. From my point of view, preprocessor and modules are two separate things that
+should stay separated. But a lot of big players are pushing for this feature.
 
 ## Compiler Extensions
 
 Another compromise would be to ship macro support in modules as an extension.
 
 Clang has always been friendly for macros in modules. Their BMI is actually a precompiled header. If we want to gradually
-use module without breaking anything, if you happen to use clang, why not develop an extension? I mean, clang is open source.
+use modules without breaking anything and if you happen to use clang, why not develop an extension? I mean, clang is open source.
 Their codebase has been friendly toward modular macros.
-If a company cannot affort to make a transition to modules without breaking their 200 million codebase and are using clang,
-the extension could be activated temporarely and would allow giant codebases to make a smooth transition. Later on, we could disable the extension when it's not needed anymore.
-This is great because it won't impact The language, or the community as a whole, but still allow the smooth transition large codebase are requiring.
+If a company cannot afford to make a transition to modules without breaking their 200 million codebase and are using clang,
+the extension could be activated temporarily and would allow giant codebases to make a smooth transition. Later on, we could disable the extension when it's not needed anymore.
+This is great because it won't impact the language or the community as a whole, but still allow the smooth transition large codebases are requiring.
 
  #conclude "blogpost.md"
 ========================
 
 Modules are indeed a huge transition, and probably the biggest transition the C++ community has seen, bigger than C++11.
 We can't simply drop all the old code that exists. But I think that if we provide the required tool and help, the transition
-can be done elegantly. The perfect solution don't exist. This is why we are engineers, to work out solutions to difficult problems and find common ground between multiple contraints. When it affect the tool we usually use to solve problem, we tend to be polarized in our opinions. The above compromises and solutions are just example. If we work to move the community forward and stop divising it I think we might find something acceptable for everybody.
+can be done elegantly. The perfect solution doesn't exist. This is why we are engineers, to work out solutions to difficult problems and find common ground between multiple constraints. When it affects the tool we usually use to solve problems, we tend to be polarized in our opinions. The above compromises and solutions are just example. If we work to move the community forward and stop dividing it I think we might find something acceptable for everybody.
