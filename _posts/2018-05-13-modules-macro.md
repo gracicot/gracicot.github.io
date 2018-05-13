@@ -5,13 +5,12 @@ The debate on whether we should support macro in module has always been very pol
 and the paper [p1052r0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1052r0.html).
 I want to make a small post showing what is possible to do, and how we can solve the need for modular macros and find common ground in this story.
 
-## Macros: A New Start
+## Macros Surviving The Transition
 
-Modules is not the end of macro. I think modules as currently proposed by the TS (not mixing macro in them) has good interactions with macros for
-most needs. I'll show you what I mean with examples of how we can use.
+Modules is not the end of macro. I think modules as currently proposed by the TS (not mixing macro in them) has good interactions with macros for most needs. I'll show you what I mean with examples of how we can use.
 
-It makes explicit when macros are included with a module. Indeed, it even enforce a separation between preprocessor
-code and C++ code. Importing a module with macro will look like this:
+The current proposal makes it explicit when macros are included with a module. Indeed, it even enforce a separation between preprocessor
+code and C++ code, and I think this is important to keep our interfaces clean. Importing a module with macro will look like this:
 
 ```c++
 // Module and macros "logging.h"
@@ -23,7 +22,7 @@ import lib.logging;
 // Importer "user.cpp"
 module user;
 import lib.graphic; // traditional import
-#include "logging.h" // import with macros
+#include "logging.h" // imports lib.logging with macros A and B
 ```
 
 In this example, C++ symbols and preprocessor directives are separated.
@@ -141,4 +140,4 @@ This is great because it won't impact The language, or the community as a whole,
 
 Modules are indeed a huge transition, and probably the biggest transition the C++ community has seen, bigger than C++11.
 We can't simply drop all the old code that exists. But I think that if we provide the required tool and help, the transition
-can be done elegantly. The perfect solution don't exist. This is why we are engineers, to work out solutions to difficult problems.
+can be done elegantly. The perfect solution don't exist. This is why we are engineers, to work out solutions to difficult problems and find common ground between multiple contraints. When it affect the tool we usually use to solve problem, we tend to be polarized in our opinions. The above compromises and solutions are just example. If we work to move the community forward and stop divising it I think we might find something acceptable for everybody.
