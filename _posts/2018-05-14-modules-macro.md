@@ -108,6 +108,8 @@ Modules enforce a more robust solution for config macros, and without spilling m
 Do I believe macros support in modules should *never* be added?
 My personal option is *No*. I'm not enthusiastic about supporting macros in modules, but I still believe a reasonable compromise can be made.
 
+We could in the future add features that would allow exporting macros from modules.
+
 I don't want to transform the `import` directive into a preprocessor directive.
 I don't think a C++ statement should influence in any way the state of the preprocessor.
 But new preprocessor directives to cope with the problem can be added.
