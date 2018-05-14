@@ -106,7 +106,7 @@ Modules enforce a more robust solution for config macros, and without spilling m
 ## A Reasonable Compromise
 
 Do I believe macros support in modules should *never* be added?
-My personal option is *No*. I'm not enthusiastic about supporting macros in modules, but I still believe a reasonable compromise can be made.
+My personal option is *No*. I'm not enthusiastic about supporting macros in modules, but I still believe that if something reasonable is proposed, we should consider it.
 
 We could in the future add features that would allow exporting macros from modules.
 
@@ -130,7 +130,7 @@ import lib.d; // make `f` visible
 ```
 
 I think this is a reasonable compromise since the import C++ statement will not change the preprocessor state,
-and yet macro could be exported, and imported by other modules.
+and yet macro could be exported, and imported by other modules. I don't claim it to be the ultimate solution, but it shows that if we put efforts into it, maybe we could have something acceptable.
 
 This is great because the feature exposed above is, I believe, implementable as a preprocessor only solution that won't directly change how C++ works, and the impact on build system should be reduced.
 
