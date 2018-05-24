@@ -124,7 +124,7 @@ This is great because it won't impact the language or the community as a whole, 
 Do I believe macros support in modules should *never* be added under *any* condition?
 My personal option is *maybe not*. I'm not enthusiastic about supporting macros in modules, but I still believe that if something reasonable is proposed, we should consider it.
 
-We could in the future add features that would allow exporting macros from modules.
+We could in the future, after module adoption and experience with module, extend from there and add features that would allow exporting macros from modules.
 
 I don't want to transform the `import` directive into a preprocessor directive.
 I don't think a C++ statement should influence in any way the state of the preprocessor.
@@ -146,7 +146,7 @@ import lib.d; // make `f` visible
 ```
 
 I think this is a somewhat reasonable compromise since the import C++ statement will not change the preprocessor state,
-and yet macro could be exported, and imported by other modules. I don't claim it to be the ultimate solution, but it shows that if we put efforts into it, maybe we could have something acceptable.
+and yet macro could be exported, and imported by other modules. I don't claim it to be the ultimate solution, but it shows that if we put efforts into it, maybe we could find something acceptable.
 
 This is great because the feature exposed above is, I believe, implementable as a preprocessor only solution that won't directly change how C++ works, and the impact on build system should be reduced. The preprocessor would traverse all interfaces of imported module and only retain the preprocessor state.
 
