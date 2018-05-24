@@ -90,7 +90,7 @@ Config macros are a common pattern in some libraries. We use it to enable or dis
 Familiar? But what happens if somewhere you forget to define it at one place of many?
 Yes, you get an ODR violation. It can be sometimes hard to debug such mistakes.
 Sure, the best solution would be to add the compile definition for all your translation unit,
-but some prefer to do it this way.
+but some are still doing it this way, which is bad.
 
 So... What's happening with modules? Of course, defining a macro before importing has no effect,
 and adding the compile definition for all the TU either won't have an effect, how could we do this?
@@ -103,10 +103,22 @@ The great thing about this, is we now cable forget to define it before including
 You can only import! No trace of the option in the code, and no added definition for the entirety of the code base.
 Modules enforce a more robust solution for config macros, and without spilling macros in the code.
 
+## Compiler Extensions
+
+Another compromise would be to ship macro support in modules as an extension.
+
+Clang has always been friendly for macros in modules. Their BMI is more or less a precompiled header. If we want to gradually
+use modules without breaking anything and if you happen to use clang, why not develop an extension? I mean, clang is open source.
+Their codebase has been friendly toward modular macros.
+
+If a company cannot afford to make a transition to modules without breaking their 200 million codebase and are using clang,
+the extension could be activated temporarily and would allow giant codebases to make a smooth transition. Later on, we could disable the extension when it's not needed anymore.
+This is great because it won't impact the language or the community as a whole, but still allow the smooth transition large codebases are requiring to be modernized.
+
 ## A Reasonable Compromise
 
-Do I believe macros support in modules should *never* be added?
-My personal option is *No*. I'm not enthusiastic about supporting macros in modules, but I still believe that if something reasonable is proposed, we should consider it.
+Do I believe macros support in modules should *never* be added under *any* condition?
+My personal option is *maybe not*. I'm not enthusiastic about supporting macros in modules, but I still believe that if something reasonable is proposed, we should consider it.
 
 We could in the future add features that would allow exporting macros from modules.
 
@@ -129,25 +141,13 @@ import lib.d; // make `f` visible
 #import lib.d // defines D_MACRO
 ```
 
-I think this is a reasonable compromise since the import C++ statement will not change the preprocessor state,
+I think this is a somewhat reasonable compromise since the import C++ statement will not change the preprocessor state,
 and yet macro could be exported, and imported by other modules. I don't claim it to be the ultimate solution, but it shows that if we put efforts into it, maybe we could have something acceptable.
 
-This is great because the feature exposed above is, I believe, implementable as a preprocessor only solution that won't directly change how C++ works, and the impact on build system should be reduced.
+This is great because the feature exposed above is, I believe, implementable as a preprocessor only solution that won't directly change how C++ works, and the impact on build system should be reduced. The preprocessor would traverse all interfaces of imported module and only retain the preprocessor state.
 
 Do I believe this is ideal? No. From my point of view, preprocessor and modules are two separate things that
-should stay separated. But a lot of big players are pushing for this feature, and there is no reason why we should exclude their needs.
-
-## Compiler Extensions
-
-Another compromise would be to ship macro support in modules as an extension.
-
-Clang has always been friendly for macros in modules. Their BMI is more or less a precompiled header. If we want to gradually
-use modules without breaking anything and if you happen to use clang, why not develop an extension? I mean, clang is open source.
-Their codebase has been friendly toward modular macros.
-
-If a company cannot afford to make a transition to modules without breaking their 200 million codebase and are using clang,
-the extension could be activated temporarily and would allow giant codebases to make a smooth transition. Later on, we could disable the extension when it's not needed anymore.
-This is great because it won't impact the language or the community as a whole, but still allow the smooth transition large codebases are requiring to be modernized.
+should stay separated. But a lot of big players are pushing for this feature, and there is no reason why we should exclude their needs. Maybe thier need would be solve by tools or extensions, without impacting the laguage as a whole, but still, we should listen to the and try to find a solution. 
 
  #conclude "blogpost.md"
 ========================
