@@ -75,7 +75,7 @@ This should be even easier if the library exposes a "modularizable header", as d
 the clang folks. I mean, the Google proposal initially proposed the `import "legacy.h"` syntax that would transform a modularizable legacy header inclusion to an importation. If that is possible within clang, I cannot imagine why it won't be possible to generate a module interface and a separated header that applies the required preprocessor state.  Imagine doing that:
 
 ```sh
- generate-interface --generate-macros SDL.h # outputs sdl.ixx and sdl-macros.h
+ $ generate-interface --generate-macros SDL.h # outputs sdl.ixx and sdl-macros.h
 ```
 
 I didn't try making a tool with this particular API, but I don't think it would be impossible to do. Invoking a generator like that can be done by the build system automatically, making the integration of legacy code and C code seamless.
