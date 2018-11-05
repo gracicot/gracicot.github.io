@@ -43,7 +43,7 @@ export namespace hello {
 import hello;
 
 int main() {
-    hello::a_global = 3;
+    hello::global_data = 3;
     hello::sayhello();
 }
 ```
