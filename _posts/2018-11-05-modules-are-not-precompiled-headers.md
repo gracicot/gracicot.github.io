@@ -60,6 +60,12 @@ I can also compile hello independently because again, `hello.cpp` is a translati
 
 This also outputs two files: `hello.o` and `hello.nms`. The file `hello.o` contains the compiled code from our `hello.cpp` translation unit. Additionally, this file `hello.o` compiled using modules and exported fancy stuff can be used to link against non-modular code, since the `hello.o` file is the same as it is were compiled as non-modular code.
 
+> And... What About Clang?
+
+This is where my title lies. Clang (for the moment) implement modules wity their compiled header and Clang-modules imolememtation, which resulted in a complete, but distorted implementation of modules.
+
+GCC on the other hand is  more comformant in their imolementation and may be more efficient, but it still lack completeness since a lot of valid language won't work for the moment there is still many crashes.
+
 ## The BMI And Recompilation
 
 One could argue that such code as above is a bad design. If one would change ever so slightly the implementation of `hello::say_hello`, it would cause a runaway recompilation of all file that transitively imports it!
