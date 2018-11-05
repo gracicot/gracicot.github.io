@@ -12,7 +12,7 @@ Modules have been the subject of many controversies in the C++ community in the 
 
 <!--more-->
 
-I do not want to argue about how modules should have been and what should have not been, but about modules as they are today, in the merged proposal.
+I do not want to argue about how modules should have been and what should have not been. Instead I want to talk tabout modules as they are today, in the merged proposal.
 
 ## What A Time To Be A C++ Programmer!
 
