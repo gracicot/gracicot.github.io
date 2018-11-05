@@ -107,9 +107,7 @@ Exported templates were such a failure... we didn't imagine we would talking abo
 ```c++
 /// size.cpp
 module;
-
 #include <cstdio>
-
 export module hello.size;
 
 void print(std::size_t size) {
