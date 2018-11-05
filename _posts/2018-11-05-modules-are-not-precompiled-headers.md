@@ -12,6 +12,8 @@ Modules have been the subject of many controversies in the C++ community in the 
 
 <!--more-->
 
+I do not want to argue about how modules should have been and what should have not been, but about modules as they are today, in the merged proposal.
+
 ## What A Time To Be A C++ Programmer!
 
 I'm writing this ~~November 4th, it's about 19:00~~ the November 5, it's about 3 in the morning, and today is gonna be the start of an important event: the 2018 San Diego meeting. There is about 276 papers in the pre-meeting mailing, which is an absurdly large amount.
