@@ -62,9 +62,9 @@ This also outputs two files: `hello.o` and `hello.nms`. The file `hello.o` conta
 
 > And... What About Clang?
 
-This is where my title lies. Clang (for the moment) implement modules wity their compiled header and Clang-modules imolememtation, which resulted in a complete, but distorted implementation of modules.
+This is where my title lies. Clang (at the moment) implement modules with their compiled header and Clang-modules implementation, which resulted in a more complete and working, but distorted implementation of modules.
 
-GCC on the other hand is  more comformant in their imolementation and may be more efficient, but it still lack completeness since a lot of valid language won't work for the moment there is still many crashes.
+GCC on the other hand is more comformant in their imolementation and may be more efficient, but it still lack completeness since a lot of valid language constructs won't work for the moment and there is still many crashes.
 
 ## The BMI And Recompilation
 
