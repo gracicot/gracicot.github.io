@@ -24,6 +24,12 @@ We used libraries like `glfw`, `jsoncpp`, `glm` and a few others. But one day, I
 
 Then I tried to use a library that wasn't package by my distribution. We simply added it to the list of packages to build beforehand... in the right order... Well, it was becoming quite tedious, something had to be done.
 
+## Submodules
+
+The idea of using submodules to ship dependencies was considered at first. I could fetch the submodule of only the libraries I needed. However, it turns out git is not a dependency manager. Submodule was hellish to support, and updates would have been a pain.
+
+We choose not to use git submodules as a package manager. It Didn't felt *right*.
+
 ## install_missing.sh
 
 My first solution I had to automate a repetitive task was of course to create a script. I wanted something simple: Something to install our missing dependencies.
@@ -34,8 +40,35 @@ Long story short, it became hell quickly. I did not wanted to depend on any spec
 
 To check if I can use a particular package in CMake is quite straighforward:
 
- 1. Generate a CMakeLists.txt that tries to use `find_package(xyz)`
+ 1. Generate a CMakeLists.txt that tries to use `find_package(xyz REQUIRED)`
  2. Optionally, check if every targets are available for use
  3. Read the output for errors
 
-That way, I could detect any libraries in a cross platform manner. 
+That way, I could detect any libraries in a cross platform manner. If a package failed to be found, then I just had to install it in the script!
+
+The installation process was also simple:
+
+ 1. If the library is not found, clone the library's repo
+ 2. Run cmake and build it
+ 3. Finally, install it.
+
+And that's it! Or... is it?
+
+There were many problems with that approach.
+
+First, it was a `sh` script. Not that it's wrong, but it would be wrong to say it's truely multiplatform. Also, all the dependency data was in the script, including the arguments to pass to cmake, git repository and even package name.
+
+Then, there was a distribution problem. How to deal with multiple project? Add the script to the git repository? Then when updating dependencies or the script itself I need to repeat the update everywhere? And if I choose the gitsubmodule approach to distribute the script, how do I represent multiple projects with different dependencies?
+
+## Something Better?
+
+We had to deal with these issues and make a choice. We already wasted too much time on configuration!
+
+We started by distributed the script by copy it in all of our projects and libraries, and modified the script for different dependency set. Of course, it became hard to track which project was on which version of the script, and errors were creeping in different versions of the script.
+
+After experimenting, we decided to ship the script in his own submodule. We added the union of all our dependencies in it. It became much easier to maintain it.
+
+Clearly, we needed something better. Something that would be reliable, easy to use and easier to add new libraries than modifying a script.
+
+## A Rewrite
+
