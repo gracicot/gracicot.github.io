@@ -10,7 +10,7 @@ excerpt_separator: <!--more-->
 
 _Likely the first reaction of most C++ programmers_
 
-But I still made one. And I made it using CMake scripts. I'm currently using it for a hobby project a small team and I are working on, and I'm likely keeping it and maintaining it for a while.
+But I still made one. And I made it using CMake scripts. I'm currently using it for a hobby project a small team and I are working on, and I'm likely keeping it and maintaining it for a little while.
 
 Why is that? And why on earth using cmake as a scripting language? Today I'll explain my needs at the time, the thought process behind it and show you the result.
 
@@ -72,3 +72,4 @@ Clearly, we needed something better. Something that would be reliable, easy to u
 
 ## A Rewrite
 
+To expose the clean and simple interface I wanted, I first needed to decouple the list of libraries to install from the logic of installing them.
