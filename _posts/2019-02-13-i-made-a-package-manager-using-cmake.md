@@ -16,11 +16,17 @@ Why is that? And why on earth using CMake as a scripting language? Today I'll ex
 
 <!--more-->
 
+## Preface
+
+I would like to say that I'm not an expert in build systems. I may have done some obvious errors or oversight. I just had a need that I solved using to tools I know.
+
+Also, simplicity both in setup and maintenance. I was 
+
 ## A Dependency Problem
 
 At first, dependencies were not a problem. I used Linux and my mate too. We wanted something? We just had to pick it from the repo, write a small `FindXYZ.cmake` file if needed then use it.
 
-We used libraries like `glfw`, `jsoncpp`, `glm` and a few others. But one day, I made a library to support our project. And the project itself was mostly a library, plus a few side projects and proof of concepts. Clearly, just with our code we had a multi-level dependency problem. Our workflow was to build them one by one in order. Luckily, most of them was header only, so it wasn't that bad, but required some knowledge of the setup to do it correctly.
+We used libraries like `glfw`, `jsoncpp`, `glm` and a few others. But one day, I made a small framework to support our project. So we had the main project that depended on some libraries, and our framework that also had dependencies. Clearly, just with our code we had a multi-level dependency problem. Our workflow was to build them one by one in order. Luckily, most of them was header only, so it wasn't that bad, but required some knowledge of the setup to do it correctly.
 
 Then I tried to use a library that wasn't package by my distribution. We simply added it to the list of packages to build beforehand... in the right order... Well, it was becoming quite tedious, something had to be done.
 
@@ -49,7 +55,7 @@ That way, I could detect any libraries in a cross platform manner. If a package 
 The installation process was also simple:
 
  1. If the library is not found, clone the library's repo
- 2. Run cmake and build it
+ 2. Run CMake and build it
  3. Finally, install it.
 
 And that's it! Or... is it?
@@ -277,3 +283,5 @@ execute_process(
 ```
 
 If the branch has been updated, we then build and install. To save time and energy, we only do that when new commit was added to the branch since the last update.
+
+This part was very important for my projects and the people that helped us: I could focus on the framework and add dependencies without worrying about updating each machine everytime a less technical person want to start working. The tool would update both the framework and the libraries we depend on.
