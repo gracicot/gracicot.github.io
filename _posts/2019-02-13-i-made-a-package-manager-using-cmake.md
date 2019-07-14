@@ -12,7 +12,7 @@ _Likely the first reaction of most C++ programmers_
 
 But I still made one. And I made it using CMake scripts. I'm currently using it for a hobby project a small team and I are working on, and I'm likely keeping it and maintaining it for a little while.
 
-Why is that? And why on earth using cmake as a scripting language? Today I'll explain my needs at the time, the thought process behind it and show you the result.
+Why is that? And why on earth using CMake as a scripting language? Today I'll explain my needs at the time, the thought process behind it and show you the result.
 
 <!--more-->
 
@@ -73,3 +73,207 @@ Clearly, we needed something better. Something that would be reliable, easy to u
 ## A Rewrite
 
 To expose the clean and simple interface I wanted, I first needed to decouple the list of libraries to install from the logic of installing them.
+
+I decided to store all the package data into a json file, since it's easy to read from a script and to write by hand.
+
+As for the language to be written in, I needed somthing that could run and both linux and windows, had the less steps to setup and provide me with the basic tools to build stuff.
+
+Luckily, I know a language that respond to all these criteria: CMake. It's shipped with Visual Studio, so there's no additionnal steps to install it. It runs on all the platforms I need, and has all the tools I need to build and interact with the system.
+
+So... A script to install CMake dependencies in CMake it is!
+
+And... that will simply be taking the bash script, port it to cmake and read the json file to fill the data I previously hardcoded?
+
+Haha, ha... ha... So naive.
+
+It's true, I picked the same strategy as my previous script: Generating a `CMakeLists.txt` file, then run CMake to see if everything can be included.
+
+However, I migrated from a 70 line script to a... 900 line CMake monster.
+
+## 1. Reading The JSON
+
+> WARNING: I do not recommend anyone to parse json in CMake. Do it if you like suffering like me.
+
+Yes, this is what I wanted to do. Luckily, I found this wonderful git repository: [`sbellus/json-cmake`](https://github.com/sbellus/json-cmake). I had a base to work with and improve for my needs.
+
+But cmake had no arrays or objects. Only, plain variable. How can one access and traverse the json structure?
+
+The answer is obviously dynamic variable names!
+
+Let's take a look at the syntax:
+
+```cmake
+set(foods "0;1;2")
+set(foods_0 "Potato")
+set(foods_1 "Tomato")
+set(foods_2 "Pistachio")
+
+foreach(food_idx ${foods})
+    message("${foods_${food_idx}}")
+endforeach()
+```
+>     Potato
+>     Tomato
+>     Pistachio
+
+What's happening there?
+
+First we setup our variable names. Examine the pattern here closely. Each variable has the same name followed by `_N` were `N` is the index in the array.
+
+Then, inside the foreach, we use this syntax:
+
+```cmake
+${foods_${food_idx}}
+```
+
+It turns out that we can expand variable names inside a variable expansion. The expansion process look like this:
+
+```cmake
+${foods_${food_idx}} --> ${foods_1} --> Tomato
+```
+
+Another neat property of CMake variables is that their names can contain dots. It's a no brainer to use those to encode the json structure into variable names:
+
+So this json:
+
+```js
+{
+    "dependencies": [
+        {
+            "name": "nlohmann_json",
+            "target": "nlohmann_json::nlohmann_json",
+            "repository": "https://github.com/nlohmann/json.git",
+            "tag": "v3.6.1",
+            "options": "-DJSON_BuildTests=Off"
+        },
+        {
+            "name": "stb"
+            /* ... */
+        }
+    ]
+}
+```
+Become these variables:
+```cmake
+set(manifestfile.dependencies "0;1")
+set(manifestfile.dependencies_0 "name;target;repository;tag;options")
+set(manifestfile.dependencies_0.name "nlohmann_json")
+set(manifestfile.dependencies_0.target "nlohmann_json::nlohmann_json")
+set(manifestfile.dependencies_0.repository "https://github.com/nlohmann/json.git")
+set(manifestfile.dependencies_0.tag "v3.6.1")
+set(manifestfile.dependencies_0.options "-DJSON_BuildTests=Off")
+set(manifestfile.dependencies_1 "name")
+set(manifestfile.dependencies_1.name "stb")
+# ...
+```
+Then traversed like that:
+```cmake
+foreach(dependency-id ${manifestfile.dependencies})
+    message("Dependency #${dependency-id}")
+    set(dependency manifestfile.dependencies_${dependency-id}) # <-- (1)
+    message("The name of the dependency: ${${dependency}.name}") # <-- (2)
+    foreach(dependency-member ${${dependency}})
+        message("${dependency-member}: ${${dependency}.${dependency-member}}") # <-- (3)
+    endforeach()
+endforeach()
+```
+Here at `(1)` we create a variable with a special value. It contain the prefix of every variable names that precedes the member of our dependency object. Also, dereferencing the variable name like this: `${${dependency}}` will yield the value `name;target;repository;tag;options`. A list of every members.
+
+Then at `(2)`, we dereference our variable name, but followed by a postfix that is equal to a dot followed by a member name.
+
+At `(3)` we use a variable name to member of our json object to display all of them in a loop.
+
+Notice my choice of words here: We dereference the variable name. The name of the variable become some sort of a pointer. When the name of the variable is auto generated, then a variable containing that name is our only way to reference to that variable.
+
+If we continue with this analogy, `dependency-member` is some sort of a pointer to member of our object.
+
+The CMake JSON library has been tweaked a bit to generate variables with this structure. 
+
+## 2. Looking For Existing Libraries
+
+Just like my `install_missing.sh` script did, I don't want to be redundant and install libraries that already are available in the current system. I want to download and install them just if they are missing.
+
+To check if a package is available in CMake, one can usually just use `find_package`, but sadly, CMake scripts cannot define targets, and config file are not meant to be ran in script mode. Another technical reason is that the find module or the library's CMake config file might trigger errors in our package manager script. Running any CMake script in the same process as this one is undesirable.
+
+So I went with the same way as my shell script: generate a `CMakeLists.txt` file and try to run CMake on it to get a result.
+
+The file I'm generating look similar to this:
+
+```cmake
+file(WRITE "./${${dependency}.name}/CMakeLists.txt" "cmake_minimum_required(VERSION ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION})\nfind_package(${${dependency}.name} VERSION ${${dependency}.version} REQUIRED)\nif(NOT TARGET ${${dependency}.target})\nmessage(SEND_ERROR \"Package ${${dependency}.name} not found\")\nendif()")
+
+execute_process(
+    COMMAND ${CMAKE_COMMAND} . -DCMAKE_PREFIX_PATH=${project-prefix-paths}
+    WORKING_DIRECTORY "./.${${dependency}.name}-test"
+    RESULT_VARIABLE result-check-dep
+    OUTPUT_QUIET
+    ERROR_QUIET
+)
+	
+if (${result-check-dep} EQUAL 0)
+    set(check-dependency-${${dependency}.name}-result ON PARENT_SCOPE)
+else()
+    set(check-dependency-${${dependency}.name}-result OFF PARENT_SCOPE)
+endif()
+```
+Sorry for the horizontal scrolling ¯\\\_(ツ)\_/¯
+
+In short, this small piece of CMake script generate a minimal CMake script that check if a package is found and if a target is exported by the package.
+
+If we set the exact same prefix path as we use in our project, we can be sure the same packages will be found.
+
+## 3. Downloading And Installing Packages
+
+I first went with `ExternalProject`. This is an awesome tool to download, configure and install libaries, I just have to call `ExternalProject_add` then...
+
+>     CMake Error at /usr/share/cmake-3.14/Modules/ExternalProject.cmake:1016 (define_property):
+>       define_property command is not scriptable
+
+_Again! Why?_
+
+Sadly, external project cannot be used either in script mode.
+
+The solution was to run git manually to download the dependency, then build it.
+
+> For the sake of simplicity, we will assume that the recipe is simply to run CMake to build and install the package without any additional steps. We will get back on this later.
+
+```cmake
+execute_process(
+    COMMAND ${CMAKE_COMMAND}  .. -DCMAKE_BUILD_TYPE=${build-type} -DCMAKE_INSTALL_PREFIX=${modules_path}
+    WORKING_DIRECTORY "./.${${dependency}.name}/${build-directory-name}"
+)
+
+execute_process(
+    COMMAND ${CMAKE_COMMAND} --build . --target install
+    WORKING_DIRECTORY "./.${${dependency}.name}/build"
+)
+```
+Here, notice that we supply an installation path to CMake. In this case, we set it to a directory inside the main project we install dependency for. This way, the main system is not affected and we can have many project with each thier own dependency set.
+
+When this is done, we can even look if the package has been installed correctly by trying to find the package again.
+
+# 4. Updating Dependencies
+
+CMake already come with a way to specify a requested version for a package when using `find_package`. The package itself will check if it's compatible with the requested version, no a predefind match. This is powerful since different libraries may have different policies reguarding when breaks happen.
+
+This is all handled in the generated `CMakeLists.txt` to check if a dependency exists.
+
+If a dependency is not found and the repository has been downloaded before, we simply have to checkout the right tag (or branch) that satisfies the version constraint:
+
+```cmake
+execute_process(
+    COMMAND ${GIT_EXECUTABLE} checkout ${${dependency}.tag}
+    WORKING_DIRECTORY "./.${${dependency}.name}"
+)
+```
+
+It may also happen that we are not using a tag, but a branch. In this case, the branch should be updated, reguardless whether the dependency is found or not. This again, stays relatively simple:
+
+```cmake
+execute_process(
+    COMMAND ${GIT_EXECUTABLE} pull
+    WORKING_DIRECTORY "./.${${dependency}.name}"
+)
+```
+
+If the branch has been updated, we then build and install. To save time and energy, we only do that when new commit was added to the branch since the last update.
