@@ -161,15 +161,15 @@ So this json:
 ```
 Become these variables:
 ```cmake
-set(manifestfile.dependencies "0;1")
-set(manifestfile.dependencies_0 "name;target;repository;tag;options")
-set(manifestfile.dependencies_0.name "nlohmann_json")
-set(manifestfile.dependencies_0.target "nlohmann_json::nlohmann_json")
+set(manifestfile.dependencies              "0;1")
+set(manifestfile.dependencies_0            "name;target;repository;tag;options")
+set(manifestfile.dependencies_0.name       "nlohmann_json")
+set(manifestfile.dependencies_0.target     "nlohmann_json::nlohmann_json")
 set(manifestfile.dependencies_0.repository "https://github.com/nlohmann/json.git")
-set(manifestfile.dependencies_0.tag "v3.6.1")
-set(manifestfile.dependencies_0.options "-DJSON_BuildTests=Off")
-set(manifestfile.dependencies_1 "name")
-set(manifestfile.dependencies_1.name "stb")
+set(manifestfile.dependencies_0.tag        "v3.6.1")
+set(manifestfile.dependencies_0.options    "-DJSON_BuildTests=Off")
+set(manifestfile.dependencies_1            "name")
+set(manifestfile.dependencies_1.name       "stb")
 # ...
 ```
 Then traversed like that:
@@ -206,7 +206,14 @@ So I went with the same way as my shell script: generate a `CMakeLists.txt` file
 The file I'm generating look similar to this:
 
 ```cmake
-file(WRITE "./${${dependency}.name}/CMakeLists.txt" "cmake_minimum_required(VERSION ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION})\nfind_package(${${dependency}.name} VERSION ${${dependency}.version} REQUIRED)\nif(NOT TARGET ${${dependency}.target})\nmessage(SEND_ERROR \"Package ${${dependency}.name} not found\")\nendif()")
+file(WRITE "./${${dependency}.name}/CMakeLists.txt" "
+cmake_minimum_required(VERSION ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION})
+find_package(${${dependency}.name} VERSION ${${dependency}.version} REQUIRED)
+if(NOT TARGET ${${dependency}.target})
+    message(SEND_ERROR \"Package ${${dependency}.name} not found\"
+)
+endif()
+")
 
 execute_process(
     COMMAND ${CMAKE_COMMAND} . -DCMAKE_PREFIX_PATH=${project-prefix-paths}
@@ -222,7 +229,6 @@ else()
     set(check-dependency-${${dependency}.name}-result OFF PARENT_SCOPE)
 endif()
 ```
-Sorry for the horizontal scrolling ¯\\\_(ツ)\_/¯
 
 In short, this small piece of CMake script generate a minimal CMake script that check if a package is found and if a target is exported by the package.
 
@@ -256,9 +262,11 @@ execute_process(
 ```
 Here, notice that we supply an installation path to CMake. In this case, we set it to a directory inside the main project we install dependency for. This way, the main system is not affected and we can have many project with each thier own dependency set.
 
+Then at that point I realized that I could use external project with this delegated CMake thing, but I decided against it. I needed to manage which version would be checked out and also be able to update branch packages.
+
 When this is done, we can even look if the package has been installed correctly by trying to find the package again.
 
-# 4. Updating Dependencies
+## 4. Updating Dependencies
 
 CMake already come with a way to specify a requested version for a package when using `find_package`. The package itself will check if it's compatible with the requested version, no a predefind match. This is powerful since different libraries may have different policies reguarding when breaks happen.
 
@@ -285,3 +293,32 @@ execute_process(
 If the branch has been updated, we then build and install. To save time and energy, we only do that when new commit was added to the branch since the last update.
 
 This part was very important for my projects and the people that helped us: I could focus on the framework and add dependencies without worrying about updating each machine everytime a less technical person want to start working. The tool would update both the framework and the libraries we depend on.
+
+### Bugs When Updating Packages
+
+With the model I've been working on, I choose the specify two commands: `subgine-pkg update` and `subgine-pkg install`. The update were to pull every branch repository, and the install would simply download and install missing dependency.
+
+Everything was nice until I hit that error:
+
+>     error: pathspec 'v3.5.2' did not match any file(s) known to git
+
+What happened here?
+
+As it turns out, simply using `git checkout <version>` is not enough. If the new version has been created after cloning the repository and we tell the package manager to install missing package, it will see the outdated package as *not found*. It will also see the existing repository, so no clone needed. Then, the package manager would try to checkout the new version.
+
+The checkout failed because we must fetch updates before.
+
+Adding this code did the job:
+
+```cmake
+execute_process(
+    COMMAND ${GIT_EXECUTABLE} fetch
+    WORKING_DIRECTORY "./.${${dependency}.name}"
+)
+```
+
+So I had to manage updates even when installing it seemed. So the only difference left between the `update` and `install` command is that `update` will pull repositories set to a branch instead of a tag.
+
+## 5. Ensuring A Valid State
+
+When running the tool, it's easy to know when to rebuild.
