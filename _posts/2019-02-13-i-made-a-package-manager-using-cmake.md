@@ -18,9 +18,15 @@ Why is that? And why on earth using CMake as a scripting language? Today I'll ex
 
 ## Preface
 
-I would like to say that I'm not an expert in build systems. I may have done some obvious errors or oversight. I just had a need that I solved using to tools I know.
+I would like to say that I'm not an expert in build systems. I may have done some obvious errors or oversight. I just had a need that I solved using to tools I knew.
 
-Also, simplicity both in setup and maintenance. I was 
+Also, simplicity both in setup and maintenance. I was working with a team that had very little experience with C++, and didn't know how to manage dependencies. We also had multiple platforms and different setup.
+
+At the time, supporting how we setup the developpement was important. I was developping a framework and an app that used it. The rest of the team was only developping only the app and for them the framework was a dependency like any other. Simply asking to the package manager to take update everything should be one command and should update the framework it's latest revision.
+
+For me the app should use the framework I had compiled in another directory. Not installing the framework on every changes was  important for me, and simply pushing on the master branch should be all I had to do to make the update available to the rest of the team.
+
+Both vcpkg and conan didn't seem to propose all these properties, or didn't seemed simple enough for the whole team to use. The situation might have changed since the last time I tried this setup with these tools.
 
 ## A Dependency Problem
 
@@ -321,4 +327,6 @@ So I had to manage updates even when installing it seemed. So the only differenc
 
 ## 5. Ensuring A Valid State
 
-When running the tool, it's easy to know when to rebuild.
+When running the tool, it's easy to know when to rebuild. When a package has been updated, rebuild and that's it?
+
+Unfortunately, no. What happens when a package fails to build or install correctly? The next time the package manager runs, it should be able to recover, see that a package failed the last time and try again.
