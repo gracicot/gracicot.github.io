@@ -330,3 +330,7 @@ So I had to manage updates even when installing it seemed. So the only differenc
 When running the tool, it's easy to know when to rebuild. When a package has been updated, rebuild and that's it?
 
 Unfortunately, no. What happens when a package fails to build or install correctly? The next time the package manager runs, it should be able to recover, see that a package failed the last time and try again.
+
+At first, it did not happened. When writing the package manager, the logic was simple: if the options for a package, if the version changed or the branch updated, whatever, save those new options and rebuild! The problem is that it won't do well when a package failed to build for whatever reason. When invoking the package manager again, it's gonna see that nothing has been updated in that invocation. This is bad, since the package manager will finish without error, but some packages may be out of date!
+
+To fix this, the package manager has to keep something around to know if a package hasn't been built correctly. Our implementation simply save the commit id of the last successfully installed version, and the options that that installed version was built with.
