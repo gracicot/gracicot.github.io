@@ -334,3 +334,39 @@ Unfortunately, no. What happens when a package fails to build or install correct
 At first, it did not happened. When writing the package manager, the logic was simple: if the options for a package, if the version changed or the branch updated, whatever, save those new options and rebuild! The problem is that it won't do well when a package failed to build for whatever reason. When invoking the package manager again, it's gonna see that nothing has been updated in that invocation. This is bad, since the package manager will finish without error, but some packages may be out of date!
 
 To fix this, the package manager has to keep something around to know if a package hasn't been built correctly. Our implementation simply save the commit id of the last successfully installed version, and the options that that installed version was built with.
+
+To do that correctly, I made myself a nice little command for that:
+```cmake
+function(dependency_current_revision dependency return-value)
+	execute_process(
+		COMMAND ${GIT_EXECUTABLE} rev-parse HEAD
+		WORKING_DIRECTORY "${sources-path}/${${dependency}.name}"
+		OUTPUT_VARIABLE revision-current
+		RESULT_VARIABLE revision-current-result
+		ERROR_VARIABLE revision-current-error
+	)
+	
+	if ("${revision-current-result}" EQUAL 0)
+		set(${resubgine-pkg-revision.txtturn-value} "${revision-current}" PARENT_SCOPE)
+	else()
+		message(FATAL_ERROR "Git failed to retrieve current revision with output: ${revision-current-error}")
+	endif()
+endfunction()
+```
+Then use it like that when an installation is completed successfully:
+```cmake
+dependency_current_revision(${dependency} current-revision)
+file(WRITE "${${dependency}.name}/build/subgine-pkg-revision.txt" "${current-revision}")
+```
+
+Keeping that file in the `build` directory of the dependency has a nice property of being alonside other build artifacts. If there's a need to delete all build artifact, the last built version is also deleted.
+
+### Avoiding The Package Registry
+
+At first I found the package registry quite handy at first. Especially on windows, where there was no system package manager, I could just build a library somewhere and use it elsewhere, no need to install. I first assumed the package registry existed when I made the package manager, but reading the state of the packages and verifying the state was becoming quite difficult.
+
+A package could be found installed on the system, as a subdirectory of `CMAKE_PREFIX_PATH` or, with the package registry, *anywhere* else. Even in the package directory of another project using subgine-pkg!
+
+Then, that repository in the other project could had some problem building the packages or could have its process interrupted or whatever. For a package to be found by the package registry, it only need to be configured. If it's not compiled correctly, a *build time error* will occur, so my package manager would have to check the state of the other package manager's project to be sure everything has been built correctly. Or even worse, you could get back to the other project  and the package manager could be confused by the corretly built package in the other project while it reads its corrupted state. Bad bad bad!
+
+The solution was to simply disable it. When building packages I pass `-DCMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY=ON`. When doing that it became much simpler to reuse package installed by other project in a more predicatble way. More on that later.
