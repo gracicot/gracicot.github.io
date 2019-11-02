@@ -369,4 +369,78 @@ A package could be found installed on the system, as a subdirectory of `CMAKE_PR
 
 Then, that repository in the other project could had some problem building the packages or could have its process interrupted or whatever. For a package to be found by the package registry, it only need to be configured. If it's not compiled correctly, a *build time error* will occur, so my package manager would have to check the state of the other package manager's project to be sure everything has been built correctly. Or even worse, you could get back to the other project  and the package manager could be confused by the corretly built package in the other project while it reads its corrupted state. Bad bad bad!
 
-The solution was to simply disable it. When building packages I pass `-DCMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY=ON`. When doing that it became much simpler to reuse package installed by other project in a more predicatble way. More on that later.
+The solution was to simply disable it. When building packages I pass `-DCMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY=ON`. When doing that it became much simpler to reuse package installed by other project in a more predicatble way.
+
+## 6. Reusing Built Packages
+
+I really wanted to support my own owrkflow where I developped the framework and the app, side by side, without having to install the framework everytime I made a change in it. To do that, the package manager have to discover the build directory of the framework. It turns out CMake can already do that if the project supports it by exporting its build tree. Do support it in your own project, add these line to the installtion part of the script:
+```cmake
+# Normal package exportation when installing
+install(
+  EXPORT mylibTargets
+  FILE mylibTargets.cmake
+  NAMESPACE mylib::
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/mylib
+)
+
+# Export the build tree
+export(
+  EXPORT mylibTargets
+  FILE "${CMAKE_CURRENT_BINARY_DIR}/mylibTargets.cmake"
+  NAMESPACE mylib::
+)
+```
+After that, project can set the `mylib_DIR` or `CMAKE_PREFIX_PATH` to that directory, and `find_package` will be able to see the library.
+
+How does it helps for reusing packages?
+
+Well, I don't support reusing packages across unrelated projects, but if the package manager can read the build tree of another project that itself uses the same package manager, surely it could read it's own metadata and use the packages that are already there right?
+
+To do that properly, when running CMake on a project that uses subgine-pkg, I create a file in the build tree that looks like this:
+```cmake
+# in a file called subgine-pkg-mylib-default.cmake in its build directory
+set(found-pkg-mylib-prefix-path "~/some-prefix/build;/path/to/mylib/subgine-pkg-modules/") # needed prefix path
+set(found-pkg-mylib-module-path "")                                                        # module path (if needed)
+set(found-pkg-mylib-manifest-path "/path/to/mylib/sbg-manifest.json")                      # path to manifest file
+```
+
+So if I find a dependency, I can just use `find_file`, since if the package is found through the prefix path, the find file command should find the metadata file, and include it to get the variables values!
+```cmake
+find_file(sbg-package-config-file subgine-pkg-${${dependency}.name}-${current-profile}.cmake)
+include("${sbg-package-config-file}")
+list(APPEND prefix-paths-to-use ${found-pkg-${${dependency}.name}-prefix-path})
+```
+
+Here you go! Now, the `find_package` command will also find packages from a project configured with subgine-pkg!
+
+This helped me reduce the amount of duplicated package, thus making iterations faster and lighter.
+
+## 7. Profiles
+
+One could imagine needing dependencies to be built for many different incompatible setups. For example, on windows I'll need a build for debug and release. On linux, I might want a clang and a GCC build, or a build with sanitizers enabled. To do that and support all dependencies to be built with the same option, I came with profiles. Inside the `subgine-pkg-modules/` directory, I have an installation subdirectory for each profiles. So the structure look like this:
+```
+subgine-pkg-modules
+├── profile-a
+│   ├── lib1
+│   └── lib2
+└── profile-b
+    ├── lib1
+    └── lib2
+...
+```
+Then, when compiling all packages for each modules, I can output a file that contains the a prefix path pointing to the right profile installation path.
+
+For each profile the package manager supports a set of CMake argument, including CXX flags, toolchain files and others. This mean cross compiling dependencies is possible, although I never tested it.
+
+### Generating Profiles
+Using the command line interface, setuping a profile looks like this:
+```sh
+$ subgine-pkg setup my-profile -DCMAKE_CXX_FLAGS="-fsanitize=address" ... any other cmake args ...
+```
+Then, build the profile:
+```sh
+$ subgine-pkg install my-profile
+```
+This will build all packages with provided CMake argument, and also generate a file that adds required prefix paths and other variables.
+
+### Using Profiles
