@@ -371,9 +371,9 @@ Then, that repository in the other project could had some problem building the p
 
 The solution was to simply disable it. When building packages I pass `-DCMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY=ON`. When doing that it became much simpler to reuse package installed by other project in a more predicatble way.
 
-## 6. Reusing Built Packages
+## 6. Linking Workspaces Together
 
-I really wanted to support my own owrkflow where I developped the framework and the app, side by side, without having to install the framework everytime I made a change in it. To do that, the package manager have to discover the build directory of the framework. It turns out CMake can already do that if the project supports it by exporting its build tree. Do support it in your own project, add these line to the installtion part of the script:
+I really wanted to support my own workflow where I developped the framework and the app, side by side, without having to install the framework everytime I made a change in it. To do that, the package manager have to discover the build directory of the framework. It turns out CMake can already do that if the project supports it by exporting its build tree. Do support it in your own project, add these line to the installtion part of the script:
 ```cmake
 # Normal package exportation when installing
 install(
@@ -404,6 +404,8 @@ set(found-pkg-mylib-module-path "")                                             
 set(found-pkg-mylib-manifest-path "/path/to/mylib/sbg-manifest.json")                      # path to manifest file
 ```
 
+But of course, that for is not written by the user of the tool. CMake running in the user's project must output that file in its build directory and must setup the prefix path to the right places. This is all done by injecting a script I call a profile. More on that later.
+
 So if I find a dependency, I can just use `find_file`, since if the package is found through the prefix path, the find file command should find the metadata file, and include it to get the variables values!
 ```cmake
 find_file(sbg-package-config-file subgine-pkg-${${dependency}.name}-${current-profile}.cmake)
@@ -413,7 +415,7 @@ list(APPEND prefix-paths-to-use ${found-pkg-${${dependency}.name}-prefix-path})
 
 Here you go! Now, the `find_package` command will also find packages from a project configured with subgine-pkg!
 
-This helped me reduce the amount of duplicated package, thus making iterations faster and lighter.
+This helped me reduce the amount of duplicated package and setup the projects faster, thus removing waits in between iterations and make them lighter for my system.
 
 ## 7. Profiles
 
@@ -445,9 +447,11 @@ This will build all packages with provided CMake argument, and also generate a f
 
 The `update` command also takes which profile it should run for. I plan to also add support for profiles in the `clean` command, but the current behavior of operating in all profiles works for now.
 
+### Profile Code Injection
+
+CMake supports code injection in it's project scripts.
+
 ### A missing profile feature
 
 What I would love to do would be for the main project to run with the same arguments as the profile. Sadly I currently need the project name in the generated files. I also don't know if all variables such as toolchain files and other can be set programmatically before `project()` calls. I'll have to dig a bit deeper for that one.
-
-8. Linking Workspaces Together
 
