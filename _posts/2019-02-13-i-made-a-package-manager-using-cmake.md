@@ -443,4 +443,11 @@ $ subgine-pkg install my-profile
 ```
 This will build all packages with provided CMake argument, and also generate a file that adds required prefix paths and other variables.
 
-### Using Profiles
+The `update` command also takes which profile it should run for. I plan to also add support for profiles in the `clean` command, but the current behavior of operating in all profiles works for now.
+
+### A missing profile feature
+
+What I would love to do would be for the main project to run with the same arguments as the profile. Sadly I currently need the project name in the generated files. I also don't know if all variables such as toolchain files and other can be set programmatically before `project` calls. I'll have to dig a bit deeper for that one.
+
+8. Linking Workspaces Together
+
