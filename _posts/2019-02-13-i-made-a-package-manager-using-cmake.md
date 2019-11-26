@@ -453,3 +453,12 @@ What I would love to do would be for the main project to run with the same argum
 
 ## 8. Using The Packages From CMake
 
+After that configuring and building and installing of all the packages, there must be a way to find those packages and use them from the user's project.
+
+There's a CMake feature almost made for this: code injection. The variable `CMAKE_PROJECT_INCLUDE` tells to CMake to include a particular after the `project()` command is called. So without even changing our CMake project file, we can integrate our package manager!
+
+```sh
+$ cmake .. `-DCMAKE_PROJECT_INCLUDE=subgine-pkg-modules/default-module.cmake
+```
+
+And the day you want to switch to Conan, simply change which file you include there!
