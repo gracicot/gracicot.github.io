@@ -347,7 +347,7 @@ function(dependency_current_revision dependency return-value)
 	)
 	
 	if ("${revision-current-result}" EQUAL 0)
-		set(${resubgine-pkg-revision.txtturn-value} "${revision-current}" PARENT_SCOPE)
+		set(${return-value} "${revision-current}" PARENT_SCOPE)
 	else()
 		message(FATAL_ERROR "Git failed to retrieve current revision with output: ${revision-current-error}")
 	endif()
