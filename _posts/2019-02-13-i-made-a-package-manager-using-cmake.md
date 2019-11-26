@@ -462,3 +462,43 @@ $ cmake .. `-DCMAKE_PROJECT_INCLUDE=subgine-pkg-modules/default-module.cmake
 ```
 
 And the day you want to switch to Conan, simply change which file you include there!
+
+The profile file starts with some metadata:
+
+```cmake
+# We set some variables to let know the
+# CMake script that subgine-pkg has been included.
+set(subgine-pkg-${PROJECT_NAME} ON)
+set(subgine-pkg ON)
+
+# We let the current CMake script know what profile has been used.
+set(subgine-pkg-${PROJECT_NAME}-profile "${current-profile}")
+set(subgine-pkg-profile "${current-profile}")
+```
+
+Then, if the user specified any prefix or module path while calling setup, we also set it there:
+```cmake
+list(APPEND CMAKE_MODULE_PATH "some;paths")
+list(APPEND CMAKE_PREFIX_PATH "some;other;paths")
+
+# We also set the installation path of the installed libraries!
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/installation-path/prefixes/${current-profile}/")
+```
+
+To be correct, variables such as `somelib_DIR` should also be considered there but it's not supported yet.
+
+Then we output a file inside the binary dir of the project. This is important to link multiple projects together:
+```cmake
+file(WRITE "${CMAKE_BINARY_DIR}/subgine-pkg-${PROJECT_NAME}-${current-profile}.cmake" "
+set(found-pkg-${PROJECT_NAME}-prefix-path \"${CMAKE_PREFIX_PATH}\")
+set(found-pkg-${PROJECT_NAME}-module-path \"${CMAKE_MODULE_PATH}\")
+set(found-pkg-${PROJECT_NAME}-manifest-path \"${CMAKE_SOURCE_DIR}/sbg-manifest.json\")
+")
+```
+> Okay... what is going on there?
+
+We create a CMake file that is going to be read by other projects. We carefully set metadata about subgine-pkg itself.
+
+We set all required variable for this particular build tree need for it to be correctly found by `find_package`. If there's one prefix path missing, a dependency may not be found and the package cannot be used!
+
+Since the build directory can be anywhere and completely separated from the source directory, we also tell the other projects where to find the manifest file.
