@@ -482,17 +482,17 @@ list(APPEND CMAKE_MODULE_PATH "some;paths")
 list(APPEND CMAKE_PREFIX_PATH "some;other;paths")
 
 # We also set the installation path of the installed libraries!
-list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/installation-path/prefixes/${current-profile}/")
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/subgine-pkg-modules/prefixes/${current-profile}/")
 ```
 
 To be correct, variables such as `somelib_DIR` should also be considered there but it's not supported yet.
 
 Then we output a file inside the binary dir of the project. This is important to link multiple projects together:
 ```cmake
-file(WRITE "${CMAKE_BINARY_DIR}/subgine-pkg-${PROJECT_NAME}-${current-profile}.cmake" "
+file(WRITE "${PROJECT_BINARY_DIR}/subgine-pkg-${PROJECT_NAME}-${current-profile}.cmake" "
 set(found-pkg-${PROJECT_NAME}-prefix-path \"${CMAKE_PREFIX_PATH}\")
 set(found-pkg-${PROJECT_NAME}-module-path \"${CMAKE_MODULE_PATH}\")
-set(found-pkg-${PROJECT_NAME}-manifest-path \"${CMAKE_SOURCE_DIR}/sbg-manifest.json\")
+set(found-pkg-${PROJECT_NAME}-manifest-path \"${PROJECT_SOURCE_DIR}/sbg-manifest.json\")
 ")
 ```
 > Okay... what is going on there?
