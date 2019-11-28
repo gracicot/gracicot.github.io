@@ -512,10 +512,10 @@ Since the build directory can be anywhere and completely separated from the sour
 After that instruction, we try to find this kind of file that could have been outputted by our dependencies:
 ```cmake
 # We try to find the file from available prefix paths
-find_file(subgine-pkg-setup-file-${${dependency}.name} subgine-pkg-${${dependency}.name}-${current-profile}.cmake)
+find_file(subgine-pkg-setup-file-${dependency-name} subgine-pkg-${dependency-name}-${current-profile}.cmake)
 
 # If we indeed find a file, it means the other project is a workspace that uses subgine-pkg
-if(NOT "${subgine-pkg-setup-file-${dependency-name}" STREQUAL "subgine-pkg-setup-file-${dependency-name}-NOTFOUND")
+if(NOT "${subgine-pkg-setup-file-${dependency-name}}" STREQUAL "subgine-pkg-setup-file-${dependency-name}-NOTFOUND")
         # including the file will make `found-pkg-xyz` variables available
 	include("${subgine-pkg-setup-file-${dependency-name}")
 	if(NOT "${found-pkg-${dependency-name}-prefix-path}" STREQUAL "")
