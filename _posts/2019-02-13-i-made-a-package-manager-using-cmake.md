@@ -516,13 +516,13 @@ find_file(subgine-pkg-setup-file-${dependency-name} subgine-pkg-${dependency-nam
 
 # If we indeed find a file, it means the other project is a workspace that uses subgine-pkg
 if(NOT "${subgine-pkg-setup-file-${dependency-name}}" STREQUAL "subgine-pkg-setup-file-${dependency-name}-NOTFOUND")
-        # including the file will make `found-pkg-xyz` variables available
-	include("${subgine-pkg-setup-file-${dependency-name}")
-	if(NOT "${found-pkg-${dependency-name}-prefix-path}" STREQUAL "")
-		list(APPEND CMAKE_PREFIX_PATH "${found-pkg-${dependency-name}-prefix-path}")
-	endif()
-	if(NOT "${found-pkg-${dependency-name}-module-path}" STREQUAL "")
-		list(APPEND CMAKE_MODULE_PATH "${found-pkg-${dependency-name}-module-path}")
-	endif()
+    # including the file will make `found-pkg-xyz` variables available
+    include("${subgine-pkg-setup-file-${dependency-name}")
+    if(NOT "${found-pkg-${dependency-name}-prefix-path}" STREQUAL "")
+        list(APPEND CMAKE_PREFIX_PATH "${found-pkg-${dependency-name}-prefix-path}")
+    endif()
+    if(NOT "${found-pkg-${dependency-name}-module-path}" STREQUAL "")
+        list(APPEND CMAKE_MODULE_PATH "${found-pkg-${dependency-name}-module-path}")
+    endif()
 endif()
 ```
