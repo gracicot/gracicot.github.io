@@ -461,9 +461,9 @@ There's a CMake feature almost made for this: code injection. The variable `CMAK
 $ cmake .. `-DCMAKE_PROJECT_INCLUDE=subgine-pkg-modules/default-module.cmake
 ```
 
-And the day you want to switch to Conan, simply change which file you include there!
+And the day you want to switch to Conan, simply change which file you include there to the one Conan generates!
 
-The profile file starts with some metadata:
+The profile don't contain much wizardry. It's quite simple in fact. There is not much to do to in this file. Before anything, we set some metadata to be available for the CMake project that uses the profile:
 
 ```cmake
 # We set some variables to let know the
@@ -476,13 +476,14 @@ set(subgine-pkg-${PROJECT_NAME}-profile "${current-profile}")
 set(subgine-pkg-profile "${current-profile}")
 ```
 
-Then, if the user specified any prefix or module path while calling setup, we also set it there:
+Then, we add the prefix where the libraries are installed. if the user specified any prefix or module path while calling setup, we also set it there:
 ```cmake
+# Installation prefix of the libraries
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/subgine-pkg-modules/prefixes/${current-profile}/")
+
+# Prefixes and module paths sent to the `subgine-pkg setup ...` command
 list(APPEND CMAKE_MODULE_PATH "some;paths")
 list(APPEND CMAKE_PREFIX_PATH "some;other;paths")
-
-# We also set the installation path of the installed libraries!
-list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/subgine-pkg-modules/prefixes/${current-profile}/")
 ```
 
 To be correct, variables such as `somelib_DIR` should also be considered there but it's not supported yet.
@@ -526,3 +527,5 @@ if(NOT "${subgine-pkg-setup-file-${dependency-name}}" STREQUAL "subgine-pkg-setu
     endif()
 endif()
 ```
+Here we try to find a file with the same profile name as our current profile. We consider that if the prefix path don't point to the another profile with same profile name, it's probably a mistake. That file exist only when creating and compiling your own projects inside different directories and is only found if a prefix path point to it. The user is in control on the profile name and thier arguments so we assume the same profile name means compatible.
+
