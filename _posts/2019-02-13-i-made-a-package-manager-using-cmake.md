@@ -487,7 +487,13 @@ list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/subgine-pkg-modules/p
 
 To be correct, variables such as `somelib_DIR` should also be considered there but it's not supported yet.
 
-Then we output a file inside the binary dir of the project. This is important to link multiple projects together:
+## 9. Reusing Installed Packages
+
+When two workspace are linked together by the package manager, would it be nice if the dependencies would not be installed multiple times?
+
+We support doing that by emmitting some instructions in the profile file that write some required metadata to link workspaces and their dependencies together.
+
+So inside the `wathever-profile.cmake`, you'll see something like this:
 ```cmake
 file(WRITE "${PROJECT_BINARY_DIR}/subgine-pkg-${PROJECT_NAME}-${current-profile}.cmake" "
 set(found-pkg-${PROJECT_NAME}-prefix-path \"${CMAKE_PREFIX_PATH}\")
@@ -502,3 +508,21 @@ We create a CMake file that is going to be read by other projects. We carefully 
 We set all required variable for this particular build tree need for it to be correctly found by `find_package`. If there's one prefix path missing, a dependency may not be found and the package cannot be used!
 
 Since the build directory can be anywhere and completely separated from the source directory, we also tell the other projects where to find the manifest file.
+
+After that instruction, we try to find this kind of file that could have been outputted by our dependencies:
+```cmake
+# We try to find the file from available prefix paths
+find_file(subgine-pkg-setup-file-${${dependency}.name} subgine-pkg-${${dependency}.name}-${current-profile}.cmake)
+
+# If we indeed find a file, it means the other project is a workspace that uses subgine-pkg
+if(NOT "${subgine-pkg-setup-file-${dependency-name}" STREQUAL "subgine-pkg-setup-file-${dependency-name}-NOTFOUND")
+        # including the file will make `found-pkg-xyz` variables available
+	include("${subgine-pkg-setup-file-${dependency-name}")
+	if(NOT "${found-pkg-${dependency-name}-prefix-path}" STREQUAL "")
+		list(APPEND CMAKE_PREFIX_PATH "${found-pkg-${dependency-name}-prefix-path}")
+	endif()
+	if(NOT "${found-pkg-${dependency-name}-module-path}" STREQUAL "")
+		list(APPEND CMAKE_MODULE_PATH "${found-pkg-${dependency-name}-module-path}")
+	endif()
+endif()
+```
