@@ -20,11 +20,11 @@ Why is that? And why on earth using CMake as a scripting language? Today I'll ex
 
 I would like to say that I'm not an expert in build systems. I may have done some obvious errors or oversight. I just had a need that I solved using to tools I knew.
 
-Also, simplicity both in setup and maintenance. I was working with a team that had very little experience with C++, and didn't know how to manage dependencies. We also had multiple platforms and different setup.
+Also, I needed simplicity both in setup and maintenance. I was working with a team that had very little experience with C++, and didn't know how to manage dependencies. We also had multiple platforms and different setup.
 
-At the time, supporting how we setup the developpement was important. I was developping a framework and an app that used it. The rest of the team was only developping only the app and for them the framework was a dependency like any other. Simply asking to the package manager to take update everything should be one command and should update the framework it's latest revision.
+At the time, supporting how we setup the developpement was important. I was developping a framework and an app that used it. The rest of the team was only developping only the app and for them, the framework was a dependency like any other. Simply asking to the package manager to update everything should be one command and should update the framework to it's latest revision, and also update the framework's dependencies.
 
-For me the app should use the framework I had compiled in another directory. Not installing the framework on every changes was  important for me, and simply pushing on the master branch should be all I had to do to make the update available to the rest of the team.
+On my side, the app should use the framework I had compiled in another directory. Not installing the framework on every changes was important for me, and simply pushing on the master branch should be all I had to do to make the update available to the rest of the team.
 
 Both vcpkg and conan didn't seem to propose all these properties, or didn't seemed simple enough for the whole team to use. The situation might have changed since the last time I tried this setup with these tools.
 
@@ -100,7 +100,7 @@ Haha, ha... ha... So naive.
 
 It's true, I picked the same strategy as my previous script: Generating a `CMakeLists.txt` file, then run CMake to see if everything can be included.
 
-However, I migrated from a 70 line script to a... 900 line CMake monster.
+However, I migrated from a 70 line shell script to a... 1000 line CMake monster.
 
 ## 1. Reading The JSON
 
@@ -247,11 +247,11 @@ I first went with `ExternalProject`. This is an awesome tool to download, config
 >     CMake Error at /usr/share/cmake-3.14/Modules/ExternalProject.cmake:1016 (define_property):
 >       define_property command is not scriptable
 
-_Again! Why?_
-
-Sadly, external project cannot be used either in script mode.
+Sadly, external project cannot be used either in script mode. Also, it don't quite make sense to use it there since external project downloads at build time.
 
 The solution was to run git manually to download the dependency, then build it.
+
+I then realized after doing all this that there was `fetchContent` that did what I wanted. However, I use more git commands than what `fetchContent` exposes so I kept the raw git.
 
 > For the sake of simplicity, we will assume that the recipe is simply to run CMake to build and install the package without any additional steps. We will get back on this later.
 
