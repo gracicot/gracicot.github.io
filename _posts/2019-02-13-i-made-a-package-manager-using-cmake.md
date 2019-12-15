@@ -533,6 +533,24 @@ Here we try to find a file with the same profile name as our current profile. We
 
 The result? In a few weeks of work before the project started, I was able to create a small tool that worked just fine for our needs and enabled us to work. It's a recursive package manager, so package requiring other packages was possible and even required for our setup as we intended.
 
-[![asciicast](https://asciinema.org/a/288191.svg)](https://asciinema.org/a/288191)
+[![asciicast](https://asciinema.org/a/288196.svg)](https://asciinema.org/a/288196)
+
+The package manager is capable is picking up built packages from other worspaces, installed packages (optional) and can also update our installed libraries.
+
+The package manager is still useful to me. I still use it and for well built CMake packages, it work like a charm for my needs.
 
 ## What I've Learned
+
+CMake has a lot built-in to manage packages, versions, install them at the right place and more. What CMake does not have is a  tool to download packages and build them with a config. This is my attempt of making that missing tool.
+
+I also learned that not all project support building with CMake. I told you I assumed the recipe? Yeah, to use some project I had to wrap them in a CMake project to use them with my package manager.
+
+Also, there's a lot of projects that uses CMake, but are not `cmake --build . --target install` friendly, or just don't expose a CMake package at all. Some exposes a CMake package, but not their version number, so I had to add a `"ignore-version"` option on a dependency, and then upgrading that library was a pain since the package manager would not know it was out of date. Relying on CMake is great if everyone uses it correctly.
+
+To use some packages, I simply contributed to some libraries I needed. I think it's the best way to get more library with a quality CMake setup: make that quality setup and contribute to make a better world! I learned how to make libraries useable with CMake in a better way doing these contributions, and I gained a lot of experiences porting some proejcts too.
+
+I learned a lot making mistakes doing that tool. It really easy to get something working quickly, but to make something robust and reliable it quite a challenge and I still correting small bugs months after the project is finished.
+
+The CMake language has made it easy to get started, but as the tool is becoming more complex, I think using C++ directly would have been great. Making it cross platform may be harder though and I was constrained by time.
+
+Overall I'm happy I made this project. I mean, it's not perfect but it's been really useful for me, and saved me a lot of time. I would like to hear why that wools would ne be suitable for you or how can I improve it.
