@@ -531,4 +531,8 @@ Here we try to find a file with the same profile name as our current profile. We
 
 ## Result
 
+The result? In a few weeks of work before the project started, I was able to create a small tool that worked just fine for our needs and enabled us to work. It's a recursive package manager, so package requiring other packages was possible and even required for our setup as we intended.
+
+[![asciicast](https://asciinema.org/a/288191.svg)](https://asciinema.org/a/288191)
+
 ## What I've Learned
