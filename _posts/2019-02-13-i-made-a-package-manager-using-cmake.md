@@ -20,11 +20,11 @@ Why is that? And why on earth using CMake as a scripting language? Today I'll ex
 
 I would like to say that I'm not an expert in build systems. I may have done some obvious errors or oversight. I just had a need that I solved using to tools I knew.
 
-Also, simplicity both in setup and maintenance. I was working with a team that had very little experience with C++, and didn't know how to manage dependencies. We also had multiple platforms and different setup.
+Also, I needed simplicity both in setup and maintenance. I was working with a team that had very little experience with C++, and didn't know how to manage dependencies. We also had multiple platforms and different setup.
 
-At the time, supporting how we setup the developpement was important. I was developping a framework and an app that used it. The rest of the team was only developping only the app and for them the framework was a dependency like any other. Simply asking to the package manager to take update everything should be one command and should update the framework it's latest revision.
+At the time, supporting how we setup the developpement was important. I was developping a framework and an app that used it. The rest of the team was only developping only the app and for them, the framework was a dependency like any other. Simply asking to the package manager to update everything should be one command and should update the framework to it's latest revision, and also update the framework's dependencies.
 
-For me the app should use the framework I had compiled in another directory. Not installing the framework on every changes was  important for me, and simply pushing on the master branch should be all I had to do to make the update available to the rest of the team.
+On my side, the app should use the framework I had compiled in another directory. Not installing the framework on every changes was important for me, and simply pushing on the master branch should be all I had to do to make the update available to the rest of the team.
 
 Both vcpkg and conan didn't seem to propose all these properties, or didn't seemed simple enough for the whole team to use. The situation might have changed since the last time I tried this setup with these tools.
 
@@ -100,7 +100,7 @@ Haha, ha... ha... So naive.
 
 It's true, I picked the same strategy as my previous script: Generating a `CMakeLists.txt` file, then run CMake to see if everything can be included.
 
-However, I migrated from a 70 line script to a... 900 line CMake monster.
+However, I migrated from a 70 line shell script to a... 1000 line CMake monster.
 
 ## 1. Reading The JSON
 
@@ -247,11 +247,11 @@ I first went with `ExternalProject`. This is an awesome tool to download, config
 >     CMake Error at /usr/share/cmake-3.14/Modules/ExternalProject.cmake:1016 (define_property):
 >       define_property command is not scriptable
 
-_Again! Why?_
-
-Sadly, external project cannot be used either in script mode.
+Sadly, external project cannot be used either in script mode. Also, it don't quite make sense to use it there since external project downloads at build time.
 
 The solution was to run git manually to download the dependency, then build it.
+
+I then realized after doing all this that there was `fetchContent` that did what I wanted. However, I use more git commands than what `fetchContent` exposes so I kept the raw git.
 
 > For the sake of simplicity, we will assume that the recipe is simply to run CMake to build and install the package without any additional steps. We will get back on this later.
 
@@ -338,19 +338,19 @@ To fix this, the package manager has to keep something around to know if a packa
 To do that correctly, I made myself a nice little command for that:
 ```cmake
 function(dependency_current_revision dependency return-value)
-	execute_process(
-		COMMAND ${GIT_EXECUTABLE} rev-parse HEAD
-		WORKING_DIRECTORY "${sources-path}/${${dependency}.name}"
-		OUTPUT_VARIABLE revision-current
-		RESULT_VARIABLE revision-current-result
-		ERROR_VARIABLE revision-current-error
-	)
+   execute_process(
+      COMMAND ${GIT_EXECUTABLE} rev-parse HEAD
+      WORKING_DIRECTORY "${sources-path}/${${dependency}.name}"
+      OUTPUT_VARIABLE revision-current
+      RESULT_VARIABLE revision-current-result
+      ERROR_VARIABLE revision-current-error
+   )
 	
-	if ("${revision-current-result}" EQUAL 0)
-		set(${resubgine-pkg-revision.txtturn-value} "${revision-current}" PARENT_SCOPE)
-	else()
-		message(FATAL_ERROR "Git failed to retrieve current revision with output: ${revision-current-error}")
-	endif()
+   if ("${revision-current-result}" EQUAL 0)
+      set(${return-value} "${revision-current}" PARENT_SCOPE)
+   else()
+      message(FATAL_ERROR "Git failed to retrieve current revision with output: ${revision-current-error}")
+   endif()
 endfunction()
 ```
 Then use it like that when an installation is completed successfully:
@@ -371,9 +371,9 @@ Then, that repository in the other project could had some problem building the p
 
 The solution was to simply disable it. When building packages I pass `-DCMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY=ON`. When doing that it became much simpler to reuse package installed by other project in a more predicatble way.
 
-## 6. Reusing Built Packages
+## 6. Linking Workspaces Together
 
-I really wanted to support my own owrkflow where I developped the framework and the app, side by side, without having to install the framework everytime I made a change in it. To do that, the package manager have to discover the build directory of the framework. It turns out CMake can already do that if the project supports it by exporting its build tree. Do support it in your own project, add these line to the installtion part of the script:
+I really wanted to support my own workflow where I developped the framework and the app, side by side, without having to install the framework everytime I made a change in it. To do that, the package manager have to discover the build directory of the framework. It turns out CMake can already do that if the project supports it by exporting its build tree. Do support it in your own project, add these line to the installtion part of the script:
 ```cmake
 # Normal package exportation when installing
 install(
@@ -404,6 +404,8 @@ set(found-pkg-mylib-module-path "")                                             
 set(found-pkg-mylib-manifest-path "/path/to/mylib/sbg-manifest.json")                      # path to manifest file
 ```
 
+But of course, that for is not written by the user of the tool. CMake running in the user's project must output that file in its build directory and must setup the prefix path to the right places. This is all done by injecting a script I call a profile. More on that later.
+
 So if I find a dependency, I can just use `find_file`, since if the package is found through the prefix path, the find file command should find the metadata file, and include it to get the variables values!
 ```cmake
 find_file(sbg-package-config-file subgine-pkg-${${dependency}.name}-${current-profile}.cmake)
@@ -413,7 +415,7 @@ list(APPEND prefix-paths-to-use ${found-pkg-${${dependency}.name}-prefix-path})
 
 Here you go! Now, the `find_package` command will also find packages from a project configured with subgine-pkg!
 
-This helped me reduce the amount of duplicated package, thus making iterations faster and lighter.
+This helped me reduce the amount of duplicated package and setup the projects faster, thus removing waits in between iterations and make them lighter for my system.
 
 ## 7. Profiles
 
@@ -443,4 +445,112 @@ $ subgine-pkg install my-profile
 ```
 This will build all packages with provided CMake argument, and also generate a file that adds required prefix paths and other variables.
 
-### Using Profiles
+The `update` command also takes which profile it should run for. I plan to also add support for profiles in the `clean` command, but the current behavior of operating in all profiles works for now.
+
+### A missing profile feature
+
+What I would love to do would be for the main project to run with the same arguments as the profile. Sadly I currently need the project name in the generated files. I also don't know if all variables such as toolchain files and other can be set programmatically before `project()` calls. I'll have to dig a bit deeper for that one.
+
+## 8. Using The Packages From CMake
+
+After that configuring and building and installing of all the packages, there must be a way to find those packages and use them from the user's project.
+
+There's a CMake feature almost made for this: code injection. The variable `CMAKE_PROJECT_INCLUDE` tells to CMake to include a particular after the `project()` command is called. So without even changing our CMake project file, we can integrate our package manager!
+
+```sh
+$ cmake .. `-DCMAKE_PROJECT_INCLUDE=subgine-pkg-modules/default-module.cmake
+```
+
+And the day you want to switch to Conan, simply change which file you include there to the one Conan generates!
+
+The profile don't contain much wizardry. It's quite simple in fact. There is not much to do to in this file. Before anything, we set some metadata to be available for the CMake project that uses the profile:
+
+```cmake
+# We set some variables to let know the
+# CMake script that subgine-pkg has been included.
+set(subgine-pkg-${PROJECT_NAME} ON)
+set(subgine-pkg ON)
+
+# We let the current CMake script know what profile has been used.
+set(subgine-pkg-${PROJECT_NAME}-profile "${current-profile}")
+set(subgine-pkg-profile "${current-profile}")
+```
+
+Then, we add the prefix where the libraries are installed. if the user specified any prefix or module path while calling setup, we also set it there:
+```cmake
+# Installation prefix of the libraries
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/subgine-pkg-modules/prefixes/${current-profile}/")
+
+# Prefixes and module paths sent to the `subgine-pkg setup ...` command
+list(APPEND CMAKE_MODULE_PATH "some;paths")
+list(APPEND CMAKE_PREFIX_PATH "some;other;paths")
+```
+
+To be correct, variables such as `somelib_DIR` and `somelib_ROOT` should also be considered there but it's not supported yet.
+
+## 9. Reusing Installed Packages
+
+When two workspace are linked together by the package manager, would it be nice if the dependencies would not be installed multiple times?
+
+We support doing that by emmitting some instructions in the profile file that write some required metadata to link workspaces and their dependencies together.
+
+So inside the `wathever-profile.cmake`, you'll see something like this:
+```cmake
+file(WRITE "${PROJECT_BINARY_DIR}/subgine-pkg-${PROJECT_NAME}-${current-profile}.cmake" "
+set(found-pkg-${PROJECT_NAME}-prefix-path \"${CMAKE_PREFIX_PATH}\")
+set(found-pkg-${PROJECT_NAME}-module-path \"${CMAKE_MODULE_PATH}\")
+set(found-pkg-${PROJECT_NAME}-manifest-path \"${PROJECT_SOURCE_DIR}/sbg-manifest.json\")
+")
+```
+> Okay... what is going on there?
+
+We create a CMake file that is going to be read by other projects. We carefully set metadata about subgine-pkg itself.
+
+We set all required variable for this particular build tree need for it to be correctly found by `find_package`. If there's one prefix path missing, a dependency may not be found and the package cannot be used!
+
+Since the build directory can be anywhere and completely separated from the source directory, we also tell the other projects where to find the manifest file.
+
+After that instruction, we try to find this kind of file that could have been outputted by our dependencies:
+```cmake
+# We try to find the file from available prefix paths
+find_file(subgine-pkg-setup-file-${dependency-name} subgine-pkg-${dependency-name}-${current-profile}.cmake)
+
+# If we indeed find a file, it means the other project is a workspace that uses subgine-pkg
+if(NOT "${subgine-pkg-setup-file-${dependency-name}}" STREQUAL "subgine-pkg-setup-file-${dependency-name}-NOTFOUND")
+    # including the file will make `found-pkg-xyz` variables available
+    include("${subgine-pkg-setup-file-${dependency-name}")
+    if(NOT "${found-pkg-${dependency-name}-prefix-path}" STREQUAL "")
+        list(APPEND CMAKE_PREFIX_PATH "${found-pkg-${dependency-name}-prefix-path}")
+    endif()
+    if(NOT "${found-pkg-${dependency-name}-module-path}" STREQUAL "")
+        list(APPEND CMAKE_MODULE_PATH "${found-pkg-${dependency-name}-module-path}")
+    endif()
+endif()
+```
+Here we try to find a file with the same profile name as our current profile. We consider that if the prefix path don't point to the another profile with same profile name, it's probably a mistake. That file exist only when creating and compiling your own projects inside different directories and is only found if a prefix path point to it. The user is in control on the profile name and thier arguments so we assume the same profile name means compatible.
+
+## Result
+
+The result? In a few weeks of work before the project started, I was able to create a small tool that worked just fine for our needs and enabled us to work. It's a recursive package manager, so package requiring other packages was possible and even required for our setup as we intended.
+
+[![asciicast](https://asciinema.org/a/288196.svg)](https://asciinema.org/a/288196)
+
+The package manager is capable is picking up built packages from other worspaces, installed packages (optional) and can also update our installed libraries.
+
+The package manager is still useful to me. I still use it and for well built CMake packages, it work like a charm for my needs.
+
+## What I've Learned
+
+CMake has a lot built-in to manage packages, versions, install them at the right place and more. What CMake does not have is a  tool to download packages and build them with a config. This is my attempt of making that missing tool.
+
+I also learned that not all project support building with CMake. I told you I assumed the recipe? Yeah, to use some project I had to wrap them in a CMake project to use them with my package manager.
+
+Also, there's a lot of projects that uses CMake, but are not `cmake --build . --target install` friendly, or just don't expose a CMake package at all. Some exposes a CMake package, but not their version number, so I had to add a `"ignore-version"` option on a dependency, and then upgrading that library was a pain since the package manager would not know it was out of date. Relying on CMake is great if everyone uses it correctly.
+
+To use some packages, I simply contributed to some libraries I needed. I think it's the best way to get more library with a quality CMake setup: make that quality setup and contribute to make a better world! I learned how to make libraries useable with CMake in a better way doing these contributions, and I gained a lot of experiences porting some proejcts too.
+
+I learned a lot making mistakes doing that tool. It really easy to get something working quickly, but to make something robust and reliable it quite a challenge and I still correting small bugs months after the project is finished.
+
+The CMake language has made it easy to get started, but as the tool is becoming more complex, I think using C++ directly would have been great. Making it cross platform may be harder though and I was constrained by time.
+
+Overall I'm happy I made this project. I mean, it's not perfect but it's been really useful for me, and saved me a lot of time. I would like to hear why that wools would ne be suitable for you or how can I improve it.
