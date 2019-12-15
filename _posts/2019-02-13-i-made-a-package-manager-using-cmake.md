@@ -338,19 +338,19 @@ To fix this, the package manager has to keep something around to know if a packa
 To do that correctly, I made myself a nice little command for that:
 ```cmake
 function(dependency_current_revision dependency return-value)
-	execute_process(
-		COMMAND ${GIT_EXECUTABLE} rev-parse HEAD
-		WORKING_DIRECTORY "${sources-path}/${${dependency}.name}"
-		OUTPUT_VARIABLE revision-current
-		RESULT_VARIABLE revision-current-result
-		ERROR_VARIABLE revision-current-error
-	)
+   execute_process(
+      COMMAND ${GIT_EXECUTABLE} rev-parse HEAD
+      WORKING_DIRECTORY "${sources-path}/${${dependency}.name}"
+      OUTPUT_VARIABLE revision-current
+      RESULT_VARIABLE revision-current-result
+      ERROR_VARIABLE revision-current-error
+   )
 	
-	if ("${revision-current-result}" EQUAL 0)
-		set(${return-value} "${revision-current}" PARENT_SCOPE)
-	else()
-		message(FATAL_ERROR "Git failed to retrieve current revision with output: ${revision-current-error}")
-	endif()
+   if ("${revision-current-result}" EQUAL 0)
+      set(${return-value} "${revision-current}" PARENT_SCOPE)
+   else()
+      message(FATAL_ERROR "Git failed to retrieve current revision with output: ${revision-current-error}")
+   endif()
 endfunction()
 ```
 Then use it like that when an installation is completed successfully:
@@ -486,7 +486,7 @@ list(APPEND CMAKE_MODULE_PATH "some;paths")
 list(APPEND CMAKE_PREFIX_PATH "some;other;paths")
 ```
 
-To be correct, variables such as `somelib_DIR` should also be considered there but it's not supported yet.
+To be correct, variables such as `somelib_DIR` and `somelib_ROOT` should also be considered there but it's not supported yet.
 
 ## 9. Reusing Installed Packages
 
