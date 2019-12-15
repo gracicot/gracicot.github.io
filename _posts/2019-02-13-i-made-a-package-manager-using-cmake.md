@@ -12,13 +12,13 @@ _Likely the first reaction of most C++ programmers_
 
 But I still made one. And I made it using CMake scripts. I'm currently using it for a hobby project a small team and I are working on, and I'm likely keeping it and maintaining it for a little while.
 
-Why is that? And why on earth using CMake as a scripting language? Today I'll explain my needs at the time, the thought process behind it and show you the result.
+Why is that? And why on earth using CMake as a scripting language? Today I'll explain my needs at the time, the thought process behind, my implementation choices it and show you the result.
 
 <!--more-->
 
 ## Preface
 
-I would like to say that I'm not an expert in build systems. I may have done some obvious errors or oversight. I just had a need that I solved using to tools I knew.
+I would like start by saying that I'm not an expert in build systems. I may have done some obvious errors or oversight. I just had a need that I solved using to tools I knew.
 
 Also, I needed simplicity both in setup and maintenance. I was working with a team that had very little experience with C++, and didn't know how to manage dependencies. We also had multiple platforms and different setup.
 
@@ -30,15 +30,15 @@ Both vcpkg and conan didn't seem to propose all these properties, or didn't seem
 
 ## A Dependency Problem
 
-At first, dependencies were not a problem. I used Linux and my mate too. We wanted something? We just had to pick it from the repo, write a small `FindXYZ.cmake` file if needed then use it.
+At first, dependencies were not a problem. I used Linux and my mate too. We wanted something? We just had to pick it from the system package manager, write a small `FindXYZ.cmake` file if needed and then use the library.
 
-We used libraries like `glfw`, `jsoncpp`, `glm` and a few others. But one day, I made a small framework to support our project. So we had the main project that depended on some libraries, and our framework that also had dependencies. Clearly, just with our code we had a multi-level dependency problem. Our workflow was to build them one by one in order. Luckily, most of them was header only, so it wasn't that bad, but required some knowledge of the setup to do it correctly.
+We used libraries like `glfw`, `jsoncpp`, `glm` and a few others. But one day, I made a small framework to support our project. So we had the main project that depended on some libraries, and our framework that also had dependencies. We had a multi-level dependency problem. Our workflow was to build the missing libraries one by one in order. Luckily, most of them was header only, so it wasn't that bad, but required some knowledge of the setup to do it correctly.
 
-Then I tried to use a library that wasn't package by my distribution. We simply added it to the list of packages to build beforehand... in the right order... Well, it was becoming quite tedious, something had to be done.
+When we needed a new dependency that wasn't in the system repository, we simply added it to the list of packages to build beforehand... in the right order... And be careful to signal our teammates! Well, it was becoming quite tedious, something had to be done.
 
 ## Submodules
 
-The idea of using submodules to ship dependencies was considered at first. I could fetch the submodule of only the libraries I needed. However, it turns out git is not a dependency manager. Submodule was hellish to support, and updates would have been a pain.
+The idea of using submodules to ship dependencies was considered at first. I could fetch the submodule of only the libraries I needed. However, it turns out git is not a package manager. Submodule was hellish to support, and updates would have been a pain.
 
 We choose not to use git submodules as a package manager. It Didn't felt *right*.
 
