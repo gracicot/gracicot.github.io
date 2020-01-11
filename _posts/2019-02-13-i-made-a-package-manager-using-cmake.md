@@ -12,23 +12,21 @@ _Likely the first reaction of most C++ programmers_
 
 But I still made one. And I made it using CMake scripts. I'm currently using it for a hobby project a small team and I are working on, and I'm likely keeping it and maintaining it for a little while.
 
-Why is that? And why on earth using CMake as a scripting language? Today I'll explain my needs at the time, the thought process behind, my implementation choices it and show you the result.
+Why is that? And why on earth using CMake as a scripting language? Today I'll explain my needs at the time, the thought process behind, my implementation choices and show you the result.
 
 <!--more-->
 
-## Preface
+## My Needs
 
 I would like start by saying that I'm not an expert in build systems. I may have done some obvious errors or oversight. I just had a need that I solved using to tools I knew.
 
-Also, I needed simplicity both in setup and maintenance. I was working with a team that had very little experience with C++, and didn't know how to manage dependencies. We also had multiple platforms and different setup.
+I needed simplicity both in setup and maintenance. I was working with a team that had very little experience with C++, and didn't know how to manage dependencies. We also had multiple platforms and different setup. We already had a pretty decent CMake setup. Our only problem was to fetch and setup dependencies.
 
-At the time, supporting how we setup the developpement was important. I was developping a framework and an app that used it. The rest of the team was only developping only the app and for them, the framework was a dependency like any other. Simply asking to the package manager to update everything should be one command and should update the framework to it's latest revision, and also update the framework's dependencies.
-
-On my side, the app should use the framework I had compiled in another directory. Not installing the framework on every changes was important for me, and simply pushing on the master branch should be all I had to do to make the update available to the rest of the team.
+One particular need I had was to support our workflow. I was developping a framework and an app that used it. The rest of the team was only developping only the app and for them, the framework was a dependency like any other. Simply asking to the package manager to update everything should be one command and should update the framework to it's latest revision, and also update the framework's dependencies. On my side, the app should use the framework I had compiled in another directory. Not installing the framework on every changes was important for me, and simply pushing on the master branch should be all I had to do to make the update available to the rest of the team.
 
 Both vcpkg and conan didn't seem to propose all these properties, or didn't seemed simple enough for the whole team to use. The situation might have changed since the last time I tried this setup with these tools.
 
-## A Dependency Problem
+## Our Setup
 
 At first, dependencies were not a problem. I used Linux and my mate too. We wanted something? We just had to pick it from the system package manager, write a small `FindXYZ.cmake` file if needed and then use the library.
 
