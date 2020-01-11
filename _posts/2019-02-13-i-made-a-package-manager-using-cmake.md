@@ -26,7 +26,7 @@ One particular need I had was to support our workflow. I was developping a frame
 
 Both vcpkg and conan didn't seem to propose all these properties, or didn't seemed simple enough for the whole team to use. The situation might have changed since the last time I tried this setup with these tools.
 
-## Our Setup
+## Our Old Setup
 
 At first, dependencies were not a problem. I used Linux and my mate too. We wanted something? We just had to pick it from the system package manager, write a small `FindXYZ.cmake` file if needed and then use the library.
 
@@ -34,13 +34,13 @@ We used libraries like `glfw`, `jsoncpp`, `glm` and a few others. But one day, I
 
 When we needed a new dependency that wasn't in the system repository, we simply added it to the list of packages to build beforehand... in the right order... And be careful to signal our teammates! Well, it was becoming quite tedious, something had to be done.
 
-## Submodules
+### Submodules
 
 The idea of using submodules to ship dependencies was considered at first. I could fetch the submodule of only the libraries I needed. However, it turns out git is not a package manager. Submodule was hellish to support, and updates would have been a pain.
 
 We choose not to use git submodules as a package manager. It Didn't felt *right*.
 
-## install_missing.sh
+### install_missing.sh
 
 My first solution I had to automate a repetitive task was of course to create a script. I wanted something simple: Something to install our missing dependencies.
 
@@ -70,7 +70,7 @@ First, it was a `sh` script. Not that it's wrong, but it would be wrong to say i
 
 Then, there was a distribution problem. How to deal with multiple project? Add the script to the git repository? Then when updating dependencies or the script itself I need to repeat the update everywhere? And if I choose the gitsubmodule approach to distribute the script, how do I represent multiple projects with different dependencies?
 
-## Something Better?
+### Something Better?
 
 We had to deal with these issues and make a choice. We already wasted too much time on configuration!
 
@@ -94,11 +94,13 @@ So... A script to install CMake dependencies in CMake it is!
 
 And... that will simply be taking the bash script, port it to cmake and read the json file to fill the data I previously hardcoded?
 
-Haha, ha... ha... So naive.
+Right?
+
+Haha ha... So naive.
 
 It's true, I picked the same strategy as my previous script: Generating a `CMakeLists.txt` file, then run CMake to see if everything can be included.
 
-However, I migrated from a 70 line shell script to a... 1000 line CMake monster.
+However, I migrated from a 70 line shell script to a... 1000 line CMake (beautiful) monstrosity..
 
 ## 1. Reading The JSON
 
