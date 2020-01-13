@@ -554,3 +554,9 @@ I learned a lot making mistakes doing that tool. It really easy to get something
 The CMake language has made it easy to get started, but as the tool is becoming more complex, I think using C++ directly would have been great. Making it cross platform may be harder though and I was constrained by time.
 
 Overall I'm happy I made this project. I mean, it's not perfect but it's been really useful for me, and saved me a lot of time. I would like to hear why that wools would ne be suitable for you or how can I improve it.
+
+## That's All!
+
+Thank you for reading. It may not be a "production grade" package manager, but I was satisfied with the result and I've learned a ton about CMake, buildsystems in general and making reliable tools. It's been fun and I hope this will inpire more tool development as it is greatly needed in the C++ community.
+
+Opinion? Feedback? Insults?? Leave a comment on the reddit post on /r/cpp!
