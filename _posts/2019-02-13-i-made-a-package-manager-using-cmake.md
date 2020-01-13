@@ -371,7 +371,41 @@ Then, that repository in the other project could had some problem building the p
 
 The solution was to simply disable it. When building packages I pass `-DCMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY=ON`. When doing that it became much simpler to reuse package installed by other project in a more predicatble way.
 
-## 6. Linking Workspaces Together
+## 6. Profiles
+
+One could imagine needing dependencies to be built for many different incompatible setups. For example, on windows I'll need a build for debug and release. On linux, I might want a clang and a GCC build, or a build with sanitizers enabled. To do that and support all dependencies to be built with the same option, I came with profiles. Inside the `subgine-pkg-modules/` directory, I have an installation subdirectory for each profiles. So the structure look like this:
+```
+subgine-pkg-modules
+├── profile-a
+│   ├── lib1
+│   └── lib2
+└── profile-b
+    ├── lib1
+    └── lib2
+...
+```
+Then, when compiling all packages for each modules, I can output a file that contains the a prefix path pointing to the right profile installation path.
+
+For each profile the package manager supports a set of CMake argument, including CXX flags, toolchain files and others. This mean cross compiling dependencies is possible, although I never tested it.
+
+### Generating Profiles
+Using the command line interface, setuping a profile looks like this:
+```sh
+$ subgine-pkg setup my-profile -DCMAKE_CXX_FLAGS="-fsanitize=address" ... any other cmake args ...
+```
+Then, build the profile:
+```sh
+$ subgine-pkg install my-profile
+```
+This will build all packages with provided CMake argument, and also generate a file that adds required prefix paths and other variables.
+
+The `update` command also takes which profile it should run for. I plan to also add support for profiles in the `clean` command, but the current behavior of operating in all profiles works for now.
+
+### A missing profile feature
+
+What I would love to do would be for the main project to run with the same arguments as the profile. Sadly I currently need the project name in the generated files. I also don't know if all variables such as toolchain files and other can be set programmatically before `project()` calls. I'll have to dig a bit deeper for that one.
+
+## 7. Linking Workspaces Together
 
 I really wanted to support my own workflow where I developped the framework and the app, side by side, without having to install the framework everytime I made a change in it. To do that, the package manager have to discover the build directory of the framework. It turns out CMake can already do that if the project supports it by exporting its build tree. Do support it in your own project, add these line to the installtion part of the script:
 ```cmake
@@ -417,39 +451,46 @@ Here you go! Now, the `find_package` command will also find packages from a proj
 
 This helped me reduce the amount of duplicated package and setup the projects faster, thus removing waits in between iterations and make them lighter for my system.
 
-## 7. Profiles
+### Generating Metadata
 
-One could imagine needing dependencies to be built for many different incompatible setups. For example, on windows I'll need a build for debug and release. On linux, I might want a clang and a GCC build, or a build with sanitizers enabled. To do that and support all dependencies to be built with the same option, I came with profiles. Inside the `subgine-pkg-modules/` directory, I have an installation subdirectory for each profiles. So the structure look like this:
+I told you that a CMake project that uses this package manager will output a file containing metadata to link the workspaces and their dependencies together. But how does the project do that?
+
+The profile file contain these instructions at the top:
+
+So inside the `wathever-profile.cmake`, you'll see something like this:
+```cmake
+file(WRITE "${PROJECT_BINARY_DIR}/subgine-pkg-${PROJECT_NAME}-${current-profile}.cmake" "
+set(found-pkg-${PROJECT_NAME}-prefix-path \"${CMAKE_PREFIX_PATH}\")
+set(found-pkg-${PROJECT_NAME}-module-path \"${CMAKE_MODULE_PATH}\")
+set(found-pkg-${PROJECT_NAME}-manifest-path \"${PROJECT_SOURCE_DIR}/sbg-manifest.json\")
+")
 ```
-subgine-pkg-modules
-├── profile-a
-│   ├── lib1
-│   └── lib2
-└── profile-b
-    ├── lib1
-    └── lib2
-...
+> Okay... what is going on there?
+
+We create a CMake file that is going to be read by other projects. We carefully set metadata about this particular instance of subgine-pkg. That file sets all required variable for this particular build tree need for it to be correctly found by `find_package`. If there's one prefix path missing, a dependency may not be found and the package cannot be used!
+
+Since the build directory can be anywhere and completely separated from the source directory, we also tell the other projects where to find the manifest file and package installation path.
+
+After these instructions, we try to find this kind of file that could have been created by our dependencies (they might also use subgine-pkg):
+```cmake
+# We try to find the file from available prefix paths
+find_file(subgine-pkg-setup-file-${dependency-name} subgine-pkg-${dependency-name}-${current-profile}.cmake)
+
+# If we indeed find a file, it means the other project is a workspace that uses subgine-pkg
+if(NOT "${subgine-pkg-setup-file-${dependency-name}}" STREQUAL "subgine-pkg-setup-file-${dependency-name}-NOTFOUND")
+    # including the file will make `found-pkg-xyz` variables available
+    include("${subgine-pkg-setup-file-${dependency-name}")
+    if(NOT "${found-pkg-${dependency-name}-prefix-path}" STREQUAL "")
+        list(APPEND CMAKE_PREFIX_PATH "${found-pkg-${dependency-name}-prefix-path}")
+    endif()
+    if(NOT "${found-pkg-${dependency-name}-module-path}" STREQUAL "")
+        list(APPEND CMAKE_MODULE_PATH "${found-pkg-${dependency-name}-module-path}")
+    endif()
+endif()
 ```
-Then, when compiling all packages for each modules, I can output a file that contains the a prefix path pointing to the right profile installation path.
+And we do that for each dependencies to discover pre-installed packages. This enables developing a project and its dependencies without reinstalling each packages. We do that for each dependencies.
 
-For each profile the package manager supports a set of CMake argument, including CXX flags, toolchain files and others. This mean cross compiling dependencies is possible, although I never tested it.
-
-### Generating Profiles
-Using the command line interface, setuping a profile looks like this:
-```sh
-$ subgine-pkg setup my-profile -DCMAKE_CXX_FLAGS="-fsanitize=address" ... any other cmake args ...
-```
-Then, build the profile:
-```sh
-$ subgine-pkg install my-profile
-```
-This will build all packages with provided CMake argument, and also generate a file that adds required prefix paths and other variables.
-
-The `update` command also takes which profile it should run for. I plan to also add support for profiles in the `clean` command, but the current behavior of operating in all profiles works for now.
-
-### A missing profile feature
-
-What I would love to do would be for the main project to run with the same arguments as the profile. Sadly I currently need the project name in the generated files. I also don't know if all variables such as toolchain files and other can be set programmatically before `project()` calls. I'll have to dig a bit deeper for that one.
+Also, to find the file right file it uses the same profile name as our current profile in the file name. The user is in control on the profile name and thier arguments so we assume the same profile name means compatible.
 
 ## 8. Using The Packages From CMake
 
@@ -487,47 +528,6 @@ list(APPEND CMAKE_PREFIX_PATH "some;other;paths")
 ```
 
 To be correct, variables such as `somelib_DIR` and `somelib_ROOT` should also be considered there but it's not supported yet.
-
-## 9. Reusing Installed Packages
-
-When two workspace are linked together by the package manager, would it be nice if the dependencies would not be installed multiple times?
-
-We support doing that by emmitting some instructions in the profile file that write some required metadata to link workspaces and their dependencies together.
-
-So inside the `wathever-profile.cmake`, you'll see something like this:
-```cmake
-file(WRITE "${PROJECT_BINARY_DIR}/subgine-pkg-${PROJECT_NAME}-${current-profile}.cmake" "
-set(found-pkg-${PROJECT_NAME}-prefix-path \"${CMAKE_PREFIX_PATH}\")
-set(found-pkg-${PROJECT_NAME}-module-path \"${CMAKE_MODULE_PATH}\")
-set(found-pkg-${PROJECT_NAME}-manifest-path \"${PROJECT_SOURCE_DIR}/sbg-manifest.json\")
-")
-```
-> Okay... what is going on there?
-
-We create a CMake file that is going to be read by other projects. We carefully set metadata about subgine-pkg itself.
-
-We set all required variable for this particular build tree need for it to be correctly found by `find_package`. If there's one prefix path missing, a dependency may not be found and the package cannot be used!
-
-Since the build directory can be anywhere and completely separated from the source directory, we also tell the other projects where to find the manifest file.
-
-After that instruction, we try to find this kind of file that could have been outputted by our dependencies:
-```cmake
-# We try to find the file from available prefix paths
-find_file(subgine-pkg-setup-file-${dependency-name} subgine-pkg-${dependency-name}-${current-profile}.cmake)
-
-# If we indeed find a file, it means the other project is a workspace that uses subgine-pkg
-if(NOT "${subgine-pkg-setup-file-${dependency-name}}" STREQUAL "subgine-pkg-setup-file-${dependency-name}-NOTFOUND")
-    # including the file will make `found-pkg-xyz` variables available
-    include("${subgine-pkg-setup-file-${dependency-name}")
-    if(NOT "${found-pkg-${dependency-name}-prefix-path}" STREQUAL "")
-        list(APPEND CMAKE_PREFIX_PATH "${found-pkg-${dependency-name}-prefix-path}")
-    endif()
-    if(NOT "${found-pkg-${dependency-name}-module-path}" STREQUAL "")
-        list(APPEND CMAKE_MODULE_PATH "${found-pkg-${dependency-name}-module-path}")
-    endif()
-endif()
-```
-Here we try to find a file with the same profile name as our current profile. We consider that if the prefix path don't point to the another profile with same profile name, it's probably a mistake. That file exist only when creating and compiling your own projects inside different directories and is only found if a prefix path point to it. The user is in control on the profile name and thier arguments so we assume the same profile name means compatible.
 
 ## Result
 
