@@ -80,7 +80,7 @@ After experimenting, we decided to ship the script in his own submodule. We adde
 
 Clearly, we needed something better. Something that would be reliable, easy to use and easier to add new libraries than modifying a script.
 
-## A Rewrite
+## A Rewrite Using CMake
 
 To expose the clean and simple interface I wanted, I first needed to decouple the list of libraries to install from the logic of installing them.
 
