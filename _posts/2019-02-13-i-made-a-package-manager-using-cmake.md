@@ -545,11 +545,30 @@ CMake has a lot built-in to manage packages, versions, install them at the right
 
 I also learned that not all project support building with CMake. I told you I assumed the recipe? Yeah, to use some project I had to wrap them in a CMake project to use them with my package manager.
 
+### Quality Of Packages
+
 Also, there's a lot of projects that uses CMake, but are not `cmake --build . --target install` friendly, or just don't expose a CMake package at all. Some exposes a CMake package, but not their version number, so I had to add a `"ignore-version"` option on a dependency, and then upgrading that library was a pain since the package manager would not know it was out of date. Relying on CMake is great if everyone uses it correctly.
 
 To use some packages, I simply contributed to some libraries I needed. I think it's the best way to get more library with a quality CMake setup: make that quality setup and contribute to make a better world! I learned how to make libraries useable with CMake in a better way doing these contributions, and I gained a lot of experiences porting some proejcts too.
 
+Some CMake projects require a different syntax for `find_package`. A good example of that is SFML, which require components:
+
+```cmake
+find_package(SFML 2.5.1 REQUIRED) # Error!
+find_package(SFML 2.5.1 REQUIRED COMPONENTS audio window) # Works
+```
+
+This makes using some packages a bit harder. Ideally, there should be a distinct package for all components.
+
+### My Mistakes
+
 I learned a lot making mistakes doing that tool. It really easy to get something working quickly, but to make something robust and reliable it quite a challenge and I still correting small bugs months after the project is finished.
+
+For example, at first, the tool could leave the installation directory in an invalid state. I was not looking if the last run exited successfully.
+
+I also relied on the package registry. Very practical at first, but not so much when trying to create a robust setup.
+
+### In The End
 
 The CMake language has made it easy to get started, but as the tool is becoming more complex, I think using C++ directly would have been great. Making it cross platform may be harder though and I was constrained by time.
 
