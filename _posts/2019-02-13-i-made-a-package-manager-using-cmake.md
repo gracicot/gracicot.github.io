@@ -20,9 +20,9 @@ Why is that? And why on earth using CMake as a scripting language? Today I'll ex
 
 I would like start by saying that I'm not an expert in build systems. I may have done some obvious errors or oversight. I just had a need that I solved using to tools I knew.
 
-I needed simplicity both in setup and maintenance. I was working with a team that had very little experience with C++, and didn't know how to manage dependencies. We also had multiple platforms and different setup. We already had a pretty decent CMake setup. Our only problem was to fetch and setup dependencies.
+I needed simplicity both in setuping a worksation and maintaining it up to date. I was working with a team that had very little experience with C++, and didn't know how to manage dependencies. We needed a cross platform solution and fortunately we already had a pretty decent CMake setup. Our only problem was to fetch and install dependencies.
 
-One particular need I had was to support our workflow. I was developping a framework and an app that used it. The rest of the team was only developping only the app and for them, the framework was a dependency like any other. Simply asking to the package manager to update everything should be one command and should update the framework to it's latest revision, and also update the framework's dependencies. On my side, the app should use the framework I had compiled in another directory. Not installing the framework on every changes was important for me, and simply pushing on the master branch should be all I had to do to make the update available to the rest of the team.
+One particular need I had was to support our multiple workflows. I was developping a framework and an app that used it. The rest of the team was only developping only the app. For them, the framework was just a dependency like any other. Simply asking to the package manager to update everything should be one command and should update the framework to it's latest revision, and also update the framework's dependencies. On my side, the app should use the framework I had compiled in another directory. Not installing the framework on every changes was important for me, and simply pushing on the master branch should be all I had to do to make the update available to the rest of the team.
 
 Both vcpkg and conan didn't seem to propose all these properties, or didn't seemed simple enough for the whole team to use. The situation might have changed since the last time I tried this setup with these tools.
 
@@ -42,11 +42,11 @@ We choose not to use git submodules as a package manager. It Didn't felt *right*
 
 ### install_missing.sh
 
-My first solution I had to automate a repetitive task was of course to create a script. I wanted something simple: Something to install our missing dependencies.
+My first solution I had to automate a repetitive task was of course to create a script. I wanted something simple: a script to install our missing dependencies.
 
 I did not wanted to be intrusive in our workflow, so I wanted to keep the ability to use system libraries. So I needed a way, in bash, to know whether a package was installed or not. The problem was we were using multiple linux distributions, and multiple versions of them.
 
-Long story short, it became hell quickly. I did not wanted to depend on any specific distribution, or if it was a linux system or not. To solve this, I turned the problem around and ask myself *Why do I want to know what package is installed?* The response was to know if I can use them in my CMake scripts. So in the end, I did not wanted to know which package is installed, but what libraries are usable with CMake!
+Long story short, it became hell quickly, again. I did not wanted to depend on any specific distribution, or if it was a linux system or not. To solve this, I turned the problem around and ask myself *Why do I want to know what package is installed?* The response was to know if I can use them in my CMake scripts. So in the end, I did not wanted to know which package is installed, but what libraries are usable with CMake!
 
 To check if I can use a particular package in CMake is quite straighforward:
 
@@ -68,15 +68,7 @@ There were many problems with that approach.
 
 First, it was a `sh` script. Not that it's wrong, but it would be wrong to say it's truely multiplatform. Also, all the dependency data was in the script, including the arguments to pass to cmake, git repository and even package name.
 
-Then, there was a distribution problem. How to deal with multiple project? Add the script to the git repository? Then when updating dependencies or the script itself I need to repeat the update everywhere? And if I choose the gitsubmodule approach to distribute the script, how do I represent multiple projects with different dependencies?
-
-### Something Better?
-
-We had to deal with these issues and make a choice. We already wasted too much time on configuration!
-
-We started by distributed the script by copy it in all of our projects and libraries, and modified the script for different dependency set. Of course, it became hard to track which project was on which version of the script, and errors were creeping in different versions of the script.
-
-After experimenting, we decided to ship the script in his own submodule. We added the union of all our dependencies in it. It became much easier to maintain it.
+Then, there was a distribution problem. The data about which package to install was embedded in the script. How should we deal with multiple project? Add the script to the git repository? Then when updating dependencies or the script itself I need to repeat the update everywhere? And if I choose the gitsubmodule approach to distribute the script, how do I represent multiple projects with different dependencies?
 
 Clearly, we needed something better. Something that would be reliable, easy to use and easier to add new libraries than modifying a script.
 
