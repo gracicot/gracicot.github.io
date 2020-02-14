@@ -44,9 +44,9 @@ We choose not to use git submodules as a package manager. It Didn't felt *right*
 
 My first solution I had to automate a repetitive task was of course to create a script. I wanted something simple: a script to install our missing dependencies.
 
-I did not wanted to be intrusive in our workflow, so I wanted to keep the ability to use system libraries. So I needed a way, in bash, to know whether a package was installed or not. The problem was we were using multiple linux distributions, and multiple versions of them.
+I did not wanted to be intrusive in our workflow, so I wanted to keep the ability to use system libraries (more on that later). So I needed a way, in bash, to know whether a package was installed or not. The problem was we were using multiple linux distributions, and multiple versions of them.
 
-Long story short, it became hell quickly, again. I did not wanted to depend on any specific distribution, or if it was a linux system or not. To solve this, I turned the problem around and ask myself *Why do I want to know what package is installed?* The response was to know if I can use them in my CMake scripts. So in the end, I did not wanted to know which package is installed, but what libraries are usable with CMake!
+It became full of bugs quickly, since linux distributions are all different. I did not wanted to depend on any specific distribution, or if it was a linux system or not. To solve this, I turned the problem around and ask myself *Why do I want to know what package is installed?* The response was to know if I can use them in my CMake scripts. So in the end, I did not wanted to know which package is installed, but what libraries are usable with CMake!
 
 To check if I can use a particular package in CMake is quite straighforward:
 
@@ -84,9 +84,9 @@ Luckily, I know a language that respond to all these criteria: CMake. It's shipp
 
 So... A script to install CMake dependencies in CMake it is!
 
-And... that will simply be taking the bash script, port it to cmake and read the json file to fill the data I previously hardcoded?
+And... that will simply be taking the bash script, port it to cmake and read the json file to fill the data I previously hardcoded and that will be all?
 
-Right?
+That will be all, right?
 
 Haha ha... So naive.
 
