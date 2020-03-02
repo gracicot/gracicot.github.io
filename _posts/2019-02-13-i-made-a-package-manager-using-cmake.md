@@ -82,9 +82,9 @@ As for the language to be written in, I needed somthing that could run and both 
 
 Luckily, I know a language that respond to all these criteria: CMake. It's shipped with Visual Studio, so there's no additionnal steps to install it. It runs on all the platforms I need, and has all the tools I need to build and interact with the system.
 
-So... A script to install CMake dependencies in CMake it is!
+So a script to install CMake dependencies in CMake it is!
 
-And... that will simply be taking the bash script, port it to cmake and read the json file to fill the data I previously hardcoded and that will be all?
+Then I'll just have to port the old the bash script to cmake and read the json file instead of hardcoded data?
 
 That will be all, right?
 
@@ -92,11 +92,11 @@ Haha ha... So naive.
 
 It's true, I picked the same strategy as my previous script: Generating a `CMakeLists.txt` file, then run CMake to see if everything can be included.
 
-However, I migrated from a 70 line shell script to a... 1000 line CMake (beautiful) monstrosity..
+However, I migrated from a 70 line shell script to a 1000 line CMake (beautiful) monstrosity..
 
 ## 1. Reading The JSON
 
-> WARNING: I do not recommend anyone to parse json in CMake. Do it if you like suffering like me.
+> WARNING: I do not recommend anyone to parse json in CMake. Do it if you like to suffer like me.
 
 Yes, this is what I wanted to do. Luckily, I found this wonderful git repository: [`sbellus/json-cmake`](https://github.com/sbellus/json-cmake). I had a base to work with and improve for my needs.
 
@@ -195,9 +195,9 @@ The CMake JSON library has been tweaked a bit to generate variables with this st
 
 ## 2. Looking For Existing Libraries
 
-Just like my `install_missing.sh` script did, I don't want to be redundant and install libraries that already are available in the current system. I want to download and install them just if they are missing.
+Just like my `install_missing.sh` script did, it checks for preinstalled libraries that match the requirements. I didn't want to be redundant and install libraries that already are available in the current system (more on that later) or in a common directory for multiple projects. I just want to download and install them if they are missing.
 
-To check if a package is available in CMake, one can usually just use `find_package`, but sadly, CMake scripts cannot define targets, and config file are not meant to be ran in script mode. Another technical reason is that the find module or the library's CMake config file might trigger errors in our package manager script. Running any CMake script in the same process as this one is undesirable.
+To check if a package is available in CMake, one can simply use `find_package`. Sadly, CMake scripts cannot define targets, and CMake config file are not meant to be ran in script mode. Another technical reason is that the find module or the library's CMake config file might trigger errors in our package manager script. Running any CMake script in the same process as this one is undesirable.
 
 So I went with the same way as my shell script: generate a `CMakeLists.txt` file and try to run CMake on it to get a result.
 
@@ -362,6 +362,14 @@ A package could be found installed on the system, as a subdirectory of `CMAKE_PR
 Then, that repository in the other project could had some problem building the packages or could have its process interrupted or whatever. For a package to be found by the package registry, it only need to be configured. If it's not compiled correctly, a *build time error* will occur, so my package manager would have to check the state of the other package manager's project to be sure everything has been built correctly. Or even worse, you could get back to the other project  and the package manager could be confused by the corretly built package in the other project while it reads its corrupted state. Bad bad bad!
 
 The solution was to simply disable it. When building packages I pass `-DCMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY=ON`. When doing that it became much simpler to reuse package installed by other project in a more predicatble way.
+
+### Avoiding System Packages
+
+System packages were really useful when starting the project. In fact I used the system package manager for a long time to install about any packages that I needed. However, as things unravelled, I began to need particular versions for some packages.
+
+It was fine since there is a version match that can be done and also the package manager has an option for strict versions, but some packages had breaking bug in minor versions, and some other packages don't exposes the version information. Since I can simply install the version that I need in a very convenient manner, it became easier to simply disable system packages using `-DCMAKE_FIND_USE_CMAKE_SYSTEM_PATH=OFF`. It's still possible to override this and pass `-DCMAKE_FIND_USE_CMAKE_SYSTEM_PATH=ON` to the profile.
+
+Speaking of profiles...
 
 ## 6. Profiles
 
