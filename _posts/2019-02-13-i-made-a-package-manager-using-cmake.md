@@ -241,9 +241,7 @@ I first went with `ExternalProject`. This is an awesome tool to download, config
 
 Sadly, external project cannot be used either in script mode. Also, it don't quite make sense to use it there since external project downloads at build time.
 
-The solution was to run git manually to download the dependency, then build it.
-
-I then realized after doing all this that there was `fetchContent` that did what I wanted. However, I use more git commands than what `fetchContent` exposes so I kept the raw git.
+The solution I choose was to run git manually to download the dependency, then build it. I then realized after doing all this that there was `fetchContent` that did what I wanted. However, I use more git commands than what `fetchContent` exposes so I kept the raw git.
 
 > For the sake of simplicity, we will assume that the recipe is simply to run CMake to build and install the package without any additional steps. We will get back on this later.
 
