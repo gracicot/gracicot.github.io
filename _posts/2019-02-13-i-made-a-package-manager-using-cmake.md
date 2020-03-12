@@ -386,6 +386,31 @@ Then, when compiling all packages for each modules, I can output a file that con
 
 For each profile the package manager supports a set of CMake argument, including CXX flags, toolchain files and others. This mean cross compiling dependencies is possible, although I never tested it.
 
+The profile don't contain much wizardry. It's quite simple in fact. There is not much to do to in this file. Before anything, we set some metadata to be available for the CMake project that uses the profile:
+
+```cmake
+# We set some variables to let know the
+# CMake script that subgine-pkg has been included.
+set(subgine-pkg-${PROJECT_NAME} ON)
+set(subgine-pkg ON)
+
+# We let the current CMake script know what profile has been used.
+set(subgine-pkg-${PROJECT_NAME}-profile "${current-profile}")
+set(subgine-pkg-profile "${current-profile}")
+```
+
+Then, we add the prefix where the libraries are installed. if the user specified any prefix or module path while calling setup, we also set it there:
+```cmake
+# Installation prefix of the libraries
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/subgine-pkg-modules/prefixes/${current-profile}/")
+
+# Prefixes and module paths sent to the `subgine-pkg setup ...` command
+list(APPEND CMAKE_MODULE_PATH "some;paths")
+list(APPEND CMAKE_PREFIX_PATH "some;other;paths")
+```
+
+To be correct, variables such as `somelib_DIR` and `somelib_ROOT` should also be considered there but it's not supported yet.
+
 ### Generating Profiles
 Using the command line interface, setuping a profile looks like this:
 ```sh
@@ -497,35 +522,10 @@ After that configuring and building and installing of all the packages, there mu
 There's a CMake feature almost made for this: code injection. The variable `CMAKE_PROJECT_INCLUDE` tells to CMake to include a particular after the `project()` command is called. So without even changing our CMake project file, we can integrate our package manager!
 
 ```sh
-$ cmake .. `-DCMAKE_PROJECT_INCLUDE=subgine-pkg-modules/default-module.cmake
+$ cmake .. -DCMAKE_PROJECT_INCLUDE=subgine-pkg-modules/default-module.cmake
 ```
 
 And the day you want to switch to Conan, simply change which file you include there to the one Conan generates!
-
-The profile don't contain much wizardry. It's quite simple in fact. There is not much to do to in this file. Before anything, we set some metadata to be available for the CMake project that uses the profile:
-
-```cmake
-# We set some variables to let know the
-# CMake script that subgine-pkg has been included.
-set(subgine-pkg-${PROJECT_NAME} ON)
-set(subgine-pkg ON)
-
-# We let the current CMake script know what profile has been used.
-set(subgine-pkg-${PROJECT_NAME}-profile "${current-profile}")
-set(subgine-pkg-profile "${current-profile}")
-```
-
-Then, we add the prefix where the libraries are installed. if the user specified any prefix or module path while calling setup, we also set it there:
-```cmake
-# Installation prefix of the libraries
-list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/subgine-pkg-modules/prefixes/${current-profile}/")
-
-# Prefixes and module paths sent to the `subgine-pkg setup ...` command
-list(APPEND CMAKE_MODULE_PATH "some;paths")
-list(APPEND CMAKE_PREFIX_PATH "some;other;paths")
-```
-
-To be correct, variables such as `somelib_DIR` and `somelib_ROOT` should also be considered there but it's not supported yet.
 
 ## Result
 
@@ -556,7 +556,7 @@ find_package(SFML 2.5.1 REQUIRED) # Error!
 find_package(SFML 2.5.1 REQUIRED COMPONENTS audio window) # Works
 ```
 
-This makes using some packages a bit harder. Ideally, there should be a distinct package for all components.
+This makes using some packages a bit harder. Ideally, if those components are meant to be consumed separately, there should be a distinct package for each components.
 
 ### My Mistakes
 
