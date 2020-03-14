@@ -321,7 +321,7 @@ When running the tool, it's easy to know when to rebuild. When a package has bee
 
 Unfortunately, no. What happens when a package fails to build or install correctly? The next time the package manager runs, it should be able to recover, see that a package failed the last time and try again.
 
-At first, it did not happened. When writing the package manager, the logic was simple: if the options for a package, if the version changed or the branch updated, whatever, save those new options and rebuild! The problem is that it won't do well when a package failed to build for whatever reason. When invoking the package manager again, it's gonna see that nothing has been updated in that invocation. This is bad, since the package manager will finish without error, but some packages may be out of date!
+At first, such problems did not happened. When writing the package manager, the logic was simple: if the options for a package, if the version changed or the branch updated, whatever, save those new options and rebuild! The problem is that it won't do well when a package failed to build for whatever reason. When invoking the package manager again, it's gonna see that nothing has been updated in that invocation. This is bad, since the package manager will finish without error, but some packages may be out of date!
 
 To fix this, the package manager has to keep something around to know if a package hasn't been built correctly. Our implementation simply save the commit id of the last successfully installed version, and the options that that installed version was built with.
 
@@ -365,9 +365,7 @@ The solution was to simply disable it. When building packages I pass `-DCMAKE_FI
 
 System packages were really useful when starting the project. In fact I used the system package manager for a long time to install about any packages that I needed. However, as things unravelled, I began to need particular versions for some packages.
 
-It was fine since there is a version match that can be done and also the package manager has an option for strict versions, but some packages had breaking bug in minor versions, and some other packages don't exposes the version information. Since I can simply install the version that I need in a very convenient manner, it became easier to simply disable system packages using `-DCMAKE_FIND_USE_CMAKE_SYSTEM_PATH=OFF`. It's still possible to override this and pass `-DCMAKE_FIND_USE_CMAKE_SYSTEM_PATH=ON` to the profile.
-
-Speaking of profiles...
+It was fine since there is a version match that can be done and also the package manager has an option for strict versions, but some packages had breaking bug in minor versions, and some other packages don't exposes the version information. Since I can simply install the version that I need in a very convenient manner, it became easier to simply disable system packages using `-DCMAKE_FIND_USE_CMAKE_SYSTEM_PATH=OFF`. I will make this the default when I get back working on this package manager.
 
 ## 6. Profiles
 
@@ -409,6 +407,8 @@ list(APPEND CMAKE_MODULE_PATH "some;paths")
 list(APPEND CMAKE_PREFIX_PATH "some;other;paths")
 ```
 
+The profiles also contain stuff to link multiple workspace and subgine-pkg setup, but we'll see this later.
+
 To be correct, variables such as `somelib_DIR` and `somelib_ROOT` should also be considered there but it's not supported yet.
 
 ### Generating Profiles
@@ -447,7 +447,7 @@ export(
   NAMESPACE mylib::
 )
 ```
-After that, project can set the `mylib_DIR` or `CMAKE_PREFIX_PATH` to that directory, and `find_package` will be able to see the library.
+After that, other projects can set the `mylib_DIR` or `CMAKE_PREFIX_PATH` to that directory, and `find_package` will be able to see the library.
 
 How does it helps for reusing packages?
 
@@ -461,7 +461,7 @@ set(found-pkg-mylib-module-path "")                                             
 set(found-pkg-mylib-manifest-path "/path/to/mylib/sbg-manifest.json")                      # path to manifest file
 ```
 
-But of course, that for is not written by the user of the tool. CMake running in the user's project must output that file in its build directory and must setup the prefix path to the right places. This is all done by injecting a script I call a profile. More on that later.
+But of course, that for is not written by the user of the tool. CMake running in the user's project must output that file in its build directory and must setup the prefix path to the right places. This is all done by injecting a script I call a profile.
 
 So if I find a dependency, I can just use `find_file`, since if the package is found through the prefix path, the find file command should find the metadata file, and include it to get the variables values!
 ```cmake
@@ -472,7 +472,7 @@ list(APPEND prefix-paths-to-use ${found-pkg-${${dependency}.name}-prefix-path})
 
 Here you go! Now, the `find_package` command will also find packages from a project configured with subgine-pkg!
 
-This helped me reduce the amount of duplicated package and setup the projects faster, thus removing waits in between iterations and make them lighter for my system.
+This helped me reduce the amount of duplicated packages and deploy the projects faster, thus removing waits in between iterations and make them lighter for my system.
 
 ### Generating Metadata
 
@@ -480,7 +480,7 @@ I told you that a CMake project that uses this package manager will output a fil
 
 The profile file contain these instructions at the top:
 
-So inside the `wathever-profile.cmake`, you'll see something like this:
+So inside the `wathever-profile.cmake`, you'll also see something like this:
 ```cmake
 file(WRITE "${PROJECT_BINARY_DIR}/subgine-pkg-${PROJECT_NAME}-${current-profile}.cmake" "
 set(found-pkg-${PROJECT_NAME}-prefix-path \"${CMAKE_PREFIX_PATH}\")
@@ -539,15 +539,17 @@ The package manager is still useful to me. I still use it and for well built CMa
 
 ## What I've Learned
 
-CMake has a lot built-in to manage packages, versions, install them at the right place and more. What CMake does not have is a  tool to download packages and build them with a config. This is my attempt of making that missing tool.
+CMake has a lot built-in features to manage packages, versions, install them at the right place and more. What CMake does not have is a tool to download packages and build them with a config. This is my attempt of making that missing tool.
 
 I also learned that not all project support building with CMake. I told you I assumed the recipe? Yeah, to use some project I had to wrap them in a CMake project to use them with my package manager.
 
 ### Quality Of Packages
 
-Also, there's a lot of projects that uses CMake, but are not `cmake --build . --target install` friendly, or just don't expose a CMake package at all. Some exposes a CMake package, but not their version number, so I had to add a `"ignore-version"` option on a dependency, and then upgrading that library was a pain since the package manager would not know it was out of date. Relying on CMake is great if everyone uses it correctly.
+Also, there's a lot of projects that uses CMake, but are not `cmake --build . --target install` friendly, or just don't expose a CMake package at all. Some exposes a CMake package, but not their version number, so I had to add a `"ignore-version"` option on a dependency, and then upgrading that library was a pain since the package manager would not know it was out of date.
 
-To use some packages, I simply contributed to some libraries I needed. I think it's the best way to get more library with a quality CMake setup: make that quality setup and contribute to make a better world! I learned how to make libraries useable with CMake in a better way doing these contributions, and I gained a lot of experiences porting some proejcts too.
+Relying on CMake for package management is great only if everyone uses it correctly.
+
+To use some packages, I simply contributed to some libraries I needed. I think it's the best way to get more library with a quality CMake setup: make that quality setup yourself and contribute to make a better world! I learned how to make libraries useable with CMake in a better way doing these contributions, and I gained a lot of experiences porting some projects too.
 
 Some CMake projects require a different syntax for `find_package`. A good example of that is SFML, which require components:
 
@@ -560,11 +562,11 @@ This makes using some packages a bit harder. Ideally, if those components are me
 
 ### My Mistakes
 
-I learned a lot making mistakes doing that tool. It really easy to get something working quickly, but to make something robust and reliable it quite a challenge and I still correting small bugs months after the project is finished.
+I learned a lot making mistakes doing that tool. It really easy to get something working quickly, but to make something robust and reliable it quite a challenge and I'm still correting bugs months after the initial project is finished.
 
 For example, at first, the tool could leave the installation directory in an invalid state. I was not looking if the last run exited successfully.
 
-I also relied on the package registry. Very practical at first, but not so much when trying to create a robust setup.
+I also relied on the package registry and system packages. Very practical at first, but not so much when trying to create a robust setup.
 
 ### In The End
 
