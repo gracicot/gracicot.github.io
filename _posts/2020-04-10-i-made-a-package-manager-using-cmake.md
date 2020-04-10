@@ -1,7 +1,7 @@
 ---
 layout: default
 title:  "I made a package manager using CMake"
-date:   2019-02-13 3:00:00 +0500
+date:   2020-04-10 3:00:00 +0500
 categories: cmake
 excerpt_separator: <!--more-->
 ---
