@@ -60,7 +60,7 @@ The installation process was also simple:
 
  1. If the library is not found, clone the library's repo
  2. Run CMake and build it
- 3. Finally, install it.
+ 3. Finally, install it (in a local directory of the project).
 
 And that's it! Or... is it?
 
