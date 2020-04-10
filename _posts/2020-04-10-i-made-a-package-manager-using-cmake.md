@@ -367,6 +367,12 @@ System packages were really useful when starting the project. In fact I used the
 
 It was fine since there is a version match that can be done and also the package manager has an option for strict versions, but some packages had breaking bug in minor versions, and some other packages don't exposes the version information. Since I can simply install the version that I need in a very convenient manner, it became easier to simply disable system packages using `-DCMAKE_FIND_USE_CMAKE_SYSTEM_PATH=OFF`. I will make this the default when I get back working on this package manager.
 
+### But There's a Cache
+
+Just recently, I hit a new kind of bug. I added a package and suddendtly I wasn't able to find it. Why? It turns out that the package I added was using `find_package(OpenMP REQUIRED)` and it didn't work. I was surprized since when trying to build my project, it did worked. After investigating, I realized that in the CMake cache in the dummy project, it was using Clang as the compiler!
+
+It turns out that I sent `CMAKE_CXX_COMPILER=clang++` and then removed it. The cache was written but never cleared. A safe practice would be to clear the CMake cache everytime a CMake argument is changed.
+
 ## 6. Profiles
 
 One could imagine needing dependencies to be built for many different incompatible setups. For example, on windows I'll need a build for debug and release. On linux, I might want a clang and a GCC build, or a build with sanitizers enabled. To do that and support all dependencies to be built with the same option, I came with profiles. Inside the `subgine-pkg-modules/` directory, I have an installation subdirectory for each profiles. So the structure look like this:
