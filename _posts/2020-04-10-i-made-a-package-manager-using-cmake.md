@@ -48,12 +48,12 @@ My first solution I had to automate a repetitive task was of course to create a 
 
 I did not want to be intrusive in our workflow, so I wanted to keep the ability to use system libraries (more on that later). So I needed a way, in bash, to know whether a package was installed or not. The problem was we were using multiple linux distributions, and multiple versions of them.
 
-It became full of bugs quickly, since linux distributions are all different. I did not wanted to depend on any specific distribution, or if it was a linux system or not. To solve this, I turned the problem around and ask myself *Why do I want to know what package is installed?* The response was to know if I can use them in my CMake scripts. So in the end, I did not wanted to know which package is installed, but what libraries are usable with CMake!
+It became full of bugs quickly, since linux distributions are all different. I did not want to depend on any specific distribution, or if it was a linux system or not. To solve this, I turned the problem around and asked myself *Why do I want to know what package is installed?* The response was to know if I can use them in my CMake scripts. So in the end, I did not want to know which package is installed, but what libraries are usable with CMake!
 
 To check if I can use a particular package in CMake is quite straighforward:
 
  1. Generate a CMakeLists.txt that tries to use `find_package(xyz REQUIRED)`
- 2. Optionally, check if every targets are available for use
+ 2. Optionally, check if every target are available to use
  3. Read the output for errors
 
 That way, I could detect any libraries in a cross platform manner. If a package failed to be found, then I just had to install it in the script!
@@ -80,7 +80,7 @@ To expose the clean and simple interface I wanted, I first needed to decouple th
 
 I decided to store all the package data into a json file, since it's easy to read from a script and to write by hand.
 
-As for the language to be written in, I needed somthing that could run and both linux and windows, had the less steps to setup and provide me with the basic tools to build stuff.
+As for the language to be written in, I needed something that could run and both linux and windows, had the less steps to setup and provide me with the basic tools to build stuff.
 
 Luckily, I know a language that respond to all these criteria: CMake. It's shipped with Visual Studio, so there's no additionnal steps to install it. It runs on all the platforms I need, and has all the tools I need to build and interact with the system.
 
@@ -189,11 +189,11 @@ Then at `(2)`, we dereference our variable name, but followed by a postfix that 
 
 At `(3)` we use a variable name to member of our json object to display all of them in a loop.
 
-Notice my choice of words here: We dereference the variable name. The name of the variable become some sort of a pointer. When the name of the variable is auto generated, then a variable containing that name is our only way to reference to that variable.
+Notice my choice of words here: We dereference the variable name. The name of the variable become some sort of a pointer. When the name of the variable is auto generated, then a variable containing that name is our only way to reference that variable.
 
 If we continue with this analogy, `dependency-member` is some sort of a pointer to member of our object.
 
-The CMake JSON library has been tweaked a bit to generate variables with this structure. 
+The CMake JSON library has been tweaked a bit to generate variables with this structure.
 
 ## 2. Looking For Existing Libraries
 
@@ -258,7 +258,7 @@ execute_process(
     WORKING_DIRECTORY "./.${${dependency}.name}/build"
 )
 ```
-Here, notice that we supply an installation path to CMake. In this case, we set it to a directory inside the main project we install dependency for. This way, the main system is not affected and we can have many project with each thier own dependency set.
+Here, notice that we supply an installation path to CMake. In this case, we set it to a directory inside the main project we install dependency for. This way, the main system is not affected and we can have many projects with each thier own dependency set.
 
 Then at that point I realized that I could use external project with this delegated CMake thing, but I decided against it. I needed to manage which version would be checked out and also be able to update branch packages.
 
@@ -266,7 +266,7 @@ When this is done, we can even look if the package has been installed correctly 
 
 ## 4. Updating Dependencies
 
-CMake already come with a way to specify a requested version for a package when using `find_package`. The package itself will check if it's compatible with the requested version, no a predefind match. This is powerful since different libraries may have different policies reguarding when breaks happen.
+CMake already comes with a way to specify a requested version for a package when using `find_package`. The package itself will check if it's compatible with the requested version, not a predefined match. This is powerful since different libraries may have different policies reguarding when breaks happen.
 
 This is all handled in the generated `CMakeLists.txt` to check if a dependency exists.
 
@@ -290,11 +290,11 @@ execute_process(
 
 If the branch has been updated, we then build and install. To save time and energy, we only do that when new commit was added to the branch since the last update.
 
-This part was very important for my projects and the people that helped us: I could focus on the framework and add dependencies without worrying about updating each machine everytime a less technical person want to start working. The tool would update both the framework and the libraries we depend on.
+This part was very important for my projects and the people that helped us: I could focus on the framework and add dependencies without worrying about updating each machine everytime a less technical person wanted to start working. The tool would update both the framework and the libraries we depend on.
 
 ### Bugs When Updating Packages
 
-With the model I've been working on, I choose the specify two commands: `subgine-pkg update` and `subgine-pkg install`. The update were to pull every branch repository, and the install would simply download and install missing dependency.
+With the model I've been working on, I choose the two commands: `subgine-pkg update` and `subgine-pkg install`. The update command is to pull every branch repository, and the install command would simply downloads and installs missing dependencies.
 
 Everything was nice until I hit that error:
 
@@ -325,7 +325,7 @@ Unfortunately, no. What happens when a package fails to build or install correct
 
 At first, such problems did not happened. When writing the package manager, the logic was simple: if the options for a package, if the version changed or the branch updated, whatever, save those new options and rebuild! The problem is that it won't do well when a package failed to build for whatever reason. When invoking the package manager again, it's gonna see that nothing has been updated in that invocation. This is bad, since the package manager will finish without error, but some packages may be out of date!
 
-To fix this, the package manager has to keep something around to know if a package hasn't been built correctly. Our implementation simply save the commit id of the last successfully installed version, and the options that that installed version was built with.
+To fix this, the package manager has to keep something around to know if a package hasn't been built correctly. Our implementation simply saves the commit id of the last successfully installed version, and the options that that installed version was built with.
 
 To do that correctly, I made myself a nice little command for that:
 ```cmake
@@ -355,29 +355,29 @@ Keeping that file in the `build` directory of the dependency has a nice property
 
 ### Avoiding The Package Registry
 
-At first I found the package registry quite handy at first. Especially on windows, where there was no system package manager, I could just build a library somewhere and use it elsewhere, no need to install. I first assumed the package registry existed when I made the package manager, but reading the state of the packages and verifying the state was becoming quite difficult.
+At first I found the package registry quite handy. Especially on windows, where there was no system package manager, I could just build a library somewhere and use it elsewhere, no need to install. I first assumed the package registry existed when I made the package manager, but reading the state of the packages and verifying the state was becoming quite difficult.
 
 A package could be found installed on the system, as a subdirectory of `CMAKE_PREFIX_PATH` or, with the package registry, *anywhere* else. Even in the package directory of another project using subgine-pkg!
 
-Then, that repository in the other project could had some problem building the packages or could have its process interrupted or whatever. For a package to be found by the package registry, it only need to be configured. If it's not compiled correctly, a *build time error* will occur, so my package manager would have to check the state of the other package manager's project to be sure everything has been built correctly. Or even worse, you could get back to the other project  and the package manager could be confused by the corretly built package in the other project while it reads its corrupted state. Bad bad bad!
+Then, that repository in the other project could have some problem building the packages or could have its process interrupted or whatever. For a package to be found by the package registry, it only needs to be configured. If it's not compiled correctly, a *build time error* will occur, so my package manager would have to check the state of the other package manager's project to be sure everything has been built correctly. Or even worse, you could get back to the other project  and the package manager could be confused by the corretly built package in the other project while it reads its corrupted state. Bad bad bad!
 
-The solution was to simply disable it. When building packages I pass `-DCMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY=ON`. When doing that it became much simpler to reuse package installed by other project in a more predicatble way.
+The solution was to simply disable it. When building packages I pass `-DCMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY=ON`. When doing that it became much simpler to reuse packages installed by other project in a more predicatble way.
 
 ### Avoiding System Packages
 
-System packages were really useful when starting the project. In fact I used the system package manager for a long time to install about any packages that I needed. However, as things unravelled, I began to need particular versions for some packages.
+System packages were really useful when starting the project. In fact I used the system package manager for a long time to install any packages that I needed. However, as things unravelled, I began to need particular versions for some packages.
 
-It was fine since there is a version match that can be done and also the package manager has an option for strict versions, but some packages had breaking bug in minor versions, and some other packages don't exposes the version information. Since I can simply install the version that I need in a very convenient manner, it became easier to simply disable system packages using `-DCMAKE_FIND_USE_CMAKE_SYSTEM_PATH=OFF`. I will make this the default when I get back working on this package manager.
+It was fine since there is a version match that can be done and also the package manager has an option for strict versions, but some packages had breaking bugs in minor versions, and some other packages don't expose the version information. Since I can simply install the version I need in a very convenient manner, it became easier to simply disable system packages using `-DCMAKE_FIND_USE_CMAKE_SYSTEM_PATH=OFF`. I will make this the default when I get back working on this package manager.
 
 ### But There's a Cache
 
-Just recently, I hit a new kind of bug. I added a package and suddendtly I wasn't able to find it. Why? It turns out that the package I added was using `find_package(OpenMP REQUIRED)` and it didn't work. I was surprized since when trying to build my project, it did worked. After investigating, I realized that in the CMake cache in the dummy project, it was using Clang as the compiler!
+Just recently, I hit a new kind of bug. I added a package and suddendtly I wasn't able to find it. Why? It turns out that the package I added was using `find_package(OpenMP REQUIRED)` and it didn't work. I was surprized since when trying to build my project, it did work. After investigating, I realized that in the CMake cache in the dummy project, it was using Clang as the compiler!
 
 It turns out that I sent `CMAKE_CXX_COMPILER=clang++` and then removed it. The cache was written but never cleared. A safe practice would be to clear the CMake cache everytime a CMake argument is changed.
 
 ## 6. Profiles
 
-One could imagine needing dependencies to be built for many different incompatible setups. For example, on windows I'll need a build for debug and release. On linux, I might want a clang and a GCC build, or a build with sanitizers enabled. To do that and support all dependencies to be built with the same option, I came with profiles. Inside the `subgine-pkg-modules/` directory, I have an installation subdirectory for each profiles. So the structure look like this:
+One could imagine needing dependencies to be built for many different incompatible setups. For example, on windows I'll need a build for debug and release. On linux, I might want a clang and a GCC build, or a build with sanitizers enabled. To do that and support all dependencies to be built with the same option, I came up with profiles. Inside the `subgine-pkg-modules/` directory, I have an installation subdirectory for each profile. So the structure looks like this:
 ```
 subgine-pkg-modules
 ├── profile-a
@@ -388,11 +388,11 @@ subgine-pkg-modules
     └── lib2
 ...
 ```
-Then, when compiling all packages for each modules, I can output a file that contains the a prefix path pointing to the right profile installation path.
+Then, when compiling all packages for each module, I can output a file that contains a prefix path pointing to the right profile installation path.
 
 For each profile the package manager supports a set of CMake argument, including CXX flags, toolchain files and others. This mean cross compiling dependencies is possible, although I never tested it.
 
-The profile don't contain much wizardry. It's quite simple in fact. There is not much to do to in this file. Before anything, we set some metadata to be available for the CMake project that uses the profile:
+The profiles don't contain much wizardry. It's quite simple in fact. There is not much to do to in this file. Before anything, we set some metadata to be available for the CMake project that uses the profile:
 
 ```cmake
 # We set some variables to let know the
@@ -405,7 +405,7 @@ set(subgine-pkg-${PROJECT_NAME}-profile "${current-profile}")
 set(subgine-pkg-profile "${current-profile}")
 ```
 
-Then, we add the prefix where the libraries are installed. if the user specified any prefix or module path while calling setup, we also set it there:
+Then, we add the prefix where the libraries are installed. If the user specified any prefix or module path while calling setup, we also set it there:
 ```cmake
 # Installation prefix of the libraries
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/subgine-pkg-modules/prefixes/${current-profile}/")
@@ -428,17 +428,17 @@ Then, build the profile:
 ```sh
 $ subgine-pkg install my-profile
 ```
-This will build all packages with provided CMake argument, and also generate a file that adds required prefix paths and other variables.
+This will build all packages with provided CMake arguments, and also generate a file that adds required prefix paths and other variables.
 
 The `update` command also takes which profile it should run for. I plan to also add support for profiles in the `clean` command, but the current behavior of operating in all profiles works for now.
 
 ### A missing profile feature
 
-What I would love to do would be for the main project to run with the same arguments as the profile. Sadly I currently need the project name in the generated files. I also don't know if all variables such as toolchain files and other can be set programmatically before `project()` calls. I'll have to dig a bit deeper for that one.
+What I would love to do would be for the main project to run with the same arguments as the profile. Sadly I currently need the project name in the generated files. I also don't know if all variables such as toolchain files and others can be set programmatically before `project()` calls. I'll have to dig a bit deeper for that one.
 
 ## 7. Linking Workspaces Together
 
-I really wanted to support my own workflow where I developped the framework and the app, side by side, without having to install the framework everytime I made a change in it. To do that, the package manager have to discover the build directory of the framework. It turns out CMake can already do that if the project supports it by exporting its build tree. Do support it in your own project, add these line to the installtion part of the script:
+I really wanted to support my own workflow where I developped the framework and the app, side by side, without having to install the framework everytime I made a change in it. To do that, the package manager has to discover the build directory of the framework. It turns out CMake can already do that if the project supports it by exporting its build tree. To support it in your own project, add these line to the installtion part of the script:
 ```cmake
 # Normal package exportation when installing
 install(
@@ -457,7 +457,7 @@ export(
 ```
 After that, other projects can set the `mylib_DIR` or `CMAKE_PREFIX_PATH` to that directory, and `find_package` will be able to see the library.
 
-How does it helps for reusing packages?
+How does it help for reusing packages?
 
 Well, I don't support reusing packages across unrelated projects, but if the package manager can read the build tree of another project that itself uses the same package manager, surely it could read it's own metadata and use the packages that are already there right?
 
@@ -498,7 +498,7 @@ set(found-pkg-${PROJECT_NAME}-manifest-path \"${PROJECT_SOURCE_DIR}/sbg-manifest
 ```
 > Okay... what is going on there?
 
-We create a CMake file that is going to be read by other projects. We carefully set metadata about this particular instance of subgine-pkg. That file sets all required variable for this particular build tree need for it to be correctly found by `find_package`. If there's one prefix path missing, a dependency may not be found and the package cannot be used!
+We create a CMake file that is going to be read by other projects. We carefully set metadata about this particular instance of subgine-pkg. That file sets all required variable for this particular build tree needs for it to be correctly found by `find_package`. If there's one prefix path missing, a dependency may not be found and the package cannot be used!
 
 Since the build directory can be anywhere and completely separated from the source directory, we also tell the other projects where to find the manifest file and package installation path.
 
@@ -519,7 +519,7 @@ if(NOT "${subgine-pkg-setup-file-${dependency-name}}" STREQUAL "subgine-pkg-setu
     endif()
 endif()
 ```
-And we do that for each dependencies to discover pre-installed packages. This enables developing a project and its dependencies without reinstalling each packages. We do that for each dependencies.
+And we do that for each dependencies to discover pre-installed packages. This enables developing a project and its dependencies without reinstalling each packages. We do that for each dependency.
 
 Also, to find the file right file it uses the same profile name as our current profile in the file name. The user is in control on the profile name and thier arguments so we assume the same profile name means compatible.
 
@@ -541,9 +541,9 @@ The result? In a few weeks of work before the project started, I was able to cre
 
 [![asciicast](https://asciinema.org/a/288196.svg)](https://asciinema.org/a/288196)
 
-The package manager is capable is picking up built packages from other worspaces, installed packages (optional) and can also update our installed libraries.
+The package manager is capable is picking up built packages from other workspaces, installed packages (optional) and can also update our installed libraries.
 
-The package manager is still useful to me. I still use it and for well built CMake packages, it work like a charm for my needs.
+The package manager is still useful to me. I still use it and for well built CMake packages, it works like a charm for my needs.
 
 ## Try It!
 
@@ -565,11 +565,11 @@ I also learned that not all project support building with CMake. I told you I as
 
 ### Quality Of Packages
 
-Also, there's a lot of projects that uses CMake, but are not `cmake --build . --target install` friendly, or just don't expose a CMake package at all. Some exposes a CMake package, but not their version number, so I had to add a `"ignore-version"` option on a dependency, and then upgrading that library was a pain since the package manager would not know it was out of date.
+Also, there's a lot of projects that uses CMake, but are not `cmake --build . --target install` friendly, or just don't expose a CMake package at all. Some expose a CMake package, but not their version number, so I had to add a `"ignore-version"` option on a dependency, and then upgrading that library was a pain since the package manager would not know it was out of date.
 
 Relying on CMake for package management is great only if everyone uses it correctly.
 
-To use some packages, I simply contributed to some libraries I needed. I think it's the best way to get more library with a quality CMake setup: make that quality setup yourself and contribute to make a better world! I learned how to make libraries useable with CMake in a better way doing these contributions, and I gained a lot of experiences porting some projects too.
+To use some packages, I simply contributed to some libraries I needed. I think it's the best way to get more libraries with a quality CMake setup: make that quality setup yourself and contribute to make a better world! I learned how to make libraries useable with CMake in a better way doing these contributions, and I gained a lot of experiences porting some projects too.
 
 Some CMake projects require a different syntax for `find_package`. A good example of that is SFML, which require components:
 
@@ -582,7 +582,7 @@ This makes using some packages a bit harder. Ideally, if those components are me
 
 ### My Mistakes
 
-I learned a lot making mistakes doing that tool. It really easy to get something working quickly, but to make something robust and reliable it quite a challenge and I'm still correting bugs months after the initial project is finished.
+I learned a lot making mistakes doing that tool. It really easy to get something working quickly, but to make something robust and reliable is quite a challenge and I'm still correting bugs months after the initial project is finished.
 
 For example, at first, the tool could leave the installation directory in an invalid state. I was not looking if the last run exited successfully.
 
@@ -592,7 +592,7 @@ I also relied on the package registry and system packages. Very practical at fir
 
 The CMake language has made it easy to get started, but as the tool is becoming more complex, I think using C++ directly would have been great. Making it cross platform may be harder though and I was constrained by time.
 
-Overall I'm happy I made this project. I mean, it's not perfect but it's been really useful for me, and saved me a lot of time. I would like to hear why that wools would ne be suitable for you or how can I improve it.
+Overall I'm happy I made this project. I mean, it's not perfect but it's been really useful for me, and saved me a lot of time. I would like to hear why such tool would not be suitable for your projects or how can I improve it.
 
 ## That's All!
 
