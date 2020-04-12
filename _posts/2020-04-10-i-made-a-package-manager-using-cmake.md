@@ -543,6 +543,18 @@ The package manager is capable is picking up built packages from other worspaces
 
 The package manager is still useful to me. I still use it and for well built CMake packages, it work like a charm for my needs.
 
+## Try It!
+
+If you want to fiddle with the package manager, simply clone the [repository](https://github.com/gracicot/subgine-pkg) and run `sudo make install`. On windows, you can [dowload the installer](https://github.com/gracicot/subgine-pkg/releases/latest/download/subgine-pkg-setup.exe).
+
+I also created a sample project to get started:
+
+```sh
+git clone https://github.com/gracicot/subgine-pkg-user-test.git
+cd subgine-pkg-user-test
+subgine-pkg install # this will download and configure dependencies
+```
+
 ## What I've Learned
 
 CMake has a lot built-in features to manage packages, versions, install them at the right place and more. What CMake does not have is a tool to download packages and build them with a config. This is my attempt of making that missing tool.
