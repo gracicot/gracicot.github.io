@@ -598,4 +598,4 @@ Overall I'm happy I made this project. I mean, it's not perfect but it's been re
 
 Thank you for reading. It may not be a "production grade" package manager, but I was satisfied with the result and I've learned a ton about CMake, buildsystems in general and making reliable tools. It's been fun and I hope this will inpire more tool development as it is greatly needed in the C++ community.
 
-Opinion? Feedback? Insults?? Leave a comment on the reddit post on /r/cpp!
+Opinion? Feedback? Insults?? Leave a comment on the [reddit post on /r/cpp](https://www.reddit.com/r/cpp/comments/g003er/i_made_a_package_manager_using_cmake/)!
