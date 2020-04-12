@@ -550,9 +550,9 @@ If you want to fiddle with the package manager, simply clone the [repository](ht
 I also created a sample project to get started:
 
 ```sh
-git clone https://github.com/gracicot/subgine-pkg-user-test.git
-cd subgine-pkg-user-test
-subgine-pkg install # this will download and configure dependencies
+$ git clone https://github.com/gracicot/subgine-pkg-user-test.git
+$ cd subgine-pkg-user-test
+$ subgine-pkg install # this will download and configure dependencies
 ```
 
 ## What I've Learned
