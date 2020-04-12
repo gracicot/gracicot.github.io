@@ -40,13 +40,13 @@ When we needed a new dependency that wasn't in the system repository, we simply 
 
 The idea of using submodules to ship dependencies was considered at first. I could fetch the submodule of only the libraries I needed. However, it turns out git is not a package manager. Submodule was hellish to support, and updates would have been a pain.
 
-We choose not to use git submodules as a package manager. It Didn't felt *right*.
+We choose not to use git submodules as a package manager. It Didn't feel *right*.
 
 ### install_missing.sh
 
 My first solution I had to automate a repetitive task was of course to create a script. I wanted something simple: a script to install our missing dependencies.
 
-I did not wanted to be intrusive in our workflow, so I wanted to keep the ability to use system libraries (more on that later). So I needed a way, in bash, to know whether a package was installed or not. The problem was we were using multiple linux distributions, and multiple versions of them.
+I did not want to be intrusive in our workflow, so I wanted to keep the ability to use system libraries (more on that later). So I needed a way, in bash, to know whether a package was installed or not. The problem was we were using multiple linux distributions, and multiple versions of them.
 
 It became full of bugs quickly, since linux distributions are all different. I did not wanted to depend on any specific distribution, or if it was a linux system or not. To solve this, I turned the problem around and ask myself *Why do I want to know what package is installed?* The response was to know if I can use them in my CMake scripts. So in the end, I did not wanted to know which package is installed, but what libraries are usable with CMake!
 
