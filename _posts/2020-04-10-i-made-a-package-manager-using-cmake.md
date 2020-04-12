@@ -6,6 +6,8 @@ categories: cmake
 excerpt_separator: <!--more-->
 ---
 
+# I made a package manager using CMake
+
 > What?? Another one?
 
 _Likely the first reaction of most C++ programmers_
